@@ -96,8 +96,10 @@ describe('ResetPasswordPage', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             user: { id: 'user-123', email: 'test@example.com' } as any,
             access_token: 'token',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,
@@ -115,8 +117,10 @@ describe('ResetPasswordPage', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             user: { id: 'user-123', email: 'test@example.com' } as any,
             access_token: 'token',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,
@@ -153,8 +157,10 @@ describe('ResetPasswordPage', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             user: { id: 'user-123', email: 'test@example.com' } as any,
             access_token: 'token',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,
@@ -218,8 +224,10 @@ describe('ResetPasswordPage', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             user: { id: 'user-123', email: 'test@example.com' } as any,
             access_token: 'token',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,

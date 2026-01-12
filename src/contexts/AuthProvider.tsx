@@ -17,14 +17,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Fetch user profile from database.
-   * If profile fetch fails, sign out to clear the Supabase session.
+   * If profile is null or fetch fails, sign out to clear the Supabase session.
    */
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       const profile = await authApi.fetchProfile(userId)
+
+      // Check if profile is null (user exists in auth but not in profiles table)
+      if (!profile) {
+        // Profile doesn't exist - sign out to prevent authenticated API calls with user=null
+        await supabase.auth.signOut()
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
+
       setUser(profile)
     } catch {
-      // Profile fetch failed - sign out to prevent authenticated API calls with user=null
+      // Network error or other exception - also sign out
       await supabase.auth.signOut()
       setUser(null)
     } finally {

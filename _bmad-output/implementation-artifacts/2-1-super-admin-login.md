@@ -113,7 +113,7 @@ So that **I can access the admin dashboard and manage contests**.
   - [x] 8.6 Run `npm run build`, `npm run lint`, `npm run type-check`
 
 ## Review Follow-ups (AI)
-- [x] [AI-Review][MEDIUM] AuthProvider keeps Supabase session active when profile fetch fails; should sign out or clear session to avoid authenticated API calls with `user=null`. (`src/contexts/AuthProvider.tsx`#L21) - FIXED: Added supabase.auth.signOut() call in fetchUserProfile catch block to clear session when profile fetch fails
+- [x] [AI-Review][MEDIUM] AuthProvider keeps Supabase session active when profile fetch fails; should sign out or clear session to avoid authenticated API calls with `user=null`. (`src/contexts/AuthProvider.tsx`#L21) - FIXED: Added null check for profile return value and supabase.auth.signOut() call in both null profile and catch block cases to clear session when profile is missing or fetch fails
 - [x] [AI-Review][MEDIUM] `signOut` errors are swallowed in AuthProvider; UI gets no feedback and `user` may remain set when sign-out fails. (`src/contexts/AuthProvider.tsx`#L80) - FIXED: Removed unnecessary catch block to allow errors to propagate to UI; added error handling in AdminSidebar logout button with toast feedback
 - [x] [AI-Review][MEDIUM] Reset password page treats any active session as valid recovery; does not validate recovery flow state. (`src/pages/auth/ResetPasswordPage.tsx`#L42) - FIXED: Added validation to check for type=recovery in URL hash parameters; now requires both active session AND recovery flow type
 - [x] [AI-Review][LOW] Missing automated tests for password recovery flows (ForgotPasswordForm + ResetPasswordPage). (`src/pages/auth/ForgotPasswordPage.tsx`#L1, `src/pages/auth/ResetPasswordPage.tsx`#L1) - FIXED: Created comprehensive test files (ForgotPasswordForm.test.tsx with 11 tests, ResetPasswordPage.test.tsx with 12 tests); added mode: 'onBlur' to form configurations
@@ -473,12 +473,14 @@ N/A
   - ✓ Item 1 [MEDIUM]: AC6 redirect alignment - Updated epic, LoginPage.tsx, and AdminRoute.tsx to consistently use /judge/dashboard (eliminates intermediate redirect, matches admin pattern)
   - ✓ Item 2 [HIGH]: AC7 deferred to Epic 4 - Participant session detection requires ParticipantSessionContext from Epic 4. Cannot implement/test without contest/participant data. AC7 marked as deferred in both story and epic files. Tasks updated to reflect AC: 1-6 instead of 1-7.
 - **FIFTH CODE REVIEW FOLLOW-UPS RESOLVED** (2026-01-12):
-  - ✓ Item 1 [MEDIUM]: AuthProvider session handling - Added supabase.auth.signOut() in fetchUserProfile catch block to prevent authenticated API calls with user=null
+  - ✓ Item 1 [MEDIUM]: AuthProvider session handling - Added null check for profile return value and supabase.auth.signOut() in both null profile and catch block cases to prevent authenticated API calls with user=null (Note: authApi.fetchProfile returns null when profile not found, doesn't throw)
   - ✓ Item 2 [MEDIUM]: signOut error handling - Removed redundant catch block to allow error propagation; added error handling with toast feedback in AdminSidebar logout button
   - ✓ Item 3 [MEDIUM]: Reset password validation - Added URL hash validation to check for type=recovery parameter; now validates it's a password recovery flow, not just any session
   - ✓ Item 4 [LOW]: Password recovery tests - Created comprehensive test files (ForgotPasswordForm.test.tsx with 11 tests, ResetPasswordPage.test.tsx with 12 tests); added mode: 'onBlur' to form configurations
   - ✓ All 79 tests pass (56 existing + 23 new password recovery tests)
   - ✓ Build, lint, and type-check all pass
+- **SIXTH CODE REVIEW FOLLOW-UP - CORRECTION** (2026-01-12):
+  - ✓ Item 1 [MEDIUM]: AuthProvider null profile handling - Corrected implementation to properly check for null return value from fetchProfile before setting user state; previous fix only handled catch block but missed that fetchProfile returns null instead of throwing
 
 ### Change Log
 
@@ -486,6 +488,7 @@ N/A
 |------|--------|-------|
 | 2026-01-12 | Implemented Story 2.1 Super Admin Login | See File List below |
 | 2026-01-12 | Resolved 4 code review follow-ups: AuthProvider session handling, signOut error propagation, reset password validation, password recovery tests | AuthProvider.tsx, AdminSidebar.tsx, ForgotPasswordForm.tsx, ResetPasswordPage.tsx, ForgotPasswordForm.test.tsx (new), ResetPasswordPage.test.tsx (new) |
+| 2026-01-12 | Corrected AuthProvider null profile handling: added explicit null check before setting user state (fetchProfile returns null, doesn't throw) | AuthProvider.tsx, ResetPasswordPage.test.tsx |
 
 ### File List
 
