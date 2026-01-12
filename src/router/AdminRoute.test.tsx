@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { type ReactNode } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from './AdminRoute'
@@ -30,7 +31,7 @@ describe('AdminRoute', () => {
   }
 
   const renderWithAuth = (
-    children: React.ReactNode,
+    children: ReactNode,
     authValue: {
       user: User | null
       isLoading: boolean
