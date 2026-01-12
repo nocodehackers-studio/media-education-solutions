@@ -105,7 +105,7 @@ export function ContestsPage() {
             <Trophy className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No contests yet</h3>
             <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
-              Create your first contest to start accepting submissions from participants.
+              You haven't created any contests yet. Create your first contest to start accepting submissions from participants.
             </p>
             <Button onClick={() => setIsSheetOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />

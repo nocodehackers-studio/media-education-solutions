@@ -21,12 +21,13 @@ import {
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
 
+// Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'bg-gray-100 text-gray-800' },
-  published: { label: 'Published', className: 'bg-green-100 text-green-800' },
-  closed: { label: 'Closed', className: 'bg-blue-100 text-blue-800' },
+  published: { label: 'Published', className: 'bg-blue-100 text-blue-800' },
+  closed: { label: 'Closed', className: 'bg-amber-100 text-amber-800' },
   reviewed: { label: 'Reviewed', className: 'bg-purple-100 text-purple-800' },
-  finished: { label: 'Finished', className: 'bg-gray-100 text-gray-800' },
+  finished: { label: 'Finished', className: 'bg-green-100 text-green-800' },
 };
 
 /**

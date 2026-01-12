@@ -163,12 +163,16 @@ export const contestsApi = {
    * @returns Updated contest
    */
   async update(id: string, input: UpdateContestInput): Promise<Contest> {
+    // Convert empty strings to null to preserve DB semantics
+    const emptyToNull = (val: string | undefined) =>
+      val === '' ? null : val;
+
     const { data, error } = await supabase
       .from('contests')
       .update({
         name: input.name,
-        description: input.description,
-        rules: input.rules,
+        description: emptyToNull(input.description),
+        rules: emptyToNull(input.rules),
       })
       .eq('id', id)
       .select()

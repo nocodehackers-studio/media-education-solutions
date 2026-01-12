@@ -34,13 +34,18 @@ const statusOptions: { value: ContestStatus; label: string }[] = [
  */
 export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [optimisticStatus, setOptimisticStatus] = useState<ContestStatus>(contest.status);
   const updateStatus = useUpdateContestStatus();
 
-  const handleStatusChange = async (status: ContestStatus) => {
+  const handleStatusChange = async (newStatus: ContestStatus) => {
+    const previousStatus = optimisticStatus;
+    setOptimisticStatus(newStatus); // Optimistic update
+
     try {
-      await updateStatus.mutateAsync({ id: contest.id, status });
+      await updateStatus.mutateAsync({ id: contest.id, status: newStatus });
       toast.success('Status updated');
     } catch (error) {
+      setOptimisticStatus(previousStatus); // Revert on error
       toast.error(
         error instanceof Error ? error.message : 'Failed to update status'
       );
@@ -57,7 +62,7 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
         <CardTitle>Contest Details</CardTitle>
         <div className="flex gap-2">
           <Select
-            value={contest.status}
+            value={optimisticStatus}
             onValueChange={(value) => handleStatusChange(value as ContestStatus)}
             disabled={updateStatus.isPending}
           >
