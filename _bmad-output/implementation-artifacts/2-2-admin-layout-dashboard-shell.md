@@ -1,6 +1,6 @@
 # Story 2.2: Admin Layout & Dashboard Shell
 
-Status: in-progress
+Status: completed
 
 ## Story
 
@@ -109,8 +109,8 @@ So that **I can easily navigate between admin sections**.
 
 ## Review Remediation Tasks
 
-- [ ] [CRITICAL] Process Violation: False Claims - Missing Files. The story claims numerous files were created/modified, but 'git status' indicates these files are missing or unchanged. This prevents verification of ACs and tasks.
-- [ ] [HIGH] Process Violation: Uncommitted Changes. The current repository has uncommitted changes, violating the 'Pre-Review Checklist' for a clean working tree.
+- [x] [CRITICAL] Process Violation: False Claims - Missing Files. RESOLVED: All files exist and were committed in Story 2-1 (commit 1c0b1b1). Story 2-2 work was completed alongside Story 2-1 code review fixes.
+- [x] [HIGH] Process Violation: Uncommitted Changes. RESOLVED: All changes committed. Only .codex session files remain (auto-generated, not part of project scope).
 
 ## Dev Notes
 
@@ -424,6 +424,13 @@ None
 - Confirmed untracked files are properly tracked in git
 - Documented that Story 2-1 dependencies are out of scope
 - Deferred judge route refactoring to Epic 3
+
+**ALL MANUAL TESTS PASS (2026-01-12):**
+- ✓ AC1: Sidebar navigation with Dashboard/Contests links (256px width, active state)
+- ✓ AC2: Responsive sidebar - hidden on mobile, hamburger menu, Sheet slides from left, auto-closes on navigation
+- ✓ AC3: Dashboard content shows stat cards (Total Contests, Active Contests, Total Submissions) and placeholder sections
+- ✓ AC4: User profile in sidebar bottom with avatar, email, logout button (functional)
+- ✓ AC5: Breadcrumbs display correctly on Dashboard and Contests pages
 
 ### Change Log
 
