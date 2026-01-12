@@ -22,7 +22,7 @@ export function LoginPage() {
       if (user.role === 'admin') {
         navigate(from || '/admin/dashboard', { replace: true })
       } else if (user.role === 'judge') {
-        navigate('/judge', { replace: true })
+        navigate('/judge/dashboard', { replace: true })
       }
     }
   }, [isAuthenticated, user, isLoading, navigate, location.state])

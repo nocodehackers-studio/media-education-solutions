@@ -43,11 +43,12 @@ So that **I can access the admin dashboard and manage contests**.
 
 **Given** I am logged in as a Judge
 **When** I try to access /admin/* routes
-**Then** I am redirected to the Judge dashboard (/judge)
+**Then** I am redirected to the Judge dashboard (/judge/dashboard)
 
-**Given** I am logged in as a Participant (code-based session)
-**When** I try to access /admin/* routes
-**Then** I am redirected to the login page
+~~**Given** I am logged in as a Participant (code-based session)~~
+~~**When** I try to access /admin/* routes~~
+~~**Then** I am redirected to the login page~~
+**(Deferred to Epic 4 - requires ParticipantSessionContext)**
 
 **Requirements:** FR1, FR4, NFR7-9
 

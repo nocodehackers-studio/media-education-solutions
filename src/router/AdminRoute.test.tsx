@@ -47,7 +47,7 @@ describe('AdminRoute', () => {
           <Routes>
             <Route path="/admin/dashboard" element={<AdminRoute>{children}</AdminRoute>} />
             <Route path="/login" element={<div>Login Page</div>} />
-            <Route path="/judge" element={<div>Judge Dashboard</div>} />
+            <Route path="/judge/dashboard" element={<div>Judge Dashboard</div>} />
           </Routes>
         </MemoryRouter>
       </AuthContext.Provider>
@@ -91,7 +91,7 @@ describe('AdminRoute', () => {
   })
 
   describe('Judge Role Access (AC6)', () => {
-    it('redirects to /judge when user is a judge', () => {
+    it('redirects to /judge/dashboard when user is a judge', () => {
       renderWithAuth(<div>Admin Content</div>, {
         user: mockJudgeUser,
         isLoading: false,

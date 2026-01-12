@@ -44,14 +44,23 @@ So that **I can access the admin dashboard and manage contests**.
 **When** I try to access /admin/* routes
 **Then** I am redirected to the Judge dashboard (/judge/dashboard)
 
-### AC7: Participant Session Redirect
+### AC7: Participant Session Redirect ⏸️ DEFERRED TO EPIC 4
+**Status:** Deferred to Epic 4 (Participant Submission Experience)
+
+**Original requirement:**
 **Given** I am logged in as a Participant (code-based session)
 **When** I try to access /admin/* routes
 **Then** I am redirected to the login page
 
+**Reason for deferral:**
+- Participant sessions use contest codes + participant codes stored in localStorage (no Supabase auth)
+- ParticipantSessionContext does not exist until Epic 4
+- Cannot detect or test participant sessions without contest/participant data
+- Current implementation already blocks unauthenticated users (including participants) via AC5
+
 ## Tasks / Subtasks
 
-- [x] Task 1: Create AuthContext and Provider (AC: 1, 3, 5, 6, 7)
+- [x] Task 1: Create AuthContext and Provider (AC: 1, 3, 5, 6)
   - [x] 1.1 Create `src/contexts/AuthContext.tsx` with user state, loading state, login/logout methods
   - [x] 1.2 Create `src/contexts/AuthProvider.tsx` with Supabase auth subscription
   - [x] 1.3 Create `useAuth()` hook for consuming auth context
@@ -73,7 +82,7 @@ So that **I can access the admin dashboard and manage contests**.
   - [x] 3.3 Create `src/pages/auth/ResetPasswordPage.tsx` for password reset callback
   - [x] 3.4 Add Zod schemas for forgot password and reset password
 
-- [x] Task 4: Create Protected Route Components (AC: 5, 6, 7)
+- [x] Task 4: Create Protected Route Components (AC: 5, 6)
   - [x] 4.1 Create `src/router/ProtectedRoute.tsx` - requires auth, any role
   - [x] 4.2 Create `src/router/AdminRoute.tsx` - requires admin role
   - [x] 4.3 Create `src/router/JudgeRoute.tsx` - requires judge role (for future)
@@ -85,16 +94,16 @@ So that **I can access the admin dashboard and manage contests**.
   - [x] 5.3 Add judge routes with JudgeRoute protection (/judge/*) - placeholder for Epic 3
   - [x] 5.4 Create placeholder `src/pages/admin/DashboardPage.tsx` (shell only, content in Story 2.2)
 
-- [x] Task 6: Create Auth Types (AC: 1-7)
+- [x] Task 6: Create Auth Types (AC: 1-6)
   - [x] 6.1 Create `src/features/auth/types/auth.types.ts` with User, AuthState, AuthContextType
   - [x] 6.2 Ensure types align with Supabase profiles table schema
 
-- [x] Task 7: Update Feature Index and Exports (AC: 1-7)
+- [x] Task 7: Update Feature Index and Exports (AC: 1-6)
   - [x] 7.1 Update `src/features/auth/index.ts` with all exports
   - [x] 7.2 Update `src/pages/index.ts` with new page exports
   - [x] 7.3 Update `PROJECT_INDEX.md` with new components and routes
 
-- [x] Task 8: Testing and Verification (AC: 1-7)
+- [x] Task 8: Testing and Verification (AC: 1-6)
   - [x] 8.1 Create `src/features/auth/components/LoginForm.test.tsx` - form validation tests
   - [x] 8.2 Manual test: Login with valid admin credentials
   - [x] 8.3 Manual test: Login with invalid credentials shows error
@@ -126,6 +135,8 @@ So that **I can access the admin dashboard and manage contests**.
 - [x] [AI-Review][LOW] `ForgotPasswordPage` rethrows errors; no catch in form leads to unhandled rejection noise. (`src/pages/auth/ForgotPasswordPage.tsx`#L11) - RESOLVED: Added catch block in ForgotPasswordForm.tsx to handle rethrown errors gracefully. Form now properly prevents success state on error without unhandled rejection noise.
 - [x] [AI-Review][CRITICAL] React namespace type usage remains in router tests (violates project rule). Possible fix: replace `React.ReactNode` with `type ReactNode` import from `react` and use `children: ReactNode` in both files. (`src/router/AdminRoute.test.tsx`#L33, `src/router/ProtectedRoute.test.tsx`#L33) - FIXED: Added `import { type ReactNode } from 'react'` and changed `children: React.ReactNode` to `children: ReactNode` in both test files
 - [x] [AI-Review][MEDIUM] AC6 says redirect to `/judge`, but `/judge` immediately redirects to `/judge/dashboard`, so effective destination does not match AC text. Decide desired target and align AC or routing. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`#L45, `src/router/index.tsx`#L46) - RESOLVED: Updated AC6 text to say "(/judge/dashboard)" to accurately reflect the effective destination after routing
+- [x] [AI-Review][MEDIUM] AC6 redirect mismatch between epic vs story vs router. Choose canonical target and align Epic 2 Story 2.1 text + router accordingly. (`_bmad-output/planning-artifacts/epics/epic-2-super-admin-authentication-contest-management.md`, `src/router/index.tsx`) - RESOLVED: Aligned to /judge/dashboard everywhere. Updated epic AC6, LoginPage.tsx redirects directly to /judge/dashboard, AdminRoute.tsx redirects to /judge/dashboard. Eliminates intermediate redirect for consistency with admin pattern.
+- [x] [AI-Review][HIGH] AC7 (participant session redirect) not implemented; no participant session detection/guard in admin routes. Decide to implement in Story 2.1 or move AC7 to Epic 4 (participant session). (`src/router/AdminRoute.tsx`, `src/router/ProtectedRoute.tsx`) - RESOLVED: AC7 deferred to Epic 4. Participant sessions require ParticipantSessionContext (Epic 4). Cannot implement or test without contest/participant data. Current implementation already blocks unauthenticated users (AC5). AC7 marked as deferred in both story and epic.
 
 ## Dev Notes
 
@@ -451,6 +462,9 @@ N/A
   - ✓ Item 1 [CRITICAL]: Fixed React namespace usage in router tests (AdminRoute.test.tsx, ProtectedRoute.test.tsx) - Changed `React.ReactNode` to `import { type ReactNode } from 'react'` and `children: ReactNode`
   - ✓ Item 2 [MEDIUM]: Updated AC6 to say "(/judge/dashboard)" instead of "(/judge)" to accurately reflect effective destination after routing
   - ✓ All 56 tests still pass after fixes
+- **FOURTH CODE REVIEW FOLLOW-UPS RESOLVED** (2026-01-12):
+  - ✓ Item 1 [MEDIUM]: AC6 redirect alignment - Updated epic, LoginPage.tsx, and AdminRoute.tsx to consistently use /judge/dashboard (eliminates intermediate redirect, matches admin pattern)
+  - ✓ Item 2 [HIGH]: AC7 deferred to Epic 4 - Participant session detection requires ParticipantSessionContext from Epic 4. Cannot implement/test without contest/participant data. AC7 marked as deferred in both story and epic files. Tasks updated to reflect AC: 1-6 instead of 1-7.
 
 ### Change Log
 
