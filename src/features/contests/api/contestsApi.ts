@@ -33,44 +33,75 @@ export const contestsApi = {
    * @throws Error if contest code already exists or creation fails
    */
   async create(input: CreateContestInput): Promise<Contest> {
-    // 1. Generate contest code if not provided
-    const contestCode = input.contestCode && input.contestCode.length === 6
-      ? input.contestCode
-      : generateContestCode();
-
-    // 2. Generate slug from name
+    // 1. Generate slug from name
     const slug = input.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 
-    // 3. Insert contest
-    const { data: contest, error: contestError } = await supabase
-      .from('contests')
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Type will resolve once Supabase migration is applied
-      .insert({
-        name: input.name,
-        description: input.description || null,
-        contest_code: contestCode,
-        slug,
-        rules: input.rules || null,
-        cover_image_url: null, // Placeholder for now (Story requirement)
-        status: 'draft' as const,
-      })
-      .select()
-      .single();
+    // 2. Retry loop for contest creation with auto-generated codes
+    const MAX_RETRIES = 5;
+    let contest: ContestRow | null = null;
+    let lastError: Error | null = null;
 
-    if (contestError) {
-      // Handle duplicate contest code
-      if (contestError.code === '23505') {
-        throw new Error('Contest code already exists');
+    // If user provided a custom code, use it without retries
+    const useCustomCode = input.contestCode && input.contestCode.length === 6;
+
+    for (let attempt = 0; attempt < (useCustomCode ? 1 : MAX_RETRIES); attempt++) {
+      const contestCode = useCustomCode
+        ? input.contestCode
+        : generateContestCode();
+
+      // 3. Insert contest
+      const { data, error: contestError } = await supabase
+        .from('contests')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Type will resolve once Supabase migration is applied
+        .insert({
+          name: input.name,
+          description: input.description || null,
+          contest_code: contestCode,
+          slug,
+          rules: input.rules || null,
+          cover_image_url: null, // Placeholder for now (Story requirement)
+          status: 'draft' as const,
+        })
+        .select()
+        .single();
+
+      if (!contestError) {
+        contest = data as ContestRow;
+        break;
       }
+
+      // Handle duplicate contest code - retry with new code if auto-generated
+      if (contestError.code === '23505') {
+        // Check if it's a contest_code collision (not slug collision)
+        // PostgreSQL constraint names: contests_contest_code_key vs contests_slug_key
+        const isCodeCollision = contestError.message.includes('contest_code');
+
+        if (isCodeCollision && !useCustomCode) {
+          // Retry with new auto-generated code
+          lastError = new Error('Contest code collision - retrying with new code');
+          continue;
+        }
+
+        // Either slug collision or custom code collision - don't retry
+        if (contestError.message.includes('slug')) {
+          throw new Error('A contest with this name already exists');
+        } else {
+          throw new Error('Contest code already exists');
+        }
+      }
+
+      // Other errors - fail immediately
       throw new Error(`Failed to create contest: ${contestError.message}`);
     }
 
     if (!contest) {
-      throw new Error('Contest creation returned no data');
+      throw new Error(
+        lastError?.message || 'Failed to create contest after multiple attempts'
+      );
     }
 
     // 4. Generate 50 participant codes
@@ -88,9 +119,16 @@ export const contestsApi = {
       .insert(participants);
 
     if (codesError) {
-      // Log error but don't fail the contest creation
-      // Admin can manually generate codes later if needed
-      console.error('Failed to generate participant codes:', codesError);
+      // Fail fast - participant codes are required per AC3
+      // Delete the contest to maintain data consistency
+      await supabase
+        .from('contests')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        .delete()
+        .eq('id', (contest as ContestRow).id);
+
+      throw new Error(`Failed to generate participant codes: ${codesError.message}`);
     }
 
     return transformContestRow(contest as ContestRow);

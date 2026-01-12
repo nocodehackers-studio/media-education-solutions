@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Form,
@@ -26,6 +27,7 @@ interface CreateContestFormProps {
  */
 export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
   const createContest = useCreateContest();
+  const navigate = useNavigate();
 
   const form = useForm<CreateContestInput>({
     resolver: zodResolver(createContestSchema),
@@ -39,10 +41,11 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
 
   const onSubmit = async (data: CreateContestInput) => {
     try {
-      await createContest.mutateAsync(data);
+      const contest = await createContest.mutateAsync(data);
       toast.success('Contest created');
       form.reset();
       onSuccess?.();
+      navigate(`/admin/contests/${contest.id}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create contest');
     }
@@ -79,6 +82,31 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="coverImage"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Cover Image</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    onChange(file);
+                  }}
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Optional. Upload will be implemented in a future story.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
