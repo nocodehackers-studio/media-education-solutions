@@ -483,6 +483,10 @@ N/A
   - ✓ Item 1 [MEDIUM]: AuthProvider null profile handling - Corrected implementation to properly check for null return value from fetchProfile before setting user state; previous fix only handled catch block but missed that fetchProfile returns null instead of throwing
   - ✓ Item 2 [LOW]: Router documentation mismatch - Updated PROJECT_INDEX.md to correctly document AdminRoute redirects judges to /judge/dashboard (not /judge) to match implementation
   - ✓ Item 3 [MEDIUM]: signIn error handling improvement - Added logic to distinguish between authentication failures (wrong password) and server/network errors; auth failures show "Invalid email or password" (security best practice), while server errors show "Something went wrong. Please try again later." (user-friendly)
+- **SEVENTH CODE REVIEW FOLLOW-UP - REFINEMENTS** (2026-01-12):
+  - ✓ Item 1 [MEDIUM]: Profile fetch failures in signIn - Added check for PGRST116 error code (no rows) to distinguish missing profile from database/network errors; missing profile shows invalid credentials, server errors show "Something went wrong"
+  - ✓ Item 2 [MEDIUM]: Status 400 too broad in signIn - Changed from checking status code to checking actual error message; now handles "email not confirmed" separately with specific message, treats only "invalid login credentials" as auth failure
+  - ✓ Item 3 [LOW]: signOut exception safety in AuthProvider - Wrapped signOut calls in try-catch to ensure setUser(null) and setIsLoading(false) always run even if signOut throws; prevents stale auth state
 
 ### Change Log
 
@@ -493,6 +497,7 @@ N/A
 | 2026-01-12 | Corrected AuthProvider null profile handling: added explicit null check before setting user state (fetchProfile returns null, doesn't throw) | AuthProvider.tsx, ResetPasswordPage.test.tsx |
 | 2026-01-12 | Fixed router documentation mismatch: updated PROJECT_INDEX.md to correctly document /judge/dashboard redirect | PROJECT_INDEX.md |
 | 2026-01-12 | Improved signIn error handling: distinguish auth failures from server/network errors for better UX | authApi.ts |
+| 2026-01-12 | Refined error handling: profile fetch error codes, email confirmation messages, signOut exception safety | authApi.ts, AuthProvider.tsx |
 
 ### File List
 

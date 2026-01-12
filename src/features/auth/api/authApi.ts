@@ -39,13 +39,18 @@ async function signIn(
 
   if (authError) {
     // Distinguish between authentication failures and server/network errors
-    // Authentication failures: wrong password, invalid email format, etc. (status 400)
-    // Server errors: network issues, database down, timeouts, etc. (status 500, network errors)
-    if (authError.message?.includes('Invalid login credentials') || authError.status === 400) {
+    // Check the actual error message, not just status code (400 can mean many things)
+    const errorMsg = authError.message?.toLowerCase() || ''
+
+    if (errorMsg.includes('invalid login credentials') ||
+        errorMsg.includes('invalid password')) {
       // Wrong password/email - don't reveal which one (security best practice)
       throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+    } else if (errorMsg.includes('email not confirmed')) {
+      // User needs to verify email - be specific
+      throw new Error('Please verify your email address before signing in.')
     } else {
-      // Server/network error - be helpful to user
+      // Server/network error, rate limiting, user disabled, etc.
       throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
     }
   }
@@ -62,9 +67,18 @@ async function signIn(
     .single()
 
   if (profileError || !profile) {
-    // Sign out if profile not found (shouldn't happen)
+    // Sign out user since we can't get their profile
     await supabase.auth.signOut()
-    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+
+    // Distinguish between missing profile and database errors
+    // PGRST116 = no rows returned (profile doesn't exist)
+    if (profileError?.code === 'PGRST116' || !profile) {
+      // Profile missing (shouldn't happen with trigger, but defensive)
+      throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+    } else {
+      // Database error, network error, timeout, etc.
+      throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+    }
   }
 
   return transformProfile(profile)

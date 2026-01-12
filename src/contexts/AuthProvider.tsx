@@ -26,7 +26,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Check if profile is null (user exists in auth but not in profiles table)
       if (!profile) {
         // Profile doesn't exist - sign out to prevent authenticated API calls with user=null
-        await supabase.auth.signOut()
+        try {
+          await supabase.auth.signOut()
+        } catch {
+          // Ignore signOut errors - we still need to clear local state
+        }
         setUser(null)
         setIsLoading(false)
         return
@@ -35,7 +39,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(profile)
     } catch {
       // Network error or other exception - also sign out
-      await supabase.auth.signOut()
+      try {
+        await supabase.auth.signOut()
+      } catch {
+        // Ignore signOut errors - we still need to clear local state
+      }
       setUser(null)
     } finally {
       setIsLoading(false)
