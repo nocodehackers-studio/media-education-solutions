@@ -9,7 +9,7 @@
 ---
 
 ## Story 2.1: Super Admin Login
-Status: in-progress
+Status: completed
 
 As a **Super Admin**,
 I want **to log in with my email and password**,

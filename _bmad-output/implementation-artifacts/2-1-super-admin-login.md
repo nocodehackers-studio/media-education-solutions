@@ -1,6 +1,6 @@
 # Story 2.1: Super Admin Login
 
-Status: review
+Status: completed
 
 ## Story
 
