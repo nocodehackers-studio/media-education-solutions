@@ -42,11 +42,11 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # Epic 1: Project Foundation & Core Infrastructure (5 stories)
   epic-1: in-progress
-  1-1-project-initialization: review
-  1-2-supabase-integration-base-schema: backlog
-  1-3-feature-architecture-discoverability: backlog
-  1-4-core-ui-components-patterns: backlog
-  1-5-ci-cd-environment-configuration: backlog
+  1-1-project-initialization: done
+  1-2-supabase-integration-base-schema: done
+  1-3-feature-architecture-discoverability: done
+  1-4-core-ui-components-patterns: in-progress
+  1-5-ci-cd-environment-configuration: in-progress
   epic-1-retrospective: optional
 
   # Epic 2: Super Admin Authentication & Contest Management (7 stories)

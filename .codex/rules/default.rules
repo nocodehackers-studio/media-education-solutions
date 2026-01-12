@@ -1,0 +1,4 @@
+prefix_rule(pattern=["/bin/zsh", "-lc", "for f in /Users/elias/Desktop/nocodehackers/media-education-solutions/src/features/*/index.ts; do echo \"--- $f\"; cat \"$f\"; done"], decision="allow")
+prefix_rule(pattern=["git", "rev-parse", "--is-inside-work-tree"], decision="allow")
+prefix_rule(pattern=["test", "-f", "/Users/elias/Desktop/nocodehackers/media-education-solutions/.env.local"], decision="allow")
+prefix_rule(pattern=["awk", "{print $2}"], decision="allow")

@@ -4,22 +4,26 @@
 
 ## Features (src/features/)
 
-| Feature | Purpose | Status |
-|---------|---------|--------|
-| auth | Admin/Judge login, session management | Placeholder |
-| contests | Contest CRUD, status management | Placeholder |
-| categories | Category management within contests | Placeholder |
-| participants | Participant codes, session, info | Placeholder |
-| submissions | File uploads, submission management | Placeholder |
-| reviews | Rating, feedback for submissions | Placeholder |
-| rankings | Drag-drop ranking, tier ordering | Placeholder |
-| notifications | Email triggers via Brevo | Placeholder |
+| Feature | Purpose | Key Exports |
+|---------|---------|-------------|
+| auth | Admin/Judge login, session management | LoginForm, useAuth, authApi (Planned) |
+| contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
+| categories | Category management within contests | CategoryCard, useCategories (Planned) |
+| participants | Participant codes, session, info | ParticipantCodeEntry, useParticipantSession (Planned) |
+| submissions | File uploads, submission management | UploadProgress, useFileUpload, MediaViewer (Planned) |
+| reviews | Rating, feedback for submissions | RatingScale, useReviews, ReviewForm (Planned) |
+| rankings | Drag-drop ranking, tier ordering | RankingDropzone, useRankings (Planned) |
+| notifications | Email triggers via Brevo | useNotifications (Planned) |
 
 ## Shared Code (src/lib/)
 
 | File | Purpose |
 |------|---------|
 | utils.ts | cn() helper, shared utilities |
+| supabase.ts | Typed Supabase client for auth + database |
+| queryClient.ts | TanStack Query client with default options |
+| errorCodes.ts | ERROR_CODES constants, ERROR_MESSAGES, getErrorMessage() |
+| sentry.ts | Sentry initialization for error tracking (prod only) |
 
 ## Contexts (src/contexts/)
 
@@ -28,9 +32,24 @@
 | AuthContext | Admin/Judge authentication state | Planned (Epic 2) |
 | ParticipantSessionContext | Participant codes + 120min timeout | Planned (Epic 4) |
 
+## Components (src/components/)
+
+| Component | Purpose |
+|-----------|---------|
+| ErrorBoundary | Sentry-integrated error boundary with fallback UI |
+
 ## UI Components (src/components/ui/)
 
-shadcn/ui primitives: Button, Card, Input (more added as needed)
+| Component | Purpose |
+|-----------|---------|
+| Button | Styled button with variants |
+| Card, CardHeader, etc. | Card container components |
+| Input | Form input field |
+| Toaster | Toast notification container (sonner) |
+| toast | Toast trigger function (success, error) |
+| Form, FormField, etc. | Form wrapper components (react-hook-form) |
+| Label | Accessible form label |
+| Skeleton | Loading placeholder animation |
 
 ## Pages (src/pages/)
 
@@ -38,9 +57,16 @@ shadcn/ui primitives: Button, Card, Input (more added as needed)
 |-------------|-------|
 | public/ | NotFoundPage |
 
+## Database (supabase/)
+
+| File | Purpose |
+|------|---------|
+| config.toml | Supabase local config |
+| migrations/00001_create_profiles.sql | Profiles table, RLS, auth trigger |
+
 ## Edge Functions (supabase/functions/)
 
-To be added in Story 1.2+
+Placeholder - to be added for Bunny upload signing (Epic 4)
 
 ## Key Patterns
 
@@ -61,3 +87,52 @@ All components use named exports, never default exports.
 - Components: PascalCase (`NotFoundPage.tsx`)
 - Utilities: camelCase (`utils.ts`)
 - Types: camelCase with `.types.ts` suffix
+
+## Quick Reference
+
+### Import Patterns
+```typescript
+// From lib (utilities, clients, error codes)
+import { cn, supabase, queryClient, ERROR_CODES, getErrorMessage } from '@/lib';
+
+// From features (components, hooks, types)
+import { useAuth, LoginForm } from '@/features/auth';
+
+// From UI components (core)
+import { Button, Card, Input, Skeleton } from '@/components/ui';
+
+// Toast usage
+import { toast } from '@/components/ui';
+toast.success('Saved!');  // Auto-dismiss 4s
+toast.error('Failed', { duration: Infinity });  // Manual dismiss
+
+// Form components
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui';
+```
+
+### State Management
+| State Type | Solution | Location |
+|------------|----------|----------|
+| Server data | TanStack Query | Feature hooks |
+| Form data | React Hook Form | Component-local |
+| Auth state | React Context | `AuthContext` |
+| Participant session | React Context | `ParticipantSessionContext` |
+| Local UI | useState | Component-local |
+
+## CI/CD & DevOps
+
+| Resource | Purpose |
+|----------|---------|
+| vercel.json | Vercel deployment config (Vite framework, SPA rewrites) |
+| .github/workflows/ci.yml | GitHub Actions: lint, type-check, build on PR/push |
+
+### Scripts
+```bash
+npm run dev          # Start dev server
+npm run build        # TypeScript + Vite production build
+npm run lint         # ESLint check
+npm run type-check   # TypeScript validation (no emit)
+```
+
+### Error Tracking
+Sentry is initialized in production when `VITE_SENTRY_DSN` is set. Errors are captured automatically via ErrorBoundary.

@@ -1,0 +1,4 @@
+model = "gpt-5.1-codex-mini"
+model_reasoning_effort = "medium"
+[projects."/Users/elias/Desktop/nocodehackers/media-education-solutions"]
+trust_level = "untrusted"
