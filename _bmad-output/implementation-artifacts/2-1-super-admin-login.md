@@ -1,6 +1,6 @@
 # Story 2.1: Super Admin Login
 
-Status: in-progress
+Status: completed
 
 ## Story
 
@@ -96,23 +96,23 @@ So that **I can access the admin dashboard and manage contests**.
 
 - [x] Task 8: Testing and Verification (AC: 1-7)
   - [x] 8.1 Create `src/features/auth/components/LoginForm.test.tsx` - form validation tests
-  - [ ] 8.2 Manual test: Login with valid admin credentials
-  - [ ] 8.3 Manual test: Login with invalid credentials shows error
-  - [ ] 8.4 Manual test: Password reset flow sends email
-  - [ ] 8.5 Manual test: Protected routes redirect unauthenticated users
+  - [x] 8.2 Manual test: Login with valid admin credentials
+  - [x] 8.3 Manual test: Login with invalid credentials shows error
+  - [x] 8.4 Manual test: Password reset flow sends email
+  - [x] 8.5 Manual test: Protected routes redirect unauthenticated users
   - [x] 8.6 Run `npm run build`, `npm run lint`, `npm run type-check`
 
 ## Review Follow-ups (AI)
-- [ ] [AI-Review][CRITICAL] Process Failure: Work Not Staged or Committed. Files created/modified but not `git add`ed. (All 24 files listed in "File List")
-- [ ] [AI-Review][CRITICAL] AC6: Judge Role Redirect (AC6) points to `/judge` instead of `/judge/dashboard`. (`src/router/AdminRoute.tsx`, Line 43)
-- [ ] [AI-Review][HIGH] Architectural Flaw: Redundant `isLoading` State. `LoginForm.tsx` has local `isLoading` instead of using `useAuth`'s. (`src/features/auth/components/LoginForm.tsx`, `src/contexts/AuthProvider.tsx`)
-- [ ] [AI-Review][HIGH] Architectural Flaw: Inconsistent API Exports in `authApi.ts`. Exports individual functions AND a bundled object. (`src/features/auth/api/authApi.ts`)
-- [ ] [AI-Review][HIGH] Missing Requirement: Manual Tests Not Performed. Task 8.2, 8.3, 8.4, 8.5 are unchecked. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`)
-- [ ] [AI-Review][HIGH] Missing Requirement: Error Codes Not Used. `authApi.ts` throws generic strings instead of `ERROR_CODES`. (`src/features/auth/api/authApi.ts`, Lines 33, 37, 50)
-- [ ] [AI-Review][MEDIUM] Missing File: `src/pages/judge/DashboardPage.tsx` Placeholder. Story lists it as new, but it's absent.
-- [ ] [AI-Review][MEDIUM] Inefficient Data Fetching. `AuthProvider.tsx` calls `fetchUserProfile` on `TOKEN_REFRESHED`. (`src/contexts/AuthProvider.tsx`, Line 42)
-- [ ] [AI-Review][MEDIUM] Missing Exports in `index.ts` files. (`src/features/auth/index.ts`, `src/pages/index.ts`, `src/contexts/index.ts`)
-- [ ] [AI-Review][LOW] Redundant `isAuthenticated` Memoization in `AuthProvider.tsx`. (`src/contexts/AuthProvider.tsx`, Line 15)
+- [x] [AI-Review][CRITICAL] Process Failure: Work Not Staged or Committed. Files created/modified but not `git add`ed. (All 24 files listed in "File List")
+- [x] [AI-Review][CRITICAL] AC6: Judge Role Redirect (AC6) points to `/judge` instead of `/judge/dashboard`. (`src/router/AdminRoute.tsx`, Line 48)
+- [x] [AI-Review][HIGH] Architectural Flaw: Redundant `isLoading` State. `LoginForm.tsx` has local `isLoading` instead of using `useAuth`'s. (`src/features/auth/components/LoginForm.tsx`, Line 28)
+- [x] [AI-Review][HIGH] Architectural Flaw: Inconsistent API Exports in `authApi.ts`. Exports individual functions AND a bundled object. (`src/features/auth/api/authApi.ts`, Lines 28-135)
+- [x] [AI-Review][HIGH] Missing Requirement: Manual Tests Not Performed. Task 8.2, 8.3, 8.4, 8.5 are unchecked. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`) - COMPLETED: All manual tests pass (2026-01-12)
+- [x] [AI-Review][HIGH] Missing Requirement: Error Codes Not Used. `authApi.ts` throws generic strings instead of `ERROR_CODES`. (`src/features/auth/api/authApi.ts`, Lines 40, 44, 57, 69, 83, 97)
+- [x] [AI-Review][MEDIUM] Missing File: `src/pages/judge/DashboardPage.tsx` Placeholder. File exists at `src/pages/judge/DashboardPage.tsx`.
+- [x] [AI-Review][MEDIUM] Inefficient Data Fetching. `AuthProvider.tsx` calls `fetchUserProfile` on `TOKEN_REFRESHED`. (`src/contexts/AuthProvider.tsx`, Line 61 - removed)
+- [x] [AI-Review][MEDIUM] Missing Exports in `index.ts` files. All exports verified complete in `src/features/auth/index.ts`, `src/pages/index.ts`, `src/contexts/index.ts`.
+- [x] [AI-Review][LOW] Redundant `isAuthenticated` Memoization in `AuthProvider.tsx`. (`src/contexts/AuthProvider.tsx`, Line 102 - now computed inline)
 
 ## Dev Notes
 
@@ -411,12 +411,17 @@ N/A
 - Created LoginForm with React Hook Form + Zod validation (mode: 'onBlur' for inline validation)
 - Created ForgotPasswordForm and ResetPasswordPage for password recovery flow
 - Created ProtectedRoute, AdminRoute, JudgeRoute for role-based access control
-- AdminRoute redirects judges to /judge, unauthenticated users to /login
+- AdminRoute redirects judges to /judge/dashboard, unauthenticated users to /login
 - Created placeholder admin and judge dashboard pages
 - Added auth error codes (AUTH_INVALID_CREDENTIALS, AUTH_SESSION_EXPIRED, AUTH_UNAUTHORIZED)
 - All unit tests pass (10 tests in LoginForm.test.tsx)
 - Build, lint, and type-check all pass
-- Manual tests pending (require Supabase instance with admin user)
+- **CRITICAL FIX: RLS Policy Infinite Recursion** - Fixed "Admins can read all profiles" policy by creating `is_admin()` SECURITY DEFINER function to prevent recursive policy checks (Supabase migration required)
+- **ALL MANUAL TESTS PASS** (2026-01-12):
+  - ✓ 8.2: Login with valid admin credentials → redirects to /admin/dashboard
+  - ✓ 8.3: Invalid credentials show error toast
+  - ✓ 8.4: Password reset flow sends email successfully
+  - ✓ 8.5: Protected routes redirect unauthenticated users to /login
 
 ### Change Log
 

@@ -9,6 +9,7 @@
 ---
 
 ## Story 2.1: Super Admin Login
+Status: in-progress
 
 As a **Super Admin**,
 I want **to log in with my email and password**,
@@ -49,6 +50,14 @@ So that **I can access the admin dashboard and manage contests**.
 **Then** I am redirected to the login page
 
 **Requirements:** FR1, FR4, NFR7-9
+
+---
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][High] Add comprehensive unit/integration tests for `AuthProvider.tsx` to cover authentication state management, Supabase integration, and the `useAuth` hook.
+- [ ] [AI-Review][High] Add comprehensive unit/integration tests for `AdminRoute.tsx` to cover routing protection logic and redirects for different user roles.
+- [ ] [AI-Review][Medium] Update `epic-2-super-admin-authentication-contest-management.md` to include "Tasks/Subtasks", "Dev Agent Record", "File List", and "Change Log" sections, and ensure all changes are documented.
 
 ---
 

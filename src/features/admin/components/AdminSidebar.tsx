@@ -82,7 +82,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {user?.firstName || 'Admin'}
+                {user?.firstName || user?.email?.split('@')[0] || 'Admin'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {user?.email}

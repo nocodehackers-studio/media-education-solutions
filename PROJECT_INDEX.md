@@ -6,6 +6,7 @@
 
 | Feature | Purpose | Key Exports |
 |---------|---------|-------------|
+| admin | Admin layout, navigation, breadcrumbs | AdminLayout, AdminSidebar, AdminHeader, AdminBreadcrumbs, useSidebar, useBreadcrumbs |
 | auth | Admin/Judge login, session management | LoginForm, ForgotPasswordForm, authApi, loginSchema, auth.types |
 | contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
 | categories | Category management within contests | CategoryCard, useCategories (Planned) |
@@ -50,6 +51,10 @@
 | Form, FormField, etc. | Form wrapper components (react-hook-form) |
 | Label | Accessible form label |
 | Skeleton | Loading placeholder animation |
+| Sheet, SheetContent, etc. | Slide-out panel component (mobile sidebar) |
+| Separator | Visual divider line |
+| Avatar, AvatarFallback | User avatar with initials fallback |
+| Breadcrumb, BreadcrumbList, etc. | Navigation breadcrumb trail |
 
 ## Pages (src/pages/)
 
@@ -57,7 +62,7 @@
 |-------------|-------|
 | public/ | NotFoundPage |
 | auth/ | LoginPage, ForgotPasswordPage, ResetPasswordPage |
-| admin/ | DashboardPage (placeholder) |
+| admin/ | DashboardPage, ContestsPage |
 | judge/ | JudgeDashboardPage (placeholder) |
 
 ## Router (src/router/)

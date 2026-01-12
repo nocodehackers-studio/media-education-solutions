@@ -4,9 +4,11 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { DashboardPage as AdminDashboardPage } from '@/pages/admin/DashboardPage'
+import { ContestsPage } from '@/pages/admin/ContestsPage'
 import { JudgeDashboardPage } from '@/pages/judge/DashboardPage'
 import { AdminRoute } from './AdminRoute'
 import { JudgeRoute } from './JudgeRoute'
+import { AdminLayout } from '@/features/admin/components/AdminLayout'
 
 const router = createBrowserRouter([
   // Public routes
@@ -23,24 +25,21 @@ const router = createBrowserRouter([
     element: <ResetPasswordPage />,
   },
 
-  // Admin routes (protected - admin only)
+  // Admin routes (protected - admin only) with layout
   {
     path: '/admin',
     element: (
       <AdminRoute>
-        <Navigate to="/admin/dashboard" replace />
+        <AdminLayout />
       </AdminRoute>
     ),
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: 'dashboard', element: <AdminDashboardPage /> },
+      { path: 'contests', element: <ContestsPage /> },
+      // Future routes: contests/:id, contests/:id/categories, etc.
+    ],
   },
-  {
-    path: '/admin/dashboard',
-    element: (
-      <AdminRoute>
-        <AdminDashboardPage />
-      </AdminRoute>
-    ),
-  },
-  // More admin routes will be added in Story 2.2+
 
   // Judge routes (protected - judge or admin)
   {

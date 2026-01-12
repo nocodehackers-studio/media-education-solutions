@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 
 /**
@@ -8,10 +8,15 @@ import { useLocation } from 'react-router-dom'
 export function useSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
+  const previousPathRef = useRef(location.pathname)
 
-  // Close sidebar on route change
+  // Close sidebar on route change using ref comparison
   useEffect(() => {
-    setIsOpen(false)
+    if (previousPathRef.current !== location.pathname) {
+      previousPathRef.current = location.pathname
+      // Schedule state update for next tick to avoid synchronous setState in effect
+      queueMicrotask(() => setIsOpen(false))
+    }
   }, [location.pathname])
 
   const open = useCallback(() => setIsOpen(true), [])
