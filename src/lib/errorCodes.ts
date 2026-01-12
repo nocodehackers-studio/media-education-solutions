@@ -32,7 +32,7 @@ export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   INVALID_CODES: 'The contest or participant code is invalid.',
   SESSION_EXPIRED: 'Your session has expired. Please log in again.',
-  AUTH_INVALID_CREDENTIALS: 'Invalid email or password.',
+  AUTH_INVALID_CREDENTIALS: 'Invalid email or password',
   AUTH_SESSION_EXPIRED: 'Your session has expired. Please log in again.',
   AUTH_UNAUTHORIZED: 'You are not authorized to access this resource.',
   CONTEST_NOT_FOUND: 'Contest not found.',

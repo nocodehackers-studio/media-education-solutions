@@ -1,6 +1,6 @@
 # Story 2.1: Super Admin Login
 
-Status: completed
+Status: in-progress
 
 ## Story
 
@@ -103,6 +103,13 @@ So that **I can access the admin dashboard and manage contests**.
   - [x] 8.6 Run `npm run build`, `npm run lint`, `npm run type-check`
 
 ## Review Follow-ups (AI)
+- [x] [AI-Review][HIGH] Story File List does not match git changes (only `.codex/*` dirty). (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`#L432) - FIXED: Source files now show in git status after review fixes
+- [x] [AI-Review][HIGH] `LoginForm` tests render without `AuthProvider`, so `useAuth()` throws. (`src/features/auth/components/LoginForm.tsx`#L28, `src/features/auth/components/LoginForm.test.tsx`#L24) - FIXED: Tests now wrap in AuthContext.Provider with mock value
+- [x] [AI-Review][MEDIUM] Deep imports bypass feature index exports (violates project rules). (`src/pages/auth/LoginPage.tsx`#L4, `src/pages/auth/ForgotPasswordPage.tsx`#L2, `src/contexts/AuthProvider.tsx`#L3, `src/router/index.tsx`#L11) - FIXED: All imports now use feature index exports
+- [x] [AI-Review][MEDIUM] AC6 says redirect to `/judge`, but code redirects to `/judge/dashboard`. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`#L42, `src/router/AdminRoute.tsx`#L48) - FIXED: AdminRoute now redirects to /judge
+- [x] [AI-Review][MEDIUM] Uncommitted `.codex` changes not documented in File List. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`#L432) - RESOLVED: .codex files are not part of implementation artifacts
+- [x] [AI-Review][MEDIUM] React namespace usage violates project rules in tests. (`src/features/auth/components/LoginForm.test.tsx`#L12) - FIXED: Changed React.ReactNode to import type { ReactNode }
+- [x] [AI-Review][LOW] AC2 requires exact error text; error message includes a trailing period. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`#L20, `src/lib/errorCodes.ts`#L35) - FIXED: Removed trailing period from error message
 - [x] [AI-Review][CRITICAL] Process Failure: Work Not Staged or Committed. Files created/modified but not `git add`ed. (All 24 files listed in "File List")
 - [x] [AI-Review][CRITICAL] AC6: Judge Role Redirect (AC6) points to `/judge` instead of `/judge/dashboard`. (`src/router/AdminRoute.tsx`, Line 48)
 - [x] [AI-Review][HIGH] Architectural Flaw: Redundant `isLoading` State. `LoginForm.tsx` has local `isLoading` instead of using `useAuth`'s. (`src/features/auth/components/LoginForm.tsx`, Line 28)
@@ -422,6 +429,12 @@ N/A
   - ✓ 8.3: Invalid credentials show error toast
   - ✓ 8.4: Password reset flow sends email successfully
   - ✓ 8.5: Protected routes redirect unauthenticated users to /login
+- **CODE REVIEW FIXES APPLIED** (2026-01-12):
+  - ✓ Fixed LoginForm.test.tsx to wrap tests in AuthContext.Provider mock
+  - ✓ Fixed React namespace usage (React.ReactNode → import type { ReactNode })
+  - ✓ Fixed deep imports across 4 files (LoginPage, ForgotPasswordPage, AuthProvider, router/index)
+  - ✓ Fixed AC6 redirect from /judge/dashboard to /judge in AdminRoute.tsx
+  - ✓ Fixed AC2 error text - removed trailing period from "Invalid email or password"
 
 ### Change Log
 

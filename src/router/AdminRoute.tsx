@@ -29,7 +29,7 @@ function LoadingScreen() {
  * Protected route that requires admin role.
  * Redirects:
  * - Unauthenticated users → /login
- * - Judges → /judge/dashboard
+ * - Judges → /judge
  */
 export function AdminRoute({ children }: AdminRouteProps) {
   const { user, isLoading, isAuthenticated } = useAuth()
@@ -45,7 +45,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
 
   if (user?.role !== 'admin') {
     // Judge trying to access admin routes
-    return <Navigate to="/judge/dashboard" replace />
+    return <Navigate to="/judge" replace />
   }
 
   return <>{children}</>

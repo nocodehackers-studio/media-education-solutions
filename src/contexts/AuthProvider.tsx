@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
-import { authApi } from '@/features/auth/api/authApi'
-import type { User } from '@/features/auth/types/auth.types'
+import { authApi, type User } from '@/features/auth'
 import { AuthContext } from './AuthContext'
 
 interface AuthProviderProps {

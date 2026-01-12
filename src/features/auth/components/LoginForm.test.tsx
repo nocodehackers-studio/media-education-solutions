@@ -6,11 +6,28 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { AuthContext } from '@/contexts/AuthContext'
+import type { AuthContextType } from '@/features/auth/types/auth.types'
 import { LoginForm } from './LoginForm'
 
-// Wrapper component for router context
-function renderWithRouter(ui: React.ReactNode) {
-  return render(<BrowserRouter>{ui}</BrowserRouter>)
+// Mock auth context value
+const mockAuthContext: AuthContextType = {
+  user: null,
+  isLoading: false,
+  isAuthenticated: false,
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  resetPassword: vi.fn(),
+}
+
+// Wrapper component for router and auth context
+function renderWithRouter(ui: ReactNode) {
+  return render(
+    <BrowserRouter>
+      <AuthContext.Provider value={mockAuthContext}>{ui}</AuthContext.Provider>
+    </BrowserRouter>
+  )
 }
 
 describe('LoginForm', () => {
@@ -130,7 +147,8 @@ describe('LoginForm', () => {
       await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(mockOnSubmit).toHaveBeenCalledWith({
+        expect(mockOnSubmit).toHaveBeenCalled()
+        expect(mockOnSubmit.mock.calls[0][0]).toEqual({
           email: 'admin@example.com',
           password: 'password123',
         })
@@ -150,37 +168,24 @@ describe('LoginForm', () => {
   })
 
   describe('loading state', () => {
-    it('disables inputs and shows loading spinner during submission', async () => {
-      const user = userEvent.setup()
-      // Create a promise that we can control
-      let resolveSubmit: () => void
-      const slowSubmit = vi.fn(
-        () =>
-          new Promise<void>(resolve => {
-            resolveSubmit = resolve
-          })
+    it('disables inputs and shows loading spinner when auth is loading', async () => {
+      const loadingAuthContext: AuthContextType = {
+        ...mockAuthContext,
+        isLoading: true,
+      }
+
+      render(
+        <BrowserRouter>
+          <AuthContext.Provider value={loadingAuthContext}>
+            <LoginForm onSubmit={mockOnSubmit} />
+          </AuthContext.Provider>
+        </BrowserRouter>
       )
 
-      renderWithRouter(<LoginForm onSubmit={slowSubmit} />)
-
-      await user.type(screen.getByLabelText(/email/i), 'admin@example.com')
-      await user.type(screen.getByLabelText(/password/i), 'password123')
-      await user.click(screen.getByRole('button', { name: /sign in/i }))
-
-      // Check loading state
-      await waitFor(() => {
-        expect(screen.getByLabelText(/email/i)).toBeDisabled()
-        expect(screen.getByLabelText(/password/i)).toBeDisabled()
-        expect(screen.getByRole('button')).toBeDisabled()
-      })
-
-      // Resolve the submission
-      resolveSubmit!()
-
-      // Check fields are re-enabled
-      await waitFor(() => {
-        expect(screen.getByLabelText(/email/i)).not.toBeDisabled()
-      })
+      // Check loading state - fields should be disabled
+      expect(screen.getByLabelText(/email/i)).toBeDisabled()
+      expect(screen.getByLabelText(/password/i)).toBeDisabled()
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled()
     })
   })
 })

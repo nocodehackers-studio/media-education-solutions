@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, toast } from '@/components/ui'
-import { LoginForm } from '@/features/auth/components/LoginForm'
+import { LoginForm, type LoginFormData } from '@/features/auth'
 import { useAuth } from '@/contexts'
-import type { LoginFormData } from '@/features/auth'
 
 /**
  * Login page for admin and judge users.

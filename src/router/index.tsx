@@ -8,7 +8,7 @@ import { ContestsPage } from '@/pages/admin/ContestsPage'
 import { JudgeDashboardPage } from '@/pages/judge/DashboardPage'
 import { AdminRoute } from './AdminRoute'
 import { JudgeRoute } from './JudgeRoute'
-import { AdminLayout } from '@/features/admin/components/AdminLayout'
+import { AdminLayout } from '@/features/admin'
 
 const router = createBrowserRouter([
   // Public routes

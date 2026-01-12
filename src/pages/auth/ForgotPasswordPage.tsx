@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, toast } from '@/components/ui'
-import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordForm'
+import { ForgotPasswordForm, type ForgotPasswordFormData } from '@/features/auth'
 import { useAuth } from '@/contexts'
-import type { ForgotPasswordFormData } from '@/features/auth'
 
 /**
  * Forgot password page for requesting password reset.
