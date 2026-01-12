@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { DashboardPage as AdminDashboardPage } from '@/pages/admin/DashboardPage'
 import { ContestsPage } from '@/pages/admin/ContestsPage'
+import { ContestDetailPage } from '@/pages/admin/ContestDetailPage'
 import { JudgeDashboardPage } from '@/pages/judge/DashboardPage'
 import { AdminRoute } from './AdminRoute'
 import { JudgeRoute } from './JudgeRoute'
@@ -37,7 +38,8 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       { path: 'dashboard', element: <AdminDashboardPage /> },
       { path: 'contests', element: <ContestsPage /> },
-      // Future routes: contests/:id, contests/:id/categories, etc.
+      { path: 'contests/:contestId', element: <ContestDetailPage /> },
+      // Future routes: contests/:id/categories, etc.
     ],
   },
 

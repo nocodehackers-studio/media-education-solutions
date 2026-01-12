@@ -9,6 +9,7 @@ export {
   CardContent,
 } from './card'
 export { Input } from './input'
+export { Textarea } from './textarea'
 
 // === Toast ===
 export { Toaster, toast } from './sonner'
