@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { CreateContestForm } from './CreateContestForm';
 import * as contestsApi from '../api/contestsApi';
+import { toast } from '@/components/ui';
 
 // Mock the API
 vi.mock('../api/contestsApi', () => ({
@@ -12,6 +13,16 @@ vi.mock('../api/contestsApi', () => ({
     create: vi.fn(),
   },
 }));
+
+// Mock react-router-dom's useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock toast
 vi.mock('@/components/ui', async (importOriginal) => {
@@ -43,6 +54,7 @@ function renderWithProviders(ui: React.ReactElement) {
 describe('CreateContestForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
   });
 
   it('renders all form fields', () => {
@@ -121,6 +133,10 @@ describe('CreateContestForm', () => {
         })
       );
       expect(onSuccess).toHaveBeenCalled();
+      // AC3: Verify success toast shown
+      expect(toast.success).toHaveBeenCalledWith('Contest created');
+      // AC3: Verify navigation to contest detail page
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/contests/123');
     });
   });
 
@@ -139,6 +155,10 @@ describe('CreateContestForm', () => {
 
     await waitFor(() => {
       expect(mockCreate).toHaveBeenCalled();
+      // AC4: Verify error toast shown with error message
+      expect(toast.error).toHaveBeenCalledWith('Contest code already exists');
+      // Should NOT navigate on error
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 

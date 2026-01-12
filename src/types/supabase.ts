@@ -27,6 +27,7 @@ export type Database = {
           first_name?: string | null
           last_name?: string | null
         }
+        Relationships: []
       }
       contests: {
         Row: {
@@ -66,6 +67,7 @@ export type Database = {
           winners_page_password?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
       participants: {
         Row: {
@@ -99,6 +101,15 @@ export type Database = {
           tlc_name?: string | null
           tlc_email?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: 'participants_contest_id_fkey'
+            columns: ['contest_id']
+            isOneToOne: false
+            referencedRelation: 'contests'
+            referencedColumns: ['id']
+          }
+        ]
       }
     }
     Views: {

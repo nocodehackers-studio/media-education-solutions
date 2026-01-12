@@ -49,15 +49,14 @@ export const contestsApi = {
     const useCustomCode = input.contestCode && input.contestCode.length === 6;
 
     while (!contest) {
-      const contestCode = useCustomCode
-        ? input.contestCode
+      // Contest code is always defined: either custom (validated to be 6 chars) or auto-generated
+      const contestCode: string = useCustomCode
+        ? input.contestCode!
         : generateContestCode();
 
       // 3. Insert contest
       const { data, error: contestError } = await supabase
         .from('contests')
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Type will resolve once Supabase migration is applied
         .insert({
           name: input.name,
           description: input.description || null,
@@ -65,7 +64,7 @@ export const contestsApi = {
           slug,
           rules: input.rules || null,
           cover_image_url: null, // Placeholder for now (Story requirement)
-          status: 'draft' as const,
+          status: 'draft',
         })
         .select()
         .single();
@@ -116,8 +115,6 @@ export const contestsApi = {
 
     const { error: codesError } = await supabase
       .from('participants')
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Type will resolve once Supabase migration is applied
       .insert(participants);
 
     if (codesError) {
@@ -125,8 +122,6 @@ export const contestsApi = {
       // Delete the contest to maintain data consistency
       const { error: deleteError } = await supabase
         .from('contests')
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         .delete()
         .eq('id', (contest as ContestRow).id);
 
@@ -151,8 +146,6 @@ export const contestsApi = {
   async list(): Promise<Contest[]> {
     const { data, error } = await supabase
       .from('contests')
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Type will resolve once Supabase migration is applied
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -171,8 +164,6 @@ export const contestsApi = {
   async getById(id: string): Promise<Contest | null> {
     const { data, error } = await supabase
       .from('contests')
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Type will resolve once Supabase migration is applied
       .select('*')
       .eq('id', id)
       .single();

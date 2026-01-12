@@ -31,6 +31,7 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
 
   const form = useForm<CreateContestInput>({
     resolver: zodResolver(createContestSchema),
+    mode: 'onBlur', // Validate on blur per UX rule
     defaultValues: {
       name: '',
       description: '',
