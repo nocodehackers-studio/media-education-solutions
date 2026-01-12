@@ -76,10 +76,22 @@
 
 ## Database (supabase/)
 
+**🚨 IMPORTANT: This project uses ONLINE Supabase (Hosted Cloud) - NOT local Docker.**
+
 | File | Purpose |
 |------|---------|
-| config.toml | Supabase local config |
+| README.md | **READ FIRST** - Migration workflow, troubleshooting, commands |
+| config.toml | Supabase CLI config (linked to online project) |
+| migrations/*.sql | Database migrations (timestamped) |
 | migrations/00001_create_profiles.sql | Profiles table, RLS, auth trigger |
+| migrations/00002_fix_rls_infinite_recursion.sql | Fixed RLS policy bug |
+| migrations/00003_create_contests_tables.sql | Contests & participants tables |
+
+**Key Commands:**
+- `npx supabase migration new <name>` - Create migration
+- `npx supabase db push` - Apply to online DB
+- `npx supabase migration list` - Check status
+- ❌ DON'T use: `supabase start`, `db reset` (local Docker only)
 
 ## Edge Functions (supabase/functions/)
 

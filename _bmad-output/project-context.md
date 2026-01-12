@@ -1,11 +1,12 @@
 ---
 project_name: 'media-education-solutions'
 user_name: 'NocodeHackers'
-date: '2026-01-10'
-sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'code_quality', 'workflow_rules', 'critical_rules']
+date: '2026-01-12'
+sections_completed: ['technology_stack', 'supabase_setup', 'language_rules', 'framework_rules', 'testing_rules', 'code_quality', 'workflow_rules', 'critical_rules']
 status: 'complete'
-rule_count: 32
+rule_count: 33
 optimized_for_llm: true
+last_updated: '2026-01-12 - Added Supabase online-only setup documentation'
 ---
 
 # Project Context for AI Agents
@@ -33,6 +34,57 @@ _Critical rules and patterns for implementing code in this project. Read this FI
 - Bunny Stream (video storage/streaming)
 - Bunny Storage (photos/assets)
 - Brevo (transactional email)
+
+---
+
+## 🚨 CRITICAL: Supabase Setup (MUST READ)
+
+**This project uses ONLINE Supabase (Hosted Cloud) - NOT local Docker.**
+
+### Database Environment
+
+| Environment | Method | Status |
+|-------------|--------|--------|
+| Development | Online Supabase (cyslxhojwlhbeabgvngv.supabase.co) | ✅ Active |
+| Local Docker | NOT USED | ❌ Do NOT use |
+
+### Migration Commands
+
+**✅ CORRECT Commands (Online Supabase):**
+```bash
+npx supabase migration new <description>  # Create new migration
+npx supabase db push                      # Apply migrations to online DB
+npx supabase migration list               # Check migration status
+npx supabase migration repair             # Fix migration history if needed
+```
+
+**❌ WRONG Commands (Local Docker - DO NOT USE):**
+```bash
+npx supabase start      # ❌ Starts local Docker (NOT USED)
+npx supabase db reset   # ❌ Resets local Docker only (NOT USED)
+npx supabase stop       # ❌ Stops local Docker (NOT USED)
+```
+
+### Why Online Supabase?
+
+1. **No Docker overhead** - Simpler setup for developers
+2. **Shared database** - All team members work on same instance
+3. **Automatic backups** - Managed by Supabase
+4. **Consistent environment** - No local/remote sync issues
+
+### Applying Migrations
+
+When you create a migration file in `supabase/migrations/`:
+
+1. Write your SQL in the timestamped file
+2. Run `npx supabase db push` to apply to online database
+3. If conflicts occur, may need `npx supabase db push --include-all`
+4. Verify with `npx supabase migration list`
+
+**NEVER:**
+- ❌ Run local Supabase commands (`start`, `stop`, `reset`)
+- ❌ Use Docker Desktop for Supabase
+- ❌ Apply migrations manually via Supabase dashboard (use CLI)
 
 ---
 
@@ -465,20 +517,24 @@ git status --porcelain | grep "^ D\|^D " | cut -c4- | sed 's/^/- /'
 12. **Never skip pre-review checklist** — All gates must pass before review
 13. **Never work on wrong branch** — Workflows enforce story/{story-key} branching (auto-created if missing)
 14. **Never mark story "review" with uncommitted changes** — Workflow validates and auto-pushes
+15. **Never use local Supabase/Docker commands** — Project uses online Supabase only (no `supabase start`, `db reset`, or Docker)
 
 ---
 
 ## Quick Reference
 
 **Before implementing any feature:**
-1. Read `PROJECT_INDEX.md` at project root
-2. Read the feature's `index.ts` to understand existing exports
-3. Check this file (project-context.md) for patterns and rules
+1. Read `README.md` at project root (setup instructions, Supabase info)
+2. Read `PROJECT_INDEX.md` (project structure overview)
+3. Read this file (project-context.md) for critical patterns and rules
+4. Read the feature's `index.ts` to understand existing exports
+5. For database work, read `supabase/README.md` for migration workflow
 
 **After implementing:**
 1. Update feature's `index.ts` with new exports
 2. Update `PROJECT_INDEX.md` if adding major components
 3. Run full pre-review checklist before marking "review"
+4. If you added migrations, verify with `npx supabase migration list`
 
 **Story File Pattern:**
 - Do NOT duplicate "Previous Story Learnings" in story files
