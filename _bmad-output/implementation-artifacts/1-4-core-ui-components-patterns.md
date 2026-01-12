@@ -1,6 +1,6 @@
 # Story 1.4: Core UI Components & Patterns
 
-Status: complete
+Status: done
 
 ## Story
 
