@@ -71,7 +71,7 @@
 |-----------|---------|
 | AppRouter | Main router with all routes |
 | ProtectedRoute | Requires authentication (any role) |
-| AdminRoute | Requires admin role, redirects judges to /judge |
+| AdminRoute | Requires admin role, redirects judges to /judge/dashboard |
 | JudgeRoute | Requires judge or admin role |
 
 ## Database (supabase/)
