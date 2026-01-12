@@ -6,7 +6,7 @@
 
 | Feature | Purpose | Key Exports |
 |---------|---------|-------------|
-| auth | Admin/Judge login, session management | LoginForm, useAuth, authApi (Planned) |
+| auth | Admin/Judge login, session management | LoginForm, ForgotPasswordForm, authApi, loginSchema, auth.types |
 | contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
 | categories | Category management within contests | CategoryCard, useCategories (Planned) |
 | participants | Participant codes, session, info | ParticipantCodeEntry, useParticipantSession (Planned) |
@@ -29,7 +29,7 @@
 
 | Context | Purpose | Status |
 |---------|---------|--------|
-| AuthContext | Admin/Judge authentication state | Planned (Epic 2) |
+| AuthContext, AuthProvider, useAuth | Admin/Judge authentication state | Implemented (Story 2.1) |
 | ParticipantSessionContext | Participant codes + 120min timeout | Planned (Epic 4) |
 
 ## Components (src/components/)
@@ -56,6 +56,18 @@
 | Route Group | Pages |
 |-------------|-------|
 | public/ | NotFoundPage |
+| auth/ | LoginPage, ForgotPasswordPage, ResetPasswordPage |
+| admin/ | DashboardPage (placeholder) |
+| judge/ | JudgeDashboardPage (placeholder) |
+
+## Router (src/router/)
+
+| Component | Purpose |
+|-----------|---------|
+| AppRouter | Main router with all routes |
+| ProtectedRoute | Requires authentication (any role) |
+| AdminRoute | Requires admin role, redirects judges to /judge |
+| JudgeRoute | Requires judge or admin role |
 
 ## Database (supabase/)
 

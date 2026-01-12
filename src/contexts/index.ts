@@ -1,4 +1,7 @@
 // === Contexts ===
-// AuthContext - to be implemented in Epic 2
+
+// Auth Context - Admin/Judge authentication
+export { AuthContext, useAuth } from './AuthContext'
+export { AuthProvider } from './AuthProvider'
+
 // ParticipantSessionContext - to be implemented in Epic 4
-export {}

@@ -1,17 +1,35 @@
 // features/auth/index.ts
 // Auth feature - Admin/Judge login, session management
-// Status: Placeholder (Epic 2)
 
 // === Components ===
-// export { LoginForm } from './components/LoginForm';
+export { LoginForm } from './components/LoginForm'
+export { ForgotPasswordForm } from './components/ForgotPasswordForm'
 
 // === Hooks ===
-// export { useAuth } from './hooks/useAuth';
+// useAuth is exported from contexts, not here
 
 // === API ===
-// export { authApi } from './api/authApi';
+export { authApi } from './api/authApi'
 
 // === Types ===
-// export type { User, AuthState } from './types/auth.types';
+export type {
+  User,
+  UserRole,
+  AuthState,
+  AuthContextType,
+  SignInCredentials,
+  ResetPasswordRequest,
+  SetNewPasswordRequest,
+} from './types/auth.types'
 
-export {}
+// === Schemas ===
+export {
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from './types/auth.schemas'
+export type {
+  LoginFormData,
+  ForgotPasswordFormData,
+  ResetPasswordFormData,
+} from './types/auth.schemas'

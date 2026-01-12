@@ -6,6 +6,9 @@ export const ERROR_CODES = {
   // Authentication & Session
   INVALID_CODES: 'INVALID_CODES',
   SESSION_EXPIRED: 'SESSION_EXPIRED',
+  AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
 
   // Contest & Category
   CONTEST_NOT_FOUND: 'CONTEST_NOT_FOUND',
@@ -29,6 +32,9 @@ export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   INVALID_CODES: 'The contest or participant code is invalid.',
   SESSION_EXPIRED: 'Your session has expired. Please log in again.',
+  AUTH_INVALID_CREDENTIALS: 'Invalid email or password.',
+  AUTH_SESSION_EXPIRED: 'Your session has expired. Please log in again.',
+  AUTH_UNAUTHORIZED: 'You are not authorized to access this resource.',
   CONTEST_NOT_FOUND: 'Contest not found.',
   CATEGORY_CLOSED: 'This category is no longer accepting submissions.',
   SUBMISSION_LIMIT_EXCEEDED: 'You have reached the submission limit.',

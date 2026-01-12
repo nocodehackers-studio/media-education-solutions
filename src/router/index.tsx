@@ -1,24 +1,73 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
-
-function HomePage() {
-  return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8 lg:p-12 font-sans">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground">
-        Media Education Solutions
-      </h1>
-      <p className="mt-4 text-muted-foreground">
-        Responsive breakpoints: sm:640px, md:768px, lg:1024px, xl:1280px, 2xl:1440px
-      </p>
-    </div>
-  )
-}
+import { LoginPage } from '@/pages/auth/LoginPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
+import { DashboardPage as AdminDashboardPage } from '@/pages/admin/DashboardPage'
+import { JudgeDashboardPage } from '@/pages/judge/DashboardPage'
+import { AdminRoute } from './AdminRoute'
+import { JudgeRoute } from './JudgeRoute'
 
 const router = createBrowserRouter([
+  // Public routes
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
+  },
+
+  // Admin routes (protected - admin only)
+  {
+    path: '/admin',
+    element: (
+      <AdminRoute>
+        <Navigate to="/admin/dashboard" replace />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/dashboard',
+    element: (
+      <AdminRoute>
+        <AdminDashboardPage />
+      </AdminRoute>
+    ),
+  },
+  // More admin routes will be added in Story 2.2+
+
+  // Judge routes (protected - judge or admin)
+  {
+    path: '/judge',
+    element: (
+      <JudgeRoute>
+        <Navigate to="/judge/dashboard" replace />
+      </JudgeRoute>
+    ),
+  },
+  {
+    path: '/judge/dashboard',
+    element: (
+      <JudgeRoute>
+        <JudgeDashboardPage />
+      </JudgeRoute>
+    ),
+  },
+  // More judge routes will be added in Epic 3
+
+  // Default redirect - send to login
   {
     path: '/',
-    element: <HomePage />,
+    element: <Navigate to="/login" replace />,
   },
+
+  // 404 catch-all
   {
     path: '*',
     element: <NotFoundPage />,

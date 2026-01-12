@@ -50,8 +50,8 @@ development_status:
   epic-1-retrospective: done  # 2026-01-12: 6 action items added to project-context.md
 
   # Epic 2: Super Admin Authentication & Contest Management (7 stories)
-  epic-2: backlog
-  2-1-super-admin-login: backlog
+  epic-2: in-progress
+  2-1-super-admin-login: review
   2-2-admin-layout-dashboard-shell: backlog
   2-3-create-contest: backlog
   2-4-contest-list-status-management: backlog
