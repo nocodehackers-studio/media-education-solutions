@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { generateContestCode } from '../utils';
-import type { CreateContestInput } from '../types/contest.schemas';
-import type { Contest, ContestRow } from '../types/contest.types';
+import type { CreateContestInput, UpdateContestInput } from '../types/contest.schemas';
+import type { Contest, ContestRow, ContestStatus } from '../types/contest.types';
 
 /**
  * Transform database row (snake_case) to application object (camelCase)
@@ -154,5 +154,63 @@ export const contestsApi = {
     }
 
     return data ? transformContestRow(data as ContestRow) : null;
+  },
+
+  /**
+   * Update a contest's editable fields (name, description, rules)
+   * @param id Contest ID
+   * @param input Fields to update
+   * @returns Updated contest
+   */
+  async update(id: string, input: UpdateContestInput): Promise<Contest> {
+    const { data, error } = await supabase
+      .from('contests')
+      .update({
+        name: input.name,
+        description: input.description,
+        rules: input.rules,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update contest: ${error.message}`);
+    }
+
+    return transformContestRow(data as ContestRow);
+  },
+
+  /**
+   * Update a contest's status
+   * @param id Contest ID
+   * @param status New status value
+   * @returns Updated contest
+   */
+  async updateStatus(id: string, status: ContestStatus): Promise<Contest> {
+    const { data, error } = await supabase
+      .from('contests')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update contest status: ${error.message}`);
+    }
+
+    return transformContestRow(data as ContestRow);
+  },
+
+  /**
+   * Delete a contest (cascades to categories, submissions, codes)
+   * @param id Contest ID
+   */
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('contests').delete().eq('id', id);
+
+    if (error) {
+      throw new Error(`Failed to delete contest: ${error.message}`);
+    }
   },
 };

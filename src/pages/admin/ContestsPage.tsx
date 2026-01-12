@@ -1,12 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Trophy, Plus } from 'lucide-react';
 import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -15,7 +14,7 @@ import {
   SheetTrigger,
   Skeleton,
 } from '@/components/ui';
-import { CreateContestForm, useContests } from '@/features/contests';
+import { ContestCard, CreateContestForm, useContests } from '@/features/contests';
 
 /**
  * Contests page - List and manage contests
@@ -23,10 +22,15 @@ import { CreateContestForm, useContests } from '@/features/contests';
  */
 export function ContestsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const navigate = useNavigate();
   const { data: contests, isLoading, error } = useContests();
 
   const handleSuccess = () => {
     setIsSheetOpen(false);
+  };
+
+  const handleContestClick = (contestId: string) => {
+    navigate(`/admin/contests/${contestId}`);
   };
 
   if (error) {
@@ -115,24 +119,11 @@ export function ContestsPage() {
       {!isLoading && contests && contests.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {contests.map((contest) => (
-            <Card key={contest.id}>
-              <CardHeader>
-                <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {contest.description || 'No description'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Code:</span>
-                  <span className="font-mono font-semibold">{contest.contestCode}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className="capitalize">{contest.status}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <ContestCard
+              key={contest.id}
+              contest={contest}
+              onClick={handleContestClick}
+            />
           ))}
         </div>
       )}
