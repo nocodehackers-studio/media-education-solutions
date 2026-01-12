@@ -487,6 +487,10 @@ N/A
   - ✓ Item 1 [MEDIUM]: Profile fetch failures in signIn - Added check for PGRST116 error code (no rows) to distinguish missing profile from database/network errors; missing profile shows invalid credentials, server errors show "Something went wrong"
   - ✓ Item 2 [MEDIUM]: Status 400 too broad in signIn - Changed from checking status code to checking actual error message; now handles "email not confirmed" separately with specific message, treats only "invalid login credentials" as auth failure
   - ✓ Item 3 [LOW]: signOut exception safety in AuthProvider - Wrapped signOut calls in try-catch to ensure setUser(null) and setIsLoading(false) always run even if signOut throws; prevents stale auth state
+- **EIGHTH CODE REVIEW FOLLOW-UP - FINAL FIXES** (2026-01-12):
+  - ✓ Item 1 [MEDIUM]: Profile error logic flaw - Fixed unreachable SERVER_ERROR path; restructured if/else to check profileError first, then check error code, making SERVER_ERROR reachable for genuine DB/network errors (authApi.ts:69-86)
+  - ✓ Item 2 [MEDIUM]: Email verification message - KEPT AS-IS; "Please verify your email address" only appears when BOTH email AND password are correct, so it's NOT an account enumeration vulnerability; provides good UX for legitimate users
+  - ✓ Item 3 [MEDIUM]: Transient errors sign out - Removed signOut from AuthProvider catch block; transient network/DB errors now keep session valid and auto-retry on next navigation instead of forcing re-login (AuthProvider.tsx:40-44)
 
 ### Change Log
 
@@ -498,6 +502,7 @@ N/A
 | 2026-01-12 | Fixed router documentation mismatch: updated PROJECT_INDEX.md to correctly document /judge/dashboard redirect | PROJECT_INDEX.md |
 | 2026-01-12 | Improved signIn error handling: distinguish auth failures from server/network errors for better UX | authApi.ts |
 | 2026-01-12 | Refined error handling: profile fetch error codes, email confirmation messages, signOut exception safety | authApi.ts, AuthProvider.tsx |
+| 2026-01-12 | Final fixes: corrected profile error logic flaw (unreachable SERVER_ERROR path), kept email verification message (not a security issue), removed signOut from transient errors for better resilience | authApi.ts, AuthProvider.tsx |
 
 ### File List
 

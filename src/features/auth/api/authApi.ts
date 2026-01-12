@@ -67,17 +67,21 @@ async function signIn(
     .single()
 
   if (profileError || !profile) {
-    // Sign out user since we can't get their profile
+    // Sign out user since we can't complete login without profile
     await supabase.auth.signOut()
 
-    // Distinguish between missing profile and database errors
-    // PGRST116 = no rows returned (profile doesn't exist)
-    if (profileError?.code === 'PGRST116' || !profile) {
-      // Profile missing (shouldn't happen with trigger, but defensive)
-      throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+    if (profileError) {
+      // We have an error object - check what kind
+      if (profileError.code === 'PGRST116') {
+        // No rows found - profile doesn't exist
+        throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+      } else {
+        // Database error, network timeout, etc.
+        throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+      }
     } else {
-      // Database error, network error, timeout, etc.
-      throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+      // !profile but no error (shouldn't happen, defensive)
+      throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
     }
   }
 

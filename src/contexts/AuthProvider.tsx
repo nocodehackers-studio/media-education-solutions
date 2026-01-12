@@ -37,14 +37,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       setUser(profile)
-    } catch {
-      // Network error or other exception - also sign out
-      try {
-        await supabase.auth.signOut()
-      } catch {
-        // Ignore signOut errors - we still need to clear local state
-      }
+    } catch (error) {
+      // Network error or other exception - don't sign out (session may still be valid)
+      // Just clear local state; next navigation will retry
       setUser(null)
+      console.error('Failed to fetch user profile:', error)
     } finally {
       setIsLoading(false)
     }
