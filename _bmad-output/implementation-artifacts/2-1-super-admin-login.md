@@ -481,6 +481,7 @@ N/A
   - ✓ Build, lint, and type-check all pass
 - **SIXTH CODE REVIEW FOLLOW-UP - CORRECTION** (2026-01-12):
   - ✓ Item 1 [MEDIUM]: AuthProvider null profile handling - Corrected implementation to properly check for null return value from fetchProfile before setting user state; previous fix only handled catch block but missed that fetchProfile returns null instead of throwing
+  - ✓ Item 2 [LOW]: Router documentation mismatch - Updated PROJECT_INDEX.md to correctly document AdminRoute redirects judges to /judge/dashboard (not /judge) to match implementation
 
 ### Change Log
 
@@ -489,6 +490,7 @@ N/A
 | 2026-01-12 | Implemented Story 2.1 Super Admin Login | See File List below |
 | 2026-01-12 | Resolved 4 code review follow-ups: AuthProvider session handling, signOut error propagation, reset password validation, password recovery tests | AuthProvider.tsx, AdminSidebar.tsx, ForgotPasswordForm.tsx, ResetPasswordPage.tsx, ForgotPasswordForm.test.tsx (new), ResetPasswordPage.test.tsx (new) |
 | 2026-01-12 | Corrected AuthProvider null profile handling: added explicit null check before setting user state (fetchProfile returns null, doesn't throw) | AuthProvider.tsx, ResetPasswordPage.test.tsx |
+| 2026-01-12 | Fixed router documentation mismatch: updated PROJECT_INDEX.md to correctly document /judge/dashboard redirect | PROJECT_INDEX.md |
 
 ### File List
 
