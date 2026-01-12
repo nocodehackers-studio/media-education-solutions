@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -36,6 +36,11 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [optimisticStatus, setOptimisticStatus] = useState<ContestStatus>(contest.status);
   const updateStatus = useUpdateContestStatus();
+
+  // Sync optimistic state when contest.status changes (refetch, navigation, external update)
+  useEffect(() => {
+    setOptimisticStatus(contest.status);
+  }, [contest.status]);
 
   const handleStatusChange = async (newStatus: ContestStatus) => {
     const previousStatus = optimisticStatus;
