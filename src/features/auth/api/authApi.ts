@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { getErrorMessage, ERROR_CODES } from '@/lib/errorCodes'
 import type { User } from '../types/auth.types'
 
 /**
@@ -25,7 +26,7 @@ function transformProfile(profile: {
  * Returns user profile on success.
  * @throws Error with "Invalid email or password" on failure
  */
-export async function signIn(
+async function signIn(
   email: string,
   password: string
 ): Promise<User> {
@@ -36,11 +37,11 @@ export async function signIn(
     })
 
   if (authError) {
-    throw new Error('Invalid email or password')
+    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
   }
 
   if (!authData.user) {
-    throw new Error('Invalid email or password')
+    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
   }
 
   // Fetch profile to get role
@@ -53,7 +54,7 @@ export async function signIn(
   if (profileError || !profile) {
     // Sign out if profile not found (shouldn't happen)
     await supabase.auth.signOut()
-    throw new Error('Invalid email or password')
+    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
   }
 
   return transformProfile(profile)
@@ -62,10 +63,10 @@ export async function signIn(
 /**
  * Sign out the current user.
  */
-export async function signOut(): Promise<void> {
+async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut()
   if (error) {
-    throw new Error('Failed to sign out')
+    throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
   }
 }
 
@@ -73,13 +74,13 @@ export async function signOut(): Promise<void> {
  * Send password reset email.
  * @throws Error if failed to send
  */
-export async function resetPassword(email: string): Promise<void> {
+async function resetPassword(email: string): Promise<void> {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   })
 
   if (error) {
-    throw new Error('Failed to send password reset email')
+    throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
   }
 }
 
@@ -87,13 +88,13 @@ export async function resetPassword(email: string): Promise<void> {
  * Update password after reset.
  * @throws Error if failed to update
  */
-export async function updatePassword(newPassword: string): Promise<void> {
+async function updatePassword(newPassword: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   })
 
   if (error) {
-    throw new Error('Failed to update password')
+    throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
   }
 }
 
@@ -101,7 +102,7 @@ export async function updatePassword(newPassword: string): Promise<void> {
  * Fetch user profile by ID.
  * Used by AuthProvider to get profile after auth state change.
  */
-export async function fetchProfile(userId: string): Promise<User | null> {
+async function fetchProfile(userId: string): Promise<User | null> {
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id, email, role, first_name, last_name')
@@ -119,7 +120,7 @@ export async function fetchProfile(userId: string): Promise<User | null> {
  * Get the current session.
  * Returns null if not authenticated.
  */
-export async function getSession() {
+async function getSession() {
   const { data } = await supabase.auth.getSession()
   return data.session
 }

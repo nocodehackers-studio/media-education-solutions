@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
@@ -14,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui'
 import { loginSchema, type LoginFormData } from '@/features/auth'
+import { useAuth } from '@/contexts'
 
 interface LoginFormProps {
   onSubmit: (data: LoginFormData) => Promise<void>
@@ -22,9 +22,10 @@ interface LoginFormProps {
 /**
  * Login form with email and password fields.
  * Uses React Hook Form + Zod for validation.
+ * Uses AuthContext isLoading for submission state.
  */
 export function LoginForm({ onSubmit }: LoginFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const { isLoading } = useAuth()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -35,18 +36,9 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     },
   })
 
-  const handleSubmit = async (data: LoginFormData) => {
-    setIsLoading(true)
-    try {
-      await onSubmit(data)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="email"

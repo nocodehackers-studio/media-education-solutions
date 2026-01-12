@@ -28,3 +28,32 @@ export { Label } from './label'
 
 // === Loading States ===
 export { Skeleton } from './skeleton'
+
+// === Layout ===
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger,
+} from './sheet'
+export { Separator } from './separator'
+
+// === Avatar ===
+export { Avatar, AvatarFallback, AvatarImage } from './avatar'
+
+// === Navigation ===
+export {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from './breadcrumb'

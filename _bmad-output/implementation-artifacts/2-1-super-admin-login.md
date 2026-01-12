@@ -1,6 +1,6 @@
 # Story 2.1: Super Admin Login
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -102,7 +102,20 @@ So that **I can access the admin dashboard and manage contests**.
   - [ ] 8.5 Manual test: Protected routes redirect unauthenticated users
   - [x] 8.6 Run `npm run build`, `npm run lint`, `npm run type-check`
 
+## Review Follow-ups (AI)
+- [ ] [AI-Review][CRITICAL] Process Failure: Work Not Staged or Committed. Files created/modified but not `git add`ed. (All 24 files listed in "File List")
+- [ ] [AI-Review][CRITICAL] AC6: Judge Role Redirect (AC6) points to `/judge` instead of `/judge/dashboard`. (`src/router/AdminRoute.tsx`, Line 43)
+- [ ] [AI-Review][HIGH] Architectural Flaw: Redundant `isLoading` State. `LoginForm.tsx` has local `isLoading` instead of using `useAuth`'s. (`src/features/auth/components/LoginForm.tsx`, `src/contexts/AuthProvider.tsx`)
+- [ ] [AI-Review][HIGH] Architectural Flaw: Inconsistent API Exports in `authApi.ts`. Exports individual functions AND a bundled object. (`src/features/auth/api/authApi.ts`)
+- [ ] [AI-Review][HIGH] Missing Requirement: Manual Tests Not Performed. Task 8.2, 8.3, 8.4, 8.5 are unchecked. (`_bmad-output/implementation-artifacts/2-1-super-admin-login.md`)
+- [ ] [AI-Review][HIGH] Missing Requirement: Error Codes Not Used. `authApi.ts` throws generic strings instead of `ERROR_CODES`. (`src/features/auth/api/authApi.ts`, Lines 33, 37, 50)
+- [ ] [AI-Review][MEDIUM] Missing File: `src/pages/judge/DashboardPage.tsx` Placeholder. Story lists it as new, but it's absent.
+- [ ] [AI-Review][MEDIUM] Inefficient Data Fetching. `AuthProvider.tsx` calls `fetchUserProfile` on `TOKEN_REFRESHED`. (`src/contexts/AuthProvider.tsx`, Line 42)
+- [ ] [AI-Review][MEDIUM] Missing Exports in `index.ts` files. (`src/features/auth/index.ts`, `src/pages/index.ts`, `src/contexts/index.ts`)
+- [ ] [AI-Review][LOW] Redundant `isAuthenticated` Memoization in `AuthProvider.tsx`. (`src/contexts/AuthProvider.tsx`, Line 15)
+
 ## Dev Notes
+
 
 ### Database Already Set Up
 

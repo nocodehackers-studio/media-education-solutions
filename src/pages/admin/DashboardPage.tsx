@@ -1,59 +1,72 @@
-import { useAuth } from '@/contexts'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
+import { Trophy, Activity, FileVideo, Users } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+
+interface StatCardProps {
+  title: string
+  value: string
+  icon: typeof Trophy
+}
+
+function StatCard({ title, value, icon: Icon }: StatCardProps) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  )
+}
 
 /**
- * Admin dashboard placeholder page.
- * Full implementation in Story 2.2.
+ * Admin dashboard page showing contest statistics and overview.
+ * Displays stat cards, recent contests, and judge progress placeholders.
  */
 export function DashboardPage() {
-  const { user, signOut } = useAuth()
-
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Welcome back, {user?.firstName || user?.email}
-            </p>
-          </div>
-          <Button variant="outline" onClick={signOut}>
-            Logout
-          </Button>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of all contests</p>
+      </div>
 
+      {/* Stat Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard title="Total Contests" value="—" icon={Trophy} />
+        <StatCard title="Active Contests" value="—" icon={Activity} />
+        <StatCard title="Total Submissions" value="—" icon={FileVideo} />
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Recent Contests */}
         <Card>
           <CardHeader>
-            <CardTitle>Dashboard Shell</CardTitle>
-            <CardDescription>
-              This is a placeholder. Full dashboard implementation in Story 2.2.
-            </CardDescription>
+            <CardTitle className="text-lg">Recent Contests</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Active Contests</p>
-                <p className="text-2xl font-semibold">—</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Total Submissions</p>
-                <p className="text-2xl font-semibold">—</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Active Judges</p>
-                <p className="text-2xl font-semibold">—</p>
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              No contests yet. Create your first contest!
+            </p>
           </CardContent>
         </Card>
 
-        <div className="text-sm text-muted-foreground">
-          <p>User ID: {user?.id}</p>
-          <p>Role: {user?.role}</p>
-        </div>
+        {/* Judge Progress */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Judge Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>No judges assigned yet</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

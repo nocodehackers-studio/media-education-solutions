@@ -16,8 +16,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const isAuthenticated = useMemo(() => user !== null, [user])
-
   /**
    * Fetch user profile from database.
    */
@@ -54,13 +52,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setIsLoading(false)
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Refresh profile on token refresh
-        await fetchUserProfile(session.user.id)
       } else if (event === 'PASSWORD_RECOVERY') {
         // User is in password recovery flow - keep loading state
         setIsLoading(false)
       }
+      // Note: TOKEN_REFRESHED does not refetch profile - profile data doesn't change on token refresh
     })
 
     return () => subscription.unsubscribe()
@@ -103,12 +99,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     () => ({
       user,
       isLoading,
-      isAuthenticated,
+      isAuthenticated: user !== null,
       signIn,
       signOut,
       resetPassword,
     }),
-    [user, isLoading, isAuthenticated, signIn, signOut, resetPassword]
+    [user, isLoading, signIn, signOut, resetPassword]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
