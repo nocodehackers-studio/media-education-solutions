@@ -102,6 +102,7 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
                     onChange(file);
                   }}
                   {...field}
+                  value=""
                 />
               </FormControl>
               <FormDescription>

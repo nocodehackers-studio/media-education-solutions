@@ -74,6 +74,9 @@ tsconfig.node.tsbuildinfo
 _bmad/
 _bmad-output/
 
+# Local working/staging directory
+.ignore/
+
 # Vite cache and temp
 .vite-cache/
 .vite-temp/

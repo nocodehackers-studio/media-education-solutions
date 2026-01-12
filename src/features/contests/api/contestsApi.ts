@@ -40,7 +40,9 @@ export const contestsApi = {
       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 
     // 2. Retry loop for contest creation with auto-generated codes
-    const MAX_RETRIES = 5;
+    // Higher retry limit to ensure AC2 uniqueness guarantee
+    // With 30^6 possible codes, collision is rare but we retry to guarantee success
+    const MAX_RETRIES = 20;
     let contest: ContestRow | null = null;
     let lastError: Error | null = null;
 
@@ -76,9 +78,14 @@ export const contestsApi = {
 
       // Handle duplicate contest code - retry with new code if auto-generated
       if (contestError.code === '23505') {
-        // Check if it's a contest_code collision (not slug collision)
-        // PostgreSQL constraint names: contests_contest_code_key vs contests_slug_key
-        const isCodeCollision = contestError.message.includes('contest_code');
+        // Extract constraint name from PostgreSQL error message
+        // Format: 'duplicate key value violates unique constraint "constraint_name"'
+        const constraintMatch = contestError.message.match(/constraint "([^"]+)"/);
+        const constraintName = constraintMatch?.[1] || '';
+
+        // Check constraint metadata: contests_contest_code_key vs contests_slug_key
+        const isCodeCollision = constraintName === 'contests_contest_code_key';
+        const isSlugCollision = constraintName === 'contests_slug_key';
 
         if (isCodeCollision && !useCustomCode) {
           // Retry with new auto-generated code
@@ -87,10 +94,13 @@ export const contestsApi = {
         }
 
         // Either slug collision or custom code collision - don't retry
-        if (contestError.message.includes('slug')) {
+        if (isSlugCollision) {
           throw new Error('A contest with this name already exists');
-        } else {
+        } else if (isCodeCollision) {
           throw new Error('Contest code already exists');
+        } else {
+          // Unknown constraint - provide generic message
+          throw new Error('A contest with these details already exists');
         }
       }
 
@@ -121,12 +131,20 @@ export const contestsApi = {
     if (codesError) {
       // Fail fast - participant codes are required per AC3
       // Delete the contest to maintain data consistency
-      await supabase
+      const { error: deleteError } = await supabase
         .from('contests')
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         .delete()
         .eq('id', (contest as ContestRow).id);
+
+      if (deleteError) {
+        // Rollback failed - orphaned contest exists
+        throw new Error(
+          `Failed to generate participant codes: ${codesError.message}. ` +
+          `WARNING: Rollback failed, orphaned contest ${contest.id} exists: ${deleteError.message}`
+        );
+      }
 
       throw new Error(`Failed to generate participant codes: ${codesError.message}`);
     }
