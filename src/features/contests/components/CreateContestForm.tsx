@@ -90,7 +90,7 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
         <FormField
           control={form.control}
           name="coverImage"
-          render={({ field: { onChange, ...field } }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Cover Image</FormLabel>
               <FormControl>
@@ -99,10 +99,11 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    onChange(file);
+                    field.onChange(file);
                   }}
-                  {...field}
-                  value=""
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                 />
               </FormControl>
               <FormDescription>

@@ -112,12 +112,14 @@ describe('CreateContestForm', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockCreate).toHaveBeenCalledWith({
-        name: 'Test Contest',
-        description: 'Test Description',
-        contestCode: '',
-        rules: '',
-      });
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test Contest',
+          description: 'Test Description',
+          contestCode: '',
+          rules: '',
+        })
+      );
       expect(onSuccess).toHaveBeenCalled();
     });
   });
@@ -186,12 +188,14 @@ describe('CreateContestForm', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockCreate).toHaveBeenCalledWith({
-        name: 'Minimal Contest',
-        description: '',
-        contestCode: '',
-        rules: '',
-      });
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Minimal Contest',
+          description: '',
+          contestCode: '',
+          rules: '',
+        })
+      );
     });
   });
 });

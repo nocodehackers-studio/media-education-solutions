@@ -40,16 +40,15 @@ export const contestsApi = {
       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 
     // 2. Retry loop for contest creation with auto-generated codes
-    // Higher retry limit to ensure AC2 uniqueness guarantee
-    // With 30^6 possible codes, collision is rare but we retry to guarantee success
-    const MAX_RETRIES = 20;
+    // AC2 GUARANTEE: Retry indefinitely for auto-generated codes
+    // With 30^6 (729M) possible codes, collision probability is ~1.37e-9 per attempt
+    // Infinite retry ensures AC2 "always auto-generated" guarantee
     let contest: ContestRow | null = null;
-    let lastError: Error | null = null;
 
     // If user provided a custom code, use it without retries
     const useCustomCode = input.contestCode && input.contestCode.length === 6;
 
-    for (let attempt = 0; attempt < (useCustomCode ? 1 : MAX_RETRIES); attempt++) {
+    while (!contest) {
       const contestCode = useCustomCode
         ? input.contestCode
         : generateContestCode();
@@ -88,8 +87,7 @@ export const contestsApi = {
         const isSlugCollision = constraintName === 'contests_slug_key';
 
         if (isCodeCollision && !useCustomCode) {
-          // Retry with new auto-generated code
-          lastError = new Error('Contest code collision - retrying with new code');
+          // Retry with new auto-generated code (infinite loop until success)
           continue;
         }
 
@@ -106,12 +104,6 @@ export const contestsApi = {
 
       // Other errors - fail immediately
       throw new Error(`Failed to create contest: ${contestError.message}`);
-    }
-
-    if (!contest) {
-      throw new Error(
-        lastError?.message || 'Failed to create contest after multiple attempts'
-      );
     }
 
     // 4. Generate 50 participant codes
