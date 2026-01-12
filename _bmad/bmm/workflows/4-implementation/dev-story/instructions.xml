@@ -134,6 +134,76 @@
     <action if="incomplete task or subtask requirements ambiguous">ASK user to clarify or HALT</action>
   </step>
 
+  <step n="1.5" goal="Validate and ensure correct git branch (MANDATORY)" tag="git-branch">
+    <critical>🔥 BRANCH DISCIPLINE ENFORCEMENT - This step is MANDATORY and CANNOT be skipped 🔥</critical>
+    <critical>Every story MUST be on its own dedicated branch for parallel development</critical>
+    <critical>Branch name MUST exactly match story filename without .md extension</critical>
+
+    <action>Extract {{branch_name}} from story filename or story_key (e.g., "1-2-user-auth.md" → "story/1-2-user-auth")</action>
+    <action>Run `git branch` to list all local branches</action>
+    <action>Run `git branch -r` to list all remote branches</action>
+    <action>Check current branch with `git branch --show-current`</action>
+
+    <!-- Branch existence check -->
+    <check if="branch story/{{story_key}} exists locally">
+      <output>🔍 **Branch Found:** story/{{story_key}} exists locally</output>
+
+      <check if="current branch != story/{{story_key}}">
+        <action>Run `git checkout story/{{story_key}}`</action>
+        <output>✅ Switched to existing branch: story/{{story_key}}</output>
+      </check>
+
+      <check if="current branch == story/{{story_key}}">
+        <output>✅ Already on correct branch: story/{{story_key}}</output>
+      </check>
+    </check>
+
+    <check if="branch story/{{story_key}} does NOT exist locally but exists remotely">
+      <output>🔍 **Remote Branch Found:** story/{{story_key}} exists on remote</output>
+      <action>Run `git checkout -b story/{{story_key}} origin/story/{{story_key}}`</action>
+      <output>✅ Checked out remote branch: story/{{story_key}}</output>
+    </check>
+
+    <check if="branch story/{{story_key}} does NOT exist anywhere">
+      <output>🆕 **Creating New Branch:** story/{{story_key}}
+
+        This is a fresh story implementation - creating dedicated branch from main.
+      </output>
+
+      <action>Run `git checkout main` to ensure we're on main first</action>
+      <action>Run `git pull origin main` to get latest changes (if remote exists)</action>
+      <action>Run `git checkout -b story/{{story_key}}` to create new branch</action>
+      <output>✅ Created and switched to new branch: story/{{story_key}}</output>
+    </check>
+
+    <!-- Final verification -->
+    <action>Run `git branch --show-current` to verify current branch</action>
+    <action>Store {{current_branch}} from git output</action>
+
+    <check if="{{current_branch}} != story/{{story_key}}">
+      <output>🚨 **CRITICAL ERROR: Branch Mismatch!**
+
+        **Expected:** story/{{story_key}}
+        **Actual:** {{current_branch}}
+
+        **This story CANNOT proceed on the wrong branch!**
+
+        **Reason:** Parallel development requires branch isolation. Multiple stories running simultaneously will conflict if on same branch.
+      </output>
+      <action>HALT - Branch validation failed</action>
+    </check>
+
+    <check if="{{current_branch}} == story/{{story_key}}">
+      <output>✅ **Branch Validation PASSED**
+
+        Current branch: story/{{story_key}}
+        Story: {{story_key}}
+
+        Ready to proceed with implementation.
+      </output>
+    </check>
+  </step>
+
   <step n="2" goal="Load project context and story information">
     <critical>Load all available context to inform implementation</critical>
 
@@ -325,6 +395,45 @@
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
     <action>Execute enhanced definition-of-done validation</action>
+
+    <!-- Git Pre-Review Validation (MANDATORY) -->
+    <critical>🔥 GIT VALIDATION - Story CANNOT be marked review without clean git state 🔥</critical>
+
+    <action>Run `git branch --show-current` to confirm still on story/{{story_key}} branch</action>
+    <action>Run `git status --porcelain` to check for uncommitted changes</action>
+
+    <check if="uncommitted changes exist">
+      <output>🚨 **CANNOT MARK REVIEW: Uncommitted Changes Detected**
+
+        **Working tree is NOT clean!**
+
+        You must commit ALL changes before marking story as "review".
+
+        **Next steps:**
+        1. Review uncommitted changes with `git status`
+        2. Stage changes: `git add .`
+        3. Commit with message: `git commit -m "{{story_key}}: [description of changes]"`
+        4. Then re-run this workflow to complete review marking
+      </output>
+      <action>HALT - Uncommitted changes must be committed before review</action>
+    </check>
+
+    <action>Run `git log origin/story/{{story_key}}..HEAD --oneline 2>/dev/null` to check if branch is pushed</action>
+
+    <check if="branch has unpushed commits OR branch doesn't exist on remote">
+      <output>📤 **Pushing Branch to Remote**
+
+        Branch story/{{story_key}} has unpushed commits or doesn't exist on remote.
+        Pushing now for code review...
+      </output>
+      <action>Run `git push -u origin story/{{story_key}}`</action>
+      <output>✅ Branch pushed to remote: story/{{story_key}}</output>
+    </check>
+
+    <check if="branch is up to date with remote">
+      <output>✅ Branch already pushed to remote: story/{{story_key}}</output>
+    </check>
+
     <action>Update the story Status to: "review"</action>
 
     <!-- Enhanced Definition of Done Validation -->

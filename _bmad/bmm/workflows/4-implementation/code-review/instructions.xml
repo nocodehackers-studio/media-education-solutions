@@ -22,6 +22,60 @@
       metadata</action>
     <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Agent Record → File List, Change Log</action>
 
+    <!-- MANDATORY Branch Validation -->
+    <critical>🔥 BRANCH VALIDATION - Code review REQUIRES story branch to exist 🔥</critical>
+    <critical>Cannot review code that isn't on a dedicated story branch</critical>
+
+    <action>Extract expected branch name: story/{{story_key}}</action>
+    <action>Run `git branch --all` to list all branches (local and remote)</action>
+    <action>Check if branch story/{{story_key}} exists locally or remotely</action>
+
+    <check if="branch story/{{story_key}} does NOT exist anywhere">
+      <output>🚨 **CRITICAL ERROR: Story Branch Does Not Exist!**
+
+        **Expected branch:** story/{{story_key}}
+        **Found:** Branch does not exist locally or on remote
+
+        **This is a BLOCKING issue!**
+
+        **Why this matters:**
+        - Parallel development requires branch isolation
+        - Cannot review changes without knowing what was modified
+        - Cannot merge completed work without a branch
+
+        **Required actions:**
+        1. Dev agent must create branch: `git checkout -b story/{{story_key}}`
+        2. Dev agent must commit all changes to that branch
+        3. Dev agent must push branch: `git push -u origin story/{{story_key}}`
+        4. Then re-run code-review
+
+        **Cannot proceed with review until branch exists.**
+      </output>
+      <action>HALT - Branch does not exist, review blocked</action>
+    </check>
+
+    <check if="branch story/{{story_key}} exists">
+      <output>✅ **Branch Validation PASSED**
+
+        Found branch: story/{{story_key}}
+        Proceeding with code review...
+      </output>
+
+      <!-- Checkout the branch for review -->
+      <action>Run `git fetch origin` to get latest remote changes</action>
+
+      <check if="branch exists locally">
+        <action>Run `git checkout story/{{story_key}}`</action>
+        <action>Run `git pull origin story/{{story_key}}` to get latest changes</action>
+        <output>✅ Checked out story branch: story/{{story_key}}</output>
+      </check>
+
+      <check if="branch exists only remotely">
+        <action>Run `git checkout -b story/{{story_key}} origin/story/{{story_key}}`</action>
+        <output>✅ Checked out remote story branch: story/{{story_key}}</output>
+      </check>
+    </check>
+
     <!-- Discover actual changes via git -->
     <action>Check if git repository detected in current directory</action>
     <check if="git repository exists">
@@ -179,6 +233,104 @@
       <action>Update story Status field to "in-progress"</action>
     </check>
     <action>Save story file</action>
+
+    <!-- Branch Merge Logic (Only when story is DONE) -->
+    <check if="{{new_status}} == 'done'">
+      <critical>🎯 STORY APPROVED - Initiating branch merge process</critical>
+
+      <action>Ensure we're on the story branch: `git checkout story/{{story_key}}`</action>
+      <action>Run `git status --porcelain` to check for uncommitted changes</action>
+
+      <check if="uncommitted review fixes exist">
+        <output>📝 **Committing Review Fixes**
+
+          Review made changes that need to be committed.
+        </output>
+        <action>Run `git add .`</action>
+        <action>Run `git commit -m "{{story_key}}: Address code review findings"`</action>
+        <action>Run `git push origin story/{{story_key}}`</action>
+        <output>✅ Review fixes committed and pushed</output>
+      </check>
+
+      <output>🔀 **Ready to Merge Story Branch**
+
+        Story: {{story_key}}
+        Branch: story/{{story_key}}
+        Status: APPROVED ✅
+
+        **Merge options:**
+        1. **Auto-merge to main** - I'll merge and push immediately
+        2. **Create Pull Request** - Use GitHub PR for final review
+        3. **Manual merge** - You'll merge when ready
+
+        Choose [1], [2], or [3]:</output>
+
+      <ask>How would you like to merge this story?</ask>
+
+      <check if="user chooses 1">
+        <action>Run `git checkout main`</action>
+        <action>Run `git pull origin main` to ensure main is up to date</action>
+        <action>Run `git merge --no-ff story/{{story_key}} -m "Merge story/{{story_key}}: {{story_title}}
+
+Story {{story_key}} completed and approved."`</action>
+        <action>Run `git push origin main`</action>
+        <output>✅ **Branch Merged Successfully!**
+
+          Story branch story/{{story_key}} has been merged to main and pushed.
+
+          **Optional cleanup:**
+          - Delete local branch: `git branch -d story/{{story_key}}`
+          - Delete remote branch: `git push origin --delete story/{{story_key}}`
+        </output>
+      </check>
+
+      <check if="user chooses 2">
+        <action>Check if `gh` CLI is available by running `which gh`</action>
+
+        <check if="gh CLI available">
+          <action>Run `git push origin story/{{story_key}}` to ensure branch is pushed</action>
+          <action>Run `gh pr create --base main --head story/{{story_key}} --title "{{story_key}}: {{story_title}}" --body "Story {{story_key}} completed and approved by code review.
+
+**Review Summary:**
+- All acceptance criteria implemented
+- All tasks completed
+- Code quality validated
+- Tests passing
+
+Ready for final review and merge."`</action>
+          <output>✅ **Pull Request Created!**
+
+            PR created for story/{{story_key}}
+            You can review and merge it on GitHub.
+          </output>
+        </check>
+
+        <check if="gh CLI not available">
+          <output>⚠️ **GitHub CLI not installed**
+
+            To create PR manually:
+            1. Visit your GitHub repository
+            2. Create PR from story/{{story_key}} → main
+            3. Add description: "Story {{story_key}} - Code review approved"
+          </output>
+        </check>
+      </check>
+
+      <check if="user chooses 3">
+        <output>✅ **Story Marked Done - Manual Merge**
+
+          Story branch story/{{story_key}} is ready for merge.
+
+          **When ready, merge with:**
+          ```bash
+          git checkout main
+          git pull origin main
+          git merge --no-ff story/{{story_key}}
+          git push origin main
+          ```
+        </output>
+      </check>
+    </check>
 
     <!-- Determine sprint tracking status -->
     <check if="{sprint_status} file exists">

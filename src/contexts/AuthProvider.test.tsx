@@ -35,6 +35,8 @@ describe('AuthProvider', () => {
   }
 
   const mockSubscription = {
+    id: 'mock-subscription',
+    callback: vi.fn(),
     unsubscribe: vi.fn(),
   }
 
@@ -85,6 +87,7 @@ describe('AuthProvider', () => {
         data: {
           session: {
             user: { id: 'user-123' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,
@@ -136,11 +139,13 @@ describe('AuthProvider', () => {
     })
 
     it('sets loading state during sign in', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let resolveSignIn: (value: any) => void
       const signInPromise = new Promise((resolve) => {
         resolveSignIn = resolve
       })
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authApi.signIn).mockReturnValue(signInPromise as any)
 
       const wrapper = ({ children }: { children: ReactNode }) => (
@@ -180,6 +185,7 @@ describe('AuthProvider', () => {
         data: {
           session: {
             user: { id: 'user-123' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,
@@ -234,6 +240,7 @@ describe('AuthProvider', () => {
 
   describe('Auth State Change Subscription', () => {
     it('handles SIGNED_IN event', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let authCallback: any
 
       vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((callback) => {
@@ -268,6 +275,7 @@ describe('AuthProvider', () => {
     })
 
     it('handles SIGNED_OUT event', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let authCallback: any
 
       // Start with authenticated user
@@ -275,6 +283,7 @@ describe('AuthProvider', () => {
         data: {
           session: {
             user: { id: 'user-123' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         },
         error: null,

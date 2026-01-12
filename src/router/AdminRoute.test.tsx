@@ -124,7 +124,7 @@ describe('AdminRoute', () => {
 
   describe('Location State Preservation', () => {
     it('passes location state to login redirect', () => {
-      const { container } = render(
+      render(
         <AuthContext.Provider
           value={{
             user: null,

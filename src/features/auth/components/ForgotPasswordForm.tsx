@@ -38,7 +38,7 @@ export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
     try {
       await onSubmit(data)
       setIsSuccess(true)
-    } catch (error) {
+    } catch {
       // Error already handled by parent (toast shown), just prevent success state
       // No rethrow needed - error is handled, just don't show success
     } finally {
