@@ -51,7 +51,7 @@ development_status:
 
   # Epic 2: Super Admin Authentication & Contest Management (7 stories)
   epic-2: in-progress
-  2-1-super-admin-login: in-progress
+  2-1-super-admin-login: review
   2-2-admin-layout-dashboard-shell: in-progress
   2-3-create-contest: backlog
   2-4-contest-list-status-management: backlog
