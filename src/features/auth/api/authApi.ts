@@ -24,7 +24,8 @@ function transformProfile(profile: {
 /**
  * Sign in with email and password.
  * Returns user profile on success.
- * @throws Error with "Invalid email or password" on failure
+ * @throws Error with "Invalid email or password" on auth failure
+ * @throws Error with "Something went wrong" on server/network errors
  */
 async function signIn(
   email: string,
@@ -37,7 +38,16 @@ async function signIn(
     })
 
   if (authError) {
-    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+    // Distinguish between authentication failures and server/network errors
+    // Authentication failures: wrong password, invalid email format, etc. (status 400)
+    // Server errors: network issues, database down, timeouts, etc. (status 500, network errors)
+    if (authError.message?.includes('Invalid login credentials') || authError.status === 400) {
+      // Wrong password/email - don't reveal which one (security best practice)
+      throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+    } else {
+      // Server/network error - be helpful to user
+      throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+    }
   }
 
   if (!authData.user) {

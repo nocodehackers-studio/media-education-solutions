@@ -482,6 +482,7 @@ N/A
 - **SIXTH CODE REVIEW FOLLOW-UP - CORRECTION** (2026-01-12):
   - ✓ Item 1 [MEDIUM]: AuthProvider null profile handling - Corrected implementation to properly check for null return value from fetchProfile before setting user state; previous fix only handled catch block but missed that fetchProfile returns null instead of throwing
   - ✓ Item 2 [LOW]: Router documentation mismatch - Updated PROJECT_INDEX.md to correctly document AdminRoute redirects judges to /judge/dashboard (not /judge) to match implementation
+  - ✓ Item 3 [MEDIUM]: signIn error handling improvement - Added logic to distinguish between authentication failures (wrong password) and server/network errors; auth failures show "Invalid email or password" (security best practice), while server errors show "Something went wrong. Please try again later." (user-friendly)
 
 ### Change Log
 
@@ -491,6 +492,7 @@ N/A
 | 2026-01-12 | Resolved 4 code review follow-ups: AuthProvider session handling, signOut error propagation, reset password validation, password recovery tests | AuthProvider.tsx, AdminSidebar.tsx, ForgotPasswordForm.tsx, ResetPasswordPage.tsx, ForgotPasswordForm.test.tsx (new), ResetPasswordPage.test.tsx (new) |
 | 2026-01-12 | Corrected AuthProvider null profile handling: added explicit null check before setting user state (fetchProfile returns null, doesn't throw) | AuthProvider.tsx, ResetPasswordPage.test.tsx |
 | 2026-01-12 | Fixed router documentation mismatch: updated PROJECT_INDEX.md to correctly document /judge/dashboard redirect | PROJECT_INDEX.md |
+| 2026-01-12 | Improved signIn error handling: distinguish auth failures from server/network errors for better UX | authApi.ts |
 
 ### File List
 
