@@ -44,8 +44,8 @@ So that **I can access the admin dashboard and manage contests**.
 **When** I try to access /admin/* routes
 **Then** I am redirected to the Judge dashboard (/judge/dashboard)
 
-### AC7: Participant Session Redirect ⏸️ DEFERRED TO EPIC 4
-**Status:** Deferred to Epic 4 (Participant Submission Experience)
+### AC7: Participant Session Redirect ⏸️ DEFERRED TO EPIC 4 STORY 4.1
+**Status:** Deferred to Epic 4 Story 4.1 (Participant Code Entry & Session)
 
 **Original requirement:**
 **Given** I am logged in as a Participant (code-based session)
@@ -54,9 +54,10 @@ So that **I can access the admin dashboard and manage contests**.
 
 **Reason for deferral:**
 - Participant sessions use contest codes + participant codes stored in localStorage (no Supabase auth)
-- ParticipantSessionContext does not exist until Epic 4
+- ParticipantSessionContext does not exist until Epic 4 Story 4.1
 - Cannot detect or test participant sessions without contest/participant data
 - Current implementation already blocks unauthenticated users (including participants) via AC5
+- **AC7 has been added to Epic 4 Story 4.1 for implementation**
 
 ## Tasks / Subtasks
 

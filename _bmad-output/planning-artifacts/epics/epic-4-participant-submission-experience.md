@@ -49,6 +49,11 @@ So that **I can submit my work without creating an account**.
 **Then** `participants` table exists with: id, contest_id, participant_code_id, name, school_organization, tlc_name, tlc_email, created_at, updated_at
 **And** the Supabase Edge Function `validate-participant` exists
 
+**Given** I have an active participant session (code-based)
+**When** I try to access /admin/* routes
+**Then** I am redirected to the login page
+**(Deferred from Epic 2 Story 2.1 - requires ParticipantSessionContext)**
+
 **Requirements:** FR5, ARCH9-10, UX9, NFR12
 
 ---
