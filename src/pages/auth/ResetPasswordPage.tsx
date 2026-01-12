@@ -33,6 +33,7 @@ export function ResetPasswordPage() {
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
+    mode: 'onBlur',
     defaultValues: {
       password: '',
       confirmPassword: '',
@@ -43,8 +44,18 @@ export function ResetPasswordPage() {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
-      // User should have a session if they came from the reset link
-      setIsValidSession(!!data.session)
+
+      // Validate this is a password recovery session, not just any logged-in session
+      // Check for recovery token in URL hash (Supabase recovery flow)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const type = hashParams.get('type')
+
+      // Valid recovery session requires:
+      // 1. Active session AND
+      // 2. URL type parameter equals 'recovery' (from Supabase recovery link)
+      const isRecoveryFlow = !!data.session && type === 'recovery'
+
+      setIsValidSession(isRecoveryFlow)
     }
     checkSession()
   }, [])

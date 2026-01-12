@@ -17,12 +17,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Fetch user profile from database.
+   * If profile fetch fails, sign out to clear the Supabase session.
    */
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       const profile = await authApi.fetchProfile(userId)
       setUser(profile)
     } catch {
+      // Profile fetch failed - sign out to prevent authenticated API calls with user=null
+      await supabase.auth.signOut()
       setUser(null)
     } finally {
       setIsLoading(false)
@@ -76,6 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Sign out the current user.
+   * Errors propagate to caller to allow UI to display feedback.
    */
   const signOut = useCallback(async () => {
     setIsLoading(true)

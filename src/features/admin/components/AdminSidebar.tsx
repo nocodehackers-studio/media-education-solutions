@@ -7,6 +7,7 @@ import {
   AvatarFallback,
   Button,
   Separator,
+  toast,
 } from '@/components/ui'
 
 const navItems = [
@@ -35,6 +36,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   const getInitials = (email: string) => {
     return email.slice(0, 2).toUpperCase()
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign out')
+    }
   }
 
   return (
@@ -93,7 +102,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
             variant="outline"
             size="sm"
             className="w-full justify-start gap-2"
-            onClick={signOut}
+            onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4" />
             Logout
