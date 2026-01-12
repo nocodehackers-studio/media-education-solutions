@@ -66,8 +66,8 @@ export function ContestsPage() {
             <SheetHeader>
               <SheetTitle>Create Contest</SheetTitle>
               <SheetDescription>
-                Set up a new contest with basic details. Participant codes will be generated
-                automatically.
+                Set up a new contest with basic details. You can generate participant codes
+                after the contest is created.
               </SheetDescription>
             </SheetHeader>
             <div className="mt-6">

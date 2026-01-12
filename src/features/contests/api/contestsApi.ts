@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { generateContestCode, generateParticipantCodes } from '../utils';
+import { generateContestCode } from '../utils';
 import type { CreateContestInput } from '../types/contest.schemas';
 import type { Contest, ContestRow } from '../types/contest.types';
 
@@ -27,34 +27,50 @@ function transformContestRow(row: ContestRow): Contest {
  */
 export const contestsApi = {
   /**
-   * Create a new contest with auto-generated participant codes
+   * Create a new contest (participant codes generated separately via button)
    * @param input Contest creation data
    * @returns Created contest
    * @throws Error if contest code already exists or creation fails
    */
   async create(input: CreateContestInput): Promise<Contest> {
-    // 1. Generate slug from name
-    const slug = input.name
+    // 1. Generate base slug from name (may be empty if name has no alphanumeric chars)
+    const baseSlug = input.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      .replace(/^-+|-+$/g, '');
 
     // 2. Retry loop for contest creation with auto-generated codes
-    // AC2 GUARANTEE: Retry indefinitely for auto-generated codes
+    // AC2 GUARANTEE: Retry for auto-generated codes until success
     // With 30^6 (729M) possible codes, collision probability is ~1.37e-9 per attempt
-    // Infinite retry ensures AC2 "always auto-generated" guarantee
+    // Max 10 retries as safety net (hitting 10 collisions = something is very wrong)
+    const MAX_RETRIES = 10;
     let contest: ContestRow | null = null;
+    let attempts = 0;
 
     // If user provided a custom code, use it without retries
     const useCustomCode = input.contestCode && input.contestCode.length === 6;
 
-    while (!contest) {
+    while (!contest && attempts < MAX_RETRIES) {
+      attempts++;
       // Contest code is always defined: either custom (validated to be 6 chars) or auto-generated
       const contestCode: string = useCustomCode
         ? input.contestCode!
         : generateContestCode();
 
-      // 3. Insert contest
+      // 3. Generate unique slug by appending contest code
+      // - If name produces valid slug: "summer-video-contest-abc123"
+      // - If name has no alphanumeric chars: "contest-abc123"
+      // This guarantees slug uniqueness (since contest_code is unique)
+      const slug = baseSlug
+        ? `${baseSlug}-${contestCode.toLowerCase()}`
+        : `contest-${contestCode.toLowerCase()}`;
+
+      // 4. Insert contest
+      // MVP: Use placeholder URL when cover image is provided (Bunny Storage deferred)
+      const coverImageUrl = input.coverImage
+        ? 'https://placehold.co/1200x630/e2e8f0/64748b?text=Contest+Cover'
+        : null;
+
       const { data, error: contestError } = await supabase
         .from('contests')
         .insert({
@@ -63,7 +79,7 @@ export const contestsApi = {
           contest_code: contestCode,
           slug,
           rules: input.rules || null,
-          cover_image_url: null, // Placeholder for now (Story requirement)
+          cover_image_url: coverImageUrl,
           status: 'draft',
         })
         .select()
@@ -74,69 +90,30 @@ export const contestsApi = {
         break;
       }
 
-      // Handle duplicate contest code - retry with new code if auto-generated
+      // Handle unique constraint violations
       if (contestError.code === '23505') {
-        // Extract constraint name from PostgreSQL error message
-        // Format: 'duplicate key value violates unique constraint "constraint_name"'
-        const constraintMatch = contestError.message.match(/constraint "([^"]+)"/);
-        const constraintName = constraintMatch?.[1] || '';
-
-        // Check constraint metadata: contests_contest_code_key vs contests_slug_key
-        const isCodeCollision = constraintName === 'contests_contest_code_key';
-        const isSlugCollision = constraintName === 'contests_slug_key';
-
-        if (isCodeCollision && !useCustomCode) {
-          // Retry with new auto-generated code (infinite loop until success)
-          continue;
-        }
-
-        // Either slug collision or custom code collision - don't retry
-        if (isSlugCollision) {
-          throw new Error('A contest with this name already exists');
-        } else if (isCodeCollision) {
+        // User provided custom code - AC4 requires specific error message
+        if (useCustomCode) {
           throw new Error('Contest code already exists');
-        } else {
-          // Unknown constraint - provide generic message
-          throw new Error('A contest with these details already exists');
         }
+
+        // Auto-generated code collision - retry with new code
+        // Since slug includes the code, a new code also means a new unique slug
+        continue;
       }
 
       // Other errors - fail immediately
       throw new Error(`Failed to create contest: ${contestError.message}`);
     }
 
-    // 4. Generate 50 participant codes
-    const codes = generateParticipantCodes(50);
-    const participants = codes.map((code) => ({
-      contest_id: (contest as ContestRow).id,
-      code,
-      status: 'unused' as const,
-    }));
-
-    const { error: codesError } = await supabase
-      .from('participants')
-      .insert(participants);
-
-    if (codesError) {
-      // Fail fast - participant codes are required per AC3
-      // Delete the contest to maintain data consistency
-      const { error: deleteError } = await supabase
-        .from('contests')
-        .delete()
-        .eq('id', (contest as ContestRow).id);
-
-      if (deleteError) {
-        // Rollback failed - orphaned contest exists
-        throw new Error(
-          `Failed to generate participant codes: ${codesError.message}. ` +
-          `WARNING: Rollback failed, orphaned contest ${contest.id} exists: ${deleteError.message}`
-        );
-      }
-
-      throw new Error(`Failed to generate participant codes: ${codesError.message}`);
+    // Safety check: if we exhausted retries without success
+    if (!contest) {
+      throw new Error(
+        'Failed to generate unique contest code after multiple attempts. Please try again.'
+      );
     }
 
-    return transformContestRow(contest as ContestRow);
+    return transformContestRow(contest);
   },
 
   /**

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.contests (
 -- Participants table
 CREATE TABLE IF NOT EXISTS public.participants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  contest_id UUID REFERENCES public.contests(id) ON DELETE CASCADE,
+  contest_id UUID NOT NULL REFERENCES public.contests(id) ON DELETE CASCADE,
   code TEXT NOT NULL CHECK (LENGTH(code) = 8),
   status TEXT DEFAULT 'unused' CHECK (status IN ('unused', 'used')),
   name TEXT,

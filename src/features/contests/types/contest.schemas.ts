@@ -7,8 +7,24 @@ import { z } from 'zod';
 // Valid characters for contest codes: A-H, J-N, P-Z, 2-9 (excludes confusing 0, 1, I, O)
 const VALID_CODE_CHARS = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]+$/;
 
+/**
+ * Generate slug from name - must produce non-empty result
+ */
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export const createContestSchema = z.object({
-  name: z.string().min(1, 'Contest name is required').max(255, 'Name too long'),
+  name: z
+    .string()
+    .min(1, 'Contest name is required')
+    .max(255, 'Name too long')
+    .refine((val) => generateSlug(val).length > 0, {
+      message: 'Contest name must contain at least one letter or number',
+    }),
   description: z.string().optional(),
   contestCode: z
     .string()
