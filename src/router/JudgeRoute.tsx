@@ -23,21 +23,30 @@ function LoadingScreen() {
  * Redirects:
  * - Unauthenticated users → /login
  * - Admins can also access judge routes (admin is superset of judge)
+ *
+ * AC1: Handles case where session exists but profile still loading.
  */
 export function JudgeRoute({ children }: JudgeRouteProps) {
   const { user, isLoading, isAuthenticated } = useAuth()
   const location = useLocation()
 
+  // Still loading auth state
   if (isLoading) {
     return <LoadingScreen />
   }
 
+  // No session - redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Both admin and judge can access judge routes
-  if (user?.role !== 'admin' && user?.role !== 'judge') {
+  // AC1: Session exists but profile still loading in background
+  if (!user) {
+    return <LoadingScreen />
+  }
+
+  // Profile loaded, check role - both admin and judge can access judge routes
+  if (user.role !== 'admin' && user.role !== 'judge') {
     return <Navigate to="/login" replace />
   }
 
