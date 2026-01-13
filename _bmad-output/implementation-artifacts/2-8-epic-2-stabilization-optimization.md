@@ -1,6 +1,6 @@
 # Story 2.8: Epic 2 Stabilization & Optimization
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
