@@ -1,0 +1,209 @@
+// CreateCategoryForm - Story 2.5
+// Form for creating a new category within a contest
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Button,
+  Calendar,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  toast,
+} from '@/components/ui';
+import { createCategorySchema, type CreateCategoryInput } from '../types/category.schemas';
+import { useCreateCategory } from '../hooks/useCreateCategory';
+
+interface CreateCategoryFormProps {
+  contestId: string;
+  onSuccess?: () => void;
+}
+
+/**
+ * Form component for creating a new category
+ * Validates with Zod schema and submits via TanStack Query mutation
+ */
+export function CreateCategoryForm({ contestId, onSuccess }: CreateCategoryFormProps) {
+  const createCategory = useCreateCategory(contestId);
+
+  const form = useForm<CreateCategoryInput>({
+    resolver: zodResolver(createCategorySchema),
+    mode: 'onBlur',
+    defaultValues: {
+      name: '',
+      type: 'video',
+      description: '',
+      rules: '',
+      deadline: '',
+    },
+  });
+
+  const onSubmit = async (data: CreateCategoryInput) => {
+    try {
+      await createCategory.mutateAsync(data);
+      toast.success('Category created');
+      form.reset();
+      onSuccess?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create category');
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category Name *</FormLabel>
+              <FormControl>
+                <Input placeholder="Best Short Film" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Submission Type *</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select submission type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="video">Video</SelectItem>
+                  <SelectItem value="photo">Photo</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Video submissions up to 500MB, photos up to 10MB.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="deadline"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Submission Deadline *</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full pl-3 text-left font-normal',
+                        !field.value && 'text-muted-foreground'
+                      )}
+                    >
+                      {field.value ? (
+                        format(new Date(field.value), 'PPP')
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        field.onChange(date.toISOString());
+                      }
+                    }}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                After this date, category will automatically close.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe what this category is about..."
+                  className="resize-none"
+                  rows={3}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="rules"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category Rules</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Specific rules for this category..."
+                  className="resize-none"
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting || createCategory.isPending}
+          >
+            {form.formState.isSubmitting || createCategory.isPending
+              ? 'Creating...'
+              : 'Create Category'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}

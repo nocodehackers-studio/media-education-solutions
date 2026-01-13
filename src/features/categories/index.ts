@@ -1,18 +1,43 @@
 // features/categories/index.ts
 // Categories feature - Category management per contest
-// Status: Placeholder (Epic 2)
+// Story: 2-5-category-management
 
 // === Components ===
-// export { CategoryList } from './components/CategoryList';
-// export { CategoryForm } from './components/CategoryForm';
+export {
+  CategoriesTab,
+  CategoryCard,
+  CreateCategoryForm,
+  DeleteCategoryButton,
+  EditCategoryForm,
+} from './components';
 
 // === Hooks ===
-// export { useCategories } from './hooks/useCategories';
+export {
+  useCategories,
+  useCategory,
+  useCreateCategory,
+  useDeleteCategory,
+  useUpdateCategory,
+  useUpdateCategoryStatus,
+} from './hooks';
 
 // === API ===
-// export { categoriesApi } from './api/categoriesApi';
+export { categoriesApi } from './api/categoriesApi';
 
 // === Types ===
-// export type { Category, CategoryType } from './types/category.types';
+export type {
+  Category,
+  CategoryRow,
+  CategoryStatus,
+  CategoryType,
+} from './types';
+export { transformCategory } from './types';
 
-export {}
+// === Schemas ===
+export {
+  categoryStatusSchema,
+  categoryTypeSchema,
+  createCategorySchema,
+  updateCategorySchema,
+} from './types';
+export type { CreateCategoryInput, UpdateCategoryInput } from './types';

@@ -93,3 +93,14 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 } from './alert-dialog'
+
+// === Calendar ===
+export { Calendar } from './calendar'
+
+// === Popover ===
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+} from './popover'
