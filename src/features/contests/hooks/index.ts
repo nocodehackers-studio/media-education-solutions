@@ -5,3 +5,5 @@ export { useCreateContest } from './useCreateContest';
 export { useUpdateContest } from './useUpdateContest';
 export { useUpdateContestStatus } from './useUpdateContestStatus';
 export { useDeleteContest } from './useDeleteContest';
+export { useParticipantCodes } from './useParticipantCodes';
+export { useGenerateCodes } from './useGenerateCodes';

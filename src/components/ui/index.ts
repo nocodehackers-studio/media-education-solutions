@@ -104,3 +104,15 @@ export {
   PopoverContent,
   PopoverAnchor,
 } from './popover'
+
+// === Table ===
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from './table'

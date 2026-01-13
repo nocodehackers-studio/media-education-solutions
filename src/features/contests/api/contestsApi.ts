@@ -1,7 +1,14 @@
 import { supabase } from '@/lib/supabase';
-import { generateContestCode } from '../utils';
+import { generateContestCode, generateParticipantCodes } from '../utils';
 import type { CreateContestInput, UpdateContestInput } from '../types/contest.schemas';
-import type { Contest, ContestRow, ContestStatus } from '../types/contest.types';
+import type {
+  Contest,
+  ContestRow,
+  ContestStatus,
+  Participant,
+  ParticipantRow,
+} from '../types/contest.types';
+import { transformParticipant } from '../types/contest.types';
 
 /**
  * Transform database row (snake_case) to application object (camelCase)
@@ -216,5 +223,71 @@ export const contestsApi = {
     if (error) {
       throw new Error(`Failed to delete contest: ${error.message}`);
     }
+  },
+
+  /**
+   * List participant codes for a contest with optional status filter
+   * @param contestId Contest ID
+   * @param filter Filter by status: 'all', 'used', or 'unused'
+   * @returns Array of participants
+   */
+  async listParticipantCodes(
+    contestId: string,
+    filter?: 'all' | 'used' | 'unused'
+  ): Promise<Participant[]> {
+    let query = supabase
+      .from('participants')
+      .select('*')
+      .eq('contest_id', contestId)
+      .order('created_at', { ascending: false });
+
+    if (filter === 'used') {
+      query = query.eq('status', 'used');
+    } else if (filter === 'unused') {
+      query = query.eq('status', 'unused');
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(`Failed to fetch participant codes: ${error.message}`);
+    }
+    return (data as ParticipantRow[]).map(transformParticipant);
+  },
+
+  /**
+   * Generate new participant codes for a contest
+   * @param contestId Contest ID
+   * @param count Number of codes to generate (default 50)
+   * @returns Array of newly created participants
+   */
+  async generateParticipantCodes(
+    contestId: string,
+    count: number = 50
+  ): Promise<Participant[]> {
+    // Get existing codes to avoid duplicates
+    const { data: existing } = await supabase
+      .from('participants')
+      .select('code')
+      .eq('contest_id', contestId);
+
+    const existingCodes = new Set((existing || []).map((p) => p.code));
+    const newCodes = generateParticipantCodes(count, existingCodes);
+
+    // Insert new codes
+    const { data, error } = await supabase
+      .from('participants')
+      .insert(
+        newCodes.map((code) => ({
+          contest_id: contestId,
+          code,
+          status: 'unused' as const,
+        }))
+      )
+      .select();
+
+    if (error) {
+      throw new Error(`Failed to generate participant codes: ${error.message}`);
+    }
+    return (data as ParticipantRow[]).map(transformParticipant);
   },
 };

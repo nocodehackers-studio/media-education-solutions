@@ -17,6 +17,7 @@ import {
 import {
   ContestDetailsTab,
   DeleteContestButton,
+  CodesTab,
   useContest,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
@@ -128,20 +129,7 @@ export function ContestDetailPage() {
         </TabsContent>
 
         <TabsContent value="codes" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Participant Codes</CardTitle>
-              <CardDescription>
-                Participant code management will be implemented in Story 2.6
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                This tab will allow you to generate and manage participant access
-                codes for this contest.
-              </p>
-            </CardContent>
-          </Card>
+          <CodesTab contest={contest} />
         </TabsContent>
 
         <TabsContent value="judges" className="mt-6">
