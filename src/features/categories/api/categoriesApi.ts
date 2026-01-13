@@ -2,6 +2,7 @@
 // Supabase CRUD operations for categories
 
 import { supabase } from '@/lib/supabase';
+import { ERROR_CODES, getErrorMessage } from '@/lib/errorCodes';
 import { transformCategory } from '../types/category.types';
 import type { CreateCategoryInput, UpdateCategoryInput } from '../types/category.schemas';
 import type { CategoryRow, CategoryStatus } from '../types/category.types';
@@ -20,7 +21,7 @@ export const categoriesApi = {
       .order('created_at', { ascending: true });
 
     if (error) {
-      throw new Error(`Failed to fetch categories: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
     }
 
     return (data as CategoryRow[]).map(transformCategory);
@@ -39,7 +40,7 @@ export const categoriesApi = {
       .single();
 
     if (error) {
-      throw new Error(`Failed to fetch category: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_NOT_FOUND));
     }
 
     return transformCategory(data as CategoryRow);
@@ -67,7 +68,7 @@ export const categoriesApi = {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create category: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_CREATE_FAILED));
     }
 
     return transformCategory(data as CategoryRow);
@@ -99,7 +100,7 @@ export const categoriesApi = {
       .single();
 
     if (error) {
-      throw new Error(`Failed to update category: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_UPDATE_FAILED));
     }
 
     return transformCategory(data as CategoryRow);
@@ -126,7 +127,7 @@ export const categoriesApi = {
       .single();
 
     if (error) {
-      throw new Error(`Failed to update category status: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_STATUS_UPDATE_FAILED));
     }
 
     return transformCategory(data as CategoryRow);
@@ -144,7 +145,7 @@ export const categoriesApi = {
       .eq('id', categoryId);
 
     if (error) {
-      throw new Error(`Failed to delete category: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_DELETE_FAILED));
     }
   },
 
@@ -168,7 +169,7 @@ export const categoriesApi = {
       if (error.code === 'PGRST116' || error.code === '42P01') {
         return 0;
       }
-      throw new Error(`Failed to get submission count: ${error.message}`);
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
     }
 
     return count ?? 0;

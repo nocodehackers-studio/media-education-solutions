@@ -2,7 +2,6 @@
 // Display a category with status badge, type badge, and actions
 
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
 import { Video, Camera } from 'lucide-react';
 import {
   Badge,
@@ -55,6 +54,15 @@ const typeConfig = {
   },
 };
 
+// Format date using Intl.DateTimeFormat per architecture rules
+function formatDeadline(dateString: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(dateString));
+}
+
 /**
  * Card component displaying a single category
  * Includes status dropdown, edit/delete actions (draft only)
@@ -62,6 +70,8 @@ const typeConfig = {
 export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [optimisticStatus, setOptimisticStatus] = useState<CategoryStatus>(category.status);
+  const [submissionCount, setSubmissionCount] = useState<number | null>(null);
+  const [submissionCountError, setSubmissionCountError] = useState(false);
   const updateStatus = useUpdateCategoryStatus(contestId);
 
   // Sync optimistic status with prop changes (per story 2-4 pattern)
@@ -69,9 +79,36 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
     setOptimisticStatus(category.status);
   }, [category.status]);
 
+  // Load submission count on mount for AC4 status change rules
+  useEffect(() => {
+    let mounted = true;
+    categoriesApi.getSubmissionCount(category.id)
+      .then((count) => {
+        if (mounted) {
+          setSubmissionCount(count);
+          setSubmissionCountError(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setSubmissionCountError(true);
+        }
+      });
+    return () => { mounted = false; };
+  }, [category.id]);
+
   const isDraft = optimisticStatus === 'draft';
   const isEditable = isDraft;
   const deadlinePassed = new Date(category.deadline) < new Date();
+
+  // AC4: Draft is only disabled if category has submissions (not based on current status)
+  const hasSubmissions = submissionCount !== null && submissionCount > 0;
+  const draftDisabled = hasSubmissions || submissionCountError;
+  const draftTooltip = hasSubmissions
+    ? 'Cannot set to Draft - category has submissions'
+    : submissionCountError
+      ? 'Cannot verify submission count'
+      : undefined;
 
   // Auto-close category if deadline passed (AC5 - client-side check)
   useEffect(() => {
@@ -83,16 +120,15 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   }, [deadlinePassed]);
 
   const handleStatusChange = async (newStatus: CategoryStatus) => {
-    // AC4: Check submission count before allowing Draft status
+    // AC4: Block Draft status if category has submissions
     if (newStatus === 'draft') {
-      try {
-        const count = await categoriesApi.getSubmissionCount(category.id);
-        if (count > 0) {
-          toast.error('Cannot set to Draft - category has submissions');
-          return;
-        }
-      } catch {
-        // If we can't check, don't block the change
+      if (submissionCountError) {
+        toast.error('Cannot verify submission count - please try again');
+        return;
+      }
+      if (hasSubmissions) {
+        toast.error('Cannot set to Draft - category has submissions');
+        return;
       }
     }
 
@@ -133,7 +169,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           </div>
         </div>
         <CardDescription>
-          Deadline: {format(new Date(category.deadline), 'PPP')}
+          Deadline: {formatDeadline(category.deadline)}
           {deadlinePassed && (
             <span className="text-red-500 ml-2">(Passed)</span>
           )}
@@ -158,8 +194,8 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           <SelectContent>
             <SelectItem
               value="draft"
-              disabled={!isDraft}
-              title={!isDraft ? 'Cannot set to Draft - category has submissions' : undefined}
+              disabled={draftDisabled}
+              title={draftTooltip}
             >
               Draft
             </SelectItem>

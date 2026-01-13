@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
 import { CategoriesTab } from './CategoriesTab';
 import * as categoriesApi from '../api/categoriesApi';
 import type { Contest } from '@/features/contests';
@@ -30,7 +31,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
   };
 });
 
-function renderWithProviders(ui: React.ReactElement) {
+function renderWithProviders(ui: ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -60,6 +61,8 @@ const mockContest: Contest = {
 describe('CategoriesTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock getSubmissionCount to return 0 by default (needed for CategoryCard useEffect)
+    vi.mocked(categoriesApi.categoriesApi.getSubmissionCount).mockResolvedValue(0);
   });
 
   it('renders loading state', () => {

@@ -3,7 +3,6 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -30,6 +29,15 @@ import {
 } from '@/components/ui';
 import { createCategorySchema, type CreateCategoryInput } from '../types/category.schemas';
 import { useCreateCategory } from '../hooks/useCreateCategory';
+
+// Format date using Intl.DateTimeFormat per architecture rules
+function formatDate(dateString: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(dateString));
+}
 
 interface CreateCategoryFormProps {
   contestId: string;
@@ -125,7 +133,7 @@ export function CreateCategoryForm({ contestId, onSuccess }: CreateCategoryFormP
                       )}
                     >
                       {field.value ? (
-                        format(new Date(field.value), 'PPP')
+                        formatDate(field.value)
                       ) : (
                         <span>Pick a date</span>
                       )}
