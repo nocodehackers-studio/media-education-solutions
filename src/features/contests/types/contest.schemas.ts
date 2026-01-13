@@ -46,3 +46,25 @@ export const createContestSchema = z.object({
  * Type inferred from createContestSchema
  */
 export type CreateContestInput = z.infer<typeof createContestSchema>;
+
+/**
+ * Schema for updating an existing contest
+ * All fields are optional since we support partial updates
+ */
+export const updateContestSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Contest name is required')
+    .max(255, 'Name too long')
+    .refine((val) => generateSlug(val).length > 0, {
+      message: 'Contest name must contain at least one letter or number',
+    })
+    .optional(),
+  description: z.string().optional(),
+  rules: z.string().optional(),
+});
+
+/**
+ * Type inferred from updateContestSchema
+ */
+export type UpdateContestInput = z.infer<typeof updateContestSchema>;

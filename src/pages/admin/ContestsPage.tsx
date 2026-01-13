@@ -1,12 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Trophy, Plus } from 'lucide-react';
 import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -15,7 +14,7 @@ import {
   SheetTrigger,
   Skeleton,
 } from '@/components/ui';
-import { CreateContestForm, useContests } from '@/features/contests';
+import { ContestCard, CreateContestForm, useContests } from '@/features/contests';
 
 /**
  * Contests page - List and manage contests
@@ -23,10 +22,15 @@ import { CreateContestForm, useContests } from '@/features/contests';
  */
 export function ContestsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const navigate = useNavigate();
   const { data: contests, isLoading, error } = useContests();
 
   const handleSuccess = () => {
     setIsSheetOpen(false);
+  };
+
+  const handleContestClick = (contestId: string) => {
+    navigate(`/admin/contests/${contestId}`);
   };
 
   if (error) {
@@ -101,7 +105,7 @@ export function ContestsPage() {
             <Trophy className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No contests yet</h3>
             <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
-              Create your first contest to start accepting submissions from participants.
+              You haven't created any contests yet. Create your first contest to start accepting submissions from participants.
             </p>
             <Button onClick={() => setIsSheetOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -115,24 +119,11 @@ export function ContestsPage() {
       {!isLoading && contests && contests.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {contests.map((contest) => (
-            <Card key={contest.id}>
-              <CardHeader>
-                <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {contest.description || 'No description'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Code:</span>
-                  <span className="font-mono font-semibold">{contest.contestCode}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className="capitalize">{contest.status}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <ContestCard
+              key={contest.id}
+              contest={contest}
+              onClick={handleContestClick}
+            />
           ))}
         </div>
       )}
