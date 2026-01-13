@@ -1,6 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { AdminRoute } from './AdminRoute'
 import { JudgeRoute } from './JudgeRoute'
 
@@ -13,6 +12,11 @@ const ForgotPasswordPage = lazy(() =>
 )
 const ResetPasswordPage = lazy(() =>
   import('@/pages/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
+)
+
+// Lazy load public pages (AC3: keep login page minimal)
+const NotFoundPage = lazy(() =>
+  import('@/pages/public/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
 )
 
 // Lazy load admin pages (AC2/AC3: split routes into chunks)
@@ -145,10 +149,14 @@ const router = createBrowserRouter([
     element: <Navigate to="/login" replace />,
   },
 
-  // 404 catch-all
+  // 404 catch-all - lazy loaded (AC3: not needed for login page)
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: (
+      <LazyRoute>
+        <NotFoundPage />
+      </LazyRoute>
+    ),
   },
 ])
 

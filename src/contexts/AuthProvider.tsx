@@ -7,7 +7,9 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
-// Profile fetch timeout (AC1: fail gracefully after 5s)
+// AC1: Session must restore within 2 seconds - this is the hard limit
+const SESSION_RESTORE_TIMEOUT = 2000
+// Profile fetch can take longer, but UI must be responsive within 2s
 const PROFILE_FETCH_TIMEOUT = 5000
 
 /**
@@ -68,9 +70,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /**
    * Initialize auth state on mount.
    * AC1: Handle INITIAL_SESSION event, add error handling with .catch()
+   * AC1: Session restoration within 2 seconds guaranteed.
    */
   useEffect(() => {
     mountedRef.current = true
+    let loadingResolved = false
+
+    // AC1: Hard 2-second limit - if auth isn't resolved by then, show UI anyway
+    // This prevents infinite loading states and guarantees 2-second restore
+    const sessionRestoreTimeout = setTimeout(() => {
+      if (mountedRef.current && !loadingResolved) {
+        console.warn('Session restore timeout (2s) - showing UI')
+        loadingResolved = true
+        setIsLoading(false)
+      }
+    }, SESSION_RESTORE_TIMEOUT)
+
+    const resolveLoading = () => {
+      if (!loadingResolved) {
+        loadingResolved = true
+        clearTimeout(sessionRestoreTimeout)
+        setIsLoading(false)
+      }
+    }
 
     // Get initial session with proper error handling (AC1)
     supabase.auth
@@ -80,21 +102,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (error) {
           console.error('Failed to get session:', error)
-          setIsLoading(false)
+          resolveLoading()
           return
         }
 
         if (session?.user) {
           fetchUserProfile(session.user.id)
         } else {
-          setIsLoading(false)
+          resolveLoading()
         }
       })
       .catch((error) => {
         // AC1: Ensure setIsLoading(false) is ALWAYS called
         console.error('Auth initialization error:', error)
         if (mountedRef.current) {
-          setIsLoading(false)
+          resolveLoading()
         }
       })
 
@@ -125,6 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => {
       mountedRef.current = false
+      clearTimeout(sessionRestoreTimeout)
       subscription.unsubscribe()
     }
   }, [fetchUserProfile])

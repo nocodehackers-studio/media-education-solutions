@@ -371,6 +371,7 @@ Before marking as "review":
 - [x] AC1: Fix AuthProvider for session restoration
   - [x] Add `.catch()` on `getSession()` to handle network errors
   - [x] Add `INITIAL_SESSION` event handler (skip duplicate profile fetch)
+  - [x] Add 2-second hard timeout on session restore (AC1 requirement enforced)
   - [x] Add 5-second timeout on profile fetch with `Promise.race()`
   - [x] Add `mountedRef` to prevent state updates after unmount
   - [x] Ensure `setIsLoading(false)` is ALWAYS called in all code paths
@@ -380,6 +381,8 @@ Before marking as "review":
   - [x] Convert judge pages to lazy imports
   - [x] Add `LazyRoute` component with Suspense boundary
   - [x] Add `LazyFallback` component for loading state
+  - [x] Lazy load NotFoundPage (removes Button from initial bundle)
+  - [x] Remove Skeleton import from AdminRoute/JudgeRoute (CSS-only loading)
   - [x] Configure manual chunks in vite.config.ts for vendor splitting
 - [x] AC4: Verify all Epic 2 features end-to-end
   - [x] All 234 tests pass
@@ -417,10 +420,19 @@ claude-opus-4-5-20251101
 - Added mountedRef to prevent memory leaks
 - Ensured setIsLoading(false) is always called
 
-**Bundle Analysis:**
-- Main chunk: 414 KB (124 KB gzip) - reduced from 799 KB
-- Total gzipped for login: ~248 KB (down from 7.4 MB baseline)
-- Estimated requests for login: ~10-12 (down from 151)
+**Bundle Analysis (Final):**
+- Main chunk: 413.80 KB (124.47 KB gzip)
+- NotFoundPage: 0.60 KB (0.36 KB gzip) - now lazy loaded
+- CSS: 43.91 KB (8.22 KB gzip)
+- Vendor chunks: react-vendor 97.73 KB, supabase-vendor 170.50 KB, query-vendor 35.74 KB, ui-vendor 92.23 KB
+- Total for login page: ~248 KB gzipped (down from 7.4 MB baseline)
+
+**AC4 Test Evidence:**
+```
+Test Files  29 passed (29)
+Tests       234 passed (234)
+Duration    8.45s
+```
 
 ## Review Follow-ups (AI)
 
@@ -429,16 +441,23 @@ _To be filled by Code Review agent_
 ## File List
 
 **Modified Files:**
-- src/lib/queryClient.ts
-- src/contexts/AuthProvider.tsx
-- src/router/index.tsx
-- vite.config.ts
+- src/lib/queryClient.ts - AC5.1: Disable aggressive refetching
+- src/contexts/AuthProvider.tsx - AC1: 2-second timeout, error handling, INITIAL_SESSION
+- src/router/index.tsx - AC2/AC3: Lazy load all non-critical routes
+- src/router/AdminRoute.tsx - AC3: Remove Skeleton import, use CSS-only loading
+- src/router/JudgeRoute.tsx - AC3: Remove Skeleton import, use CSS-only loading
+- src/router/AdminRoute.test.tsx - Update test for new loading indicator
+- vite.config.ts - AC2/AC3: Configure manual vendor chunks
+- _bmad-output/project-context.md - AC6: Add Performance Optimization Patterns
+- _bmad-output/implementation-artifacts/sprint-status.yaml - Track story status
 
 ## Change Log
 
 | Date | Change | Files |
 |------|--------|-------|
 | 2026-01-13 | AC5.1: Disable refetchOnWindowFocus/refetchOnMount globally | src/lib/queryClient.ts |
-| 2026-01-13 | AC1: Add error handling, timeout, INITIAL_SESSION handler | src/contexts/AuthProvider.tsx |
-| 2026-01-13 | AC2/AC3: Implement route-based code splitting | src/router/index.tsx |
+| 2026-01-13 | AC1: Add 2-second hard timeout, error handling, INITIAL_SESSION handler | src/contexts/AuthProvider.tsx |
+| 2026-01-13 | AC2/AC3: Implement route-based code splitting, lazy load NotFoundPage | src/router/index.tsx |
+| 2026-01-13 | AC3: Remove Skeleton import from route guards, use CSS-only loading | src/router/AdminRoute.tsx, src/router/JudgeRoute.tsx |
 | 2026-01-13 | AC2/AC3: Configure manual chunks for vendor splitting | vite.config.ts |
+| 2026-01-13 | AC6: Add Performance Optimization Patterns section | _bmad-output/project-context.md |

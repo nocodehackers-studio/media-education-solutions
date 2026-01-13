@@ -6,13 +6,6 @@ import { AdminRoute } from './AdminRoute'
 import { AuthContext } from '@/contexts/AuthContext'
 import { type User } from '@/features/auth'
 
-// Mock UI components
-vi.mock('@/components/ui', () => ({
-  Skeleton: ({ className }: { className?: string }) => (
-    <div data-testid="skeleton" className={className} />
-  ),
-}))
-
 describe('AdminRoute', () => {
   const mockAdminUser: User = {
     id: 'admin-123',
@@ -69,7 +62,8 @@ describe('AdminRoute', () => {
         resetPassword: vi.fn(),
       })
 
-      expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
+      // AC3: Uses minimal CSS-only loading indicator
+      expect(screen.getByText('Loading...')).toBeInTheDocument()
       expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
     })
   })
