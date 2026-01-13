@@ -9,3 +9,9 @@
 - **Mobile empty state CTA accessibility**: Validate that the "Create your first contest" button Sheet trigger is accessible and visible on mobile devices. Consider adding a11y tests. (src/pages/admin/ContestsPage.tsx:101)
 - **API unit tests for contestsApi**: Add direct unit tests for contestsApi.update(), updateStatus(), and delete() methods with mocked Supabase. Currently only covered by component integration tests. (src/features/contests/api/contestsApi.ts)
 - **Cover image upload**: Requires Bunny Storage infrastructure integration. Deferred from AC4 - consider bundling with Bunny Stream setup in Epic 4 (Participant Submission). Currently uses placeholder URLs. (src/features/contests/api/contestsApi.ts, src/features/contests/components/EditContestForm.tsx)
+
+## Story 2-5 Review Items
+
+- **AC4 tooltip requirement**: Draft option should show tooltip when disabled (submissions exist). Current inline helper text does not meet the spec. (src/features/categories/components/CategoryCard.tsx)
+- **Deadline picker date handling**: Selecting a date uses `toISOString()` and disables "today"; this can shift the day for non-UTC users. Store a date-only value or normalize to end-of-day, and allow same-day selection. (src/features/categories/components/CreateCategoryForm.tsx, src/features/categories/components/EditCategoryForm.tsx)
+- **Missing interaction tests**: Status dropdown and date picker behaviors are untested due to jsdom limitations; add Playwright coverage for AC4 and deadline selection. (src/features/categories/components/CategoryCard.test.tsx, src/features/categories/components/CreateCategoryForm.test.tsx)
