@@ -76,14 +76,16 @@ describe('CodesTab', () => {
     );
   };
 
-  it('shows loading state initially', () => {
+  it('shows loading state with skeletons initially', () => {
     vi.mocked(contestsApi.listParticipantCodes).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
     renderComponent();
 
-    expect(screen.getByText('Loading codes...')).toBeInTheDocument();
+    // Should show skeleton loading state (multiple skeleton elements)
+    const skeletons = document.querySelectorAll('[class*="animate-pulse"]');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('shows empty state with generate button when no codes', async () => {

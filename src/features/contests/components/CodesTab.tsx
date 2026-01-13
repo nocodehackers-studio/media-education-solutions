@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
 } from '@/components/ui';
 import { useParticipantCodes } from '../hooks/useParticipantCodes';
 import { CodeListTable } from './CodeListTable';
@@ -32,7 +33,28 @@ export function CodesTab({ contest }: CodesTabProps) {
   const { data: codes, isLoading, error } = useParticipantCodes(contest.id, filter);
 
   if (isLoading) {
-    return <div>Loading codes...</div>;
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-[120px]" />
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (error) {
