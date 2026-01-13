@@ -607,7 +607,7 @@ npx shadcn@latest add calendar
 npx shadcn@latest add popover
 ```
 
-**Note:** Use date-fns for date formatting (already installed with shadcn calendar).
+**Note:** Use `Intl.DateTimeFormat` for date formatting per architecture rules (no date-fns dependency).
 
 ### Database Migration
 
