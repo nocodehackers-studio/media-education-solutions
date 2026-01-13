@@ -29,10 +29,25 @@ interface CodesTabProps {
  */
 export function CodesTab({ contest }: CodesTabProps) {
   const [filter, setFilter] = useState<'all' | 'used' | 'unused'>('all');
-  const { data: codes, isLoading } = useParticipantCodes(contest.id, filter);
+  const { data: codes, isLoading, error } = useParticipantCodes(contest.id, filter);
 
   if (isLoading) {
     return <div>Loading codes...</div>;
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center text-destructive">
+            <p className="mb-2">Failed to load participant codes</p>
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : 'An error occurred'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const allCodes = codes || [];

@@ -227,6 +227,7 @@ export const contestsApi = {
 
   /**
    * List participant codes for a contest with optional status filter
+   * Only selects columns needed for UI display (avoids fetching unnecessary PII)
    * @param contestId Contest ID
    * @param filter Filter by status: 'all', 'used', or 'unused'
    * @returns Array of participants
@@ -235,9 +236,11 @@ export const contestsApi = {
     contestId: string,
     filter?: 'all' | 'used' | 'unused'
   ): Promise<Participant[]> {
+    // Select only columns needed for display (id, code, status, name for used codes)
+    // Avoids fetching organization_name, tlc_name, tlc_email unnecessarily
     let query = supabase
       .from('participants')
-      .select('*')
+      .select('id, contest_id, code, status, name, created_at')
       .eq('contest_id', contestId)
       .order('created_at', { ascending: false });
 
@@ -251,11 +254,23 @@ export const contestsApi = {
     if (error) {
       throw new Error(`Failed to fetch participant codes: ${error.message}`);
     }
-    return (data as ParticipantRow[]).map(transformParticipant);
+    // Map partial rows to full Participant objects (missing fields will be null)
+    return (data || []).map((row) => ({
+      id: row.id,
+      contestId: row.contest_id,
+      code: row.code,
+      status: row.status as 'unused' | 'used',
+      name: row.name,
+      organizationName: null,
+      tlcName: null,
+      tlcEmail: null,
+      createdAt: row.created_at,
+    }));
   },
 
   /**
    * Generate new participant codes for a contest
+   * Includes error handling for existing codes fetch and retry logic for conflicts
    * @param contestId Contest ID
    * @param count Number of codes to generate (default 50)
    * @returns Array of newly created participants
@@ -264,30 +279,63 @@ export const contestsApi = {
     contestId: string,
     count: number = 50
   ): Promise<Participant[]> {
-    // Get existing codes to avoid duplicates
-    const { data: existing } = await supabase
+    // Get existing codes to avoid duplicates (with error handling)
+    const { data: existing, error: fetchError } = await supabase
       .from('participants')
       .select('code')
       .eq('contest_id', contestId);
 
+    if (fetchError) {
+      throw new Error(
+        `Failed to fetch existing codes: ${fetchError.message}`
+      );
+    }
+
     const existingCodes = new Set((existing || []).map((p) => p.code));
     const newCodes = generateParticipantCodes(count, existingCodes);
 
-    // Insert new codes
-    const { data, error } = await supabase
-      .from('participants')
-      .insert(
-        newCodes.map((code) => ({
-          contest_id: contestId,
-          code,
-          status: 'unused' as const,
-        }))
-      )
-      .select();
+    // Insert new codes with retry logic for conflict handling
+    const MAX_RETRIES = 3;
+    let lastError: Error | null = null;
 
-    if (error) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const { data, error } = await supabase
+        .from('participants')
+        .insert(
+          newCodes.map((code) => ({
+            contest_id: contestId,
+            code,
+            status: 'unused' as const,
+          }))
+        )
+        .select();
+
+      if (!error) {
+        return (data as ParticipantRow[]).map(transformParticipant);
+      }
+
+      // Check for unique constraint violation (concurrent insert conflict)
+      if (error.code === '23505' && attempt < MAX_RETRIES) {
+        // Refetch existing codes and regenerate
+        const { data: refreshed } = await supabase
+          .from('participants')
+          .select('code')
+          .eq('contest_id', contestId);
+
+        const refreshedCodes = new Set((refreshed || []).map((p) => p.code));
+        // Regenerate codes that don't conflict
+        const regeneratedCodes = generateParticipantCodes(count, refreshedCodes);
+        newCodes.length = 0;
+        newCodes.push(...regeneratedCodes);
+        lastError = new Error(error.message);
+        continue;
+      }
+
       throw new Error(`Failed to generate participant codes: ${error.message}`);
     }
-    return (data as ParticipantRow[]).map(transformParticipant);
+
+    throw new Error(
+      `Failed to generate codes after ${MAX_RETRIES} attempts: ${lastError?.message}`
+    );
   },
 };

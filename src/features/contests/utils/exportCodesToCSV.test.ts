@@ -70,18 +70,31 @@ describe('exportCodesToCSV', () => {
     createdAt: '2026-01-13T00:00:00Z',
   });
 
-  it('creates CSV with correct headers', () => {
+  // Helper to read blob content
+  const readBlobContent = async (blob: Blob): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsText(blob);
+    });
+  };
+
+  it('creates CSV with correct headers (AC5)', async () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused')];
 
     exportCodesToCSV(codes, 'ABC123');
 
-    // Verify blob was created and passed to createObjectURL
+    // Verify blob was created
     expect(capturedBlob).not.toBeNull();
-    // The blob should be a text/csv type
     expect(capturedBlob?.type).toBe('text/csv;charset=utf-8;');
+
+    // Verify CSV content has correct headers
+    const content = await readBlobContent(capturedBlob!);
+    const lines = content.split('\n');
+    expect(lines[0]).toBe('Code,Status');
   });
 
-  it('includes all codes in CSV content', () => {
+  it('includes all codes in CSV content with correct format (AC5)', async () => {
     const codes: Participant[] = [
       createMockParticipant('12345678', 'unused'),
       createMockParticipant('87654321', 'used', 'John Doe'),
@@ -90,9 +103,16 @@ describe('exportCodesToCSV', () => {
 
     exportCodesToCSV(codes, 'ABC123');
 
-    // Blob was created for the CSV content
+    // Verify CSV content has all rows
     expect(capturedBlob).not.toBeNull();
-    expect(mockClick).toHaveBeenCalled();
+    const content = await readBlobContent(capturedBlob!);
+    const lines = content.split('\n');
+
+    expect(lines).toHaveLength(4); // Header + 3 codes
+    expect(lines[0]).toBe('Code,Status');
+    expect(lines[1]).toBe('12345678,unused');
+    expect(lines[2]).toBe('87654321,used');
+    expect(lines[3]).toBe('11111111,unused');
   });
 
   it('uses correct filename format', () => {
@@ -123,7 +143,7 @@ describe('exportCodesToCSV', () => {
     expect(mockClick).toHaveBeenCalled();
   });
 
-  it('handles empty codes array', () => {
+  it('handles empty codes array with header only', async () => {
     const codes: Participant[] = [];
 
     exportCodesToCSV(codes, 'ABC123');
@@ -131,6 +151,12 @@ describe('exportCodesToCSV', () => {
     // Blob was created even for empty codes (just header)
     expect(capturedBlob).not.toBeNull();
     expect(mockClick).toHaveBeenCalled();
+
+    // Verify only header row exists
+    const content = await readBlobContent(capturedBlob!);
+    const lines = content.split('\n');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toBe('Code,Status');
   });
 
   it('creates CSV with correct MIME type', () => {

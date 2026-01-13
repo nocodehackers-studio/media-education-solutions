@@ -229,4 +229,40 @@ describe('CodesTab', () => {
       expect(screen.getByText('Participant Codes')).toBeInTheDocument();
     });
   });
+
+  it('shows error state when fetch fails', async () => {
+    vi.mocked(contestsApi.listParticipantCodes).mockRejectedValue(
+      new Error('Network error')
+    );
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to load participant codes')
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText('Network error')).toBeInTheDocument();
+  });
+
+  it('error state does not show generate or export buttons', async () => {
+    vi.mocked(contestsApi.listParticipantCodes).mockRejectedValue(
+      new Error('Server error')
+    );
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to load participant codes')
+      ).toBeInTheDocument();
+    });
+    // Should not show action buttons in error state
+    expect(
+      screen.queryByRole('button', { name: 'Generate 50 More' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Export' })
+    ).not.toBeInTheDocument();
+  });
 });
