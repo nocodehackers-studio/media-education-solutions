@@ -71,3 +71,20 @@ export interface Participant {
   tlcEmail: string | null;
   createdAt: string;
 }
+
+/**
+ * Transform database row (snake_case) to application object (camelCase)
+ */
+export function transformParticipant(row: ParticipantRow): Participant {
+  return {
+    id: row.id,
+    contestId: row.contest_id,
+    code: row.code,
+    status: row.status,
+    name: row.name,
+    organizationName: row.organization_name,
+    tlcName: row.tlc_name,
+    tlcEmail: row.tlc_email,
+    createdAt: row.created_at,
+  };
+}

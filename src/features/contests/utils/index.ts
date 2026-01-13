@@ -1,3 +1,7 @@
 // Utility functions for contests feature
 export { generateContestCode } from './generateContestCode';
-export { generateParticipantCodes } from './generateParticipantCodes';
+export {
+  generateParticipantCode,
+  generateParticipantCodes,
+} from './generateParticipantCodes';
+export { exportCodesToCSV } from './exportCodesToCSV';

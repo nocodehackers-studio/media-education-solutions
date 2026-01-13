@@ -1,7 +1,14 @@
 import { supabase } from '@/lib/supabase';
-import { generateContestCode } from '../utils';
+import { generateContestCode, generateParticipantCodes } from '../utils';
 import type { CreateContestInput, UpdateContestInput } from '../types/contest.schemas';
-import type { Contest, ContestRow, ContestStatus } from '../types/contest.types';
+import type {
+  Contest,
+  ContestRow,
+  ContestStatus,
+  Participant,
+  ParticipantRow,
+} from '../types/contest.types';
+import { transformParticipant } from '../types/contest.types';
 
 /**
  * Transform database row (snake_case) to application object (camelCase)
@@ -216,5 +223,125 @@ export const contestsApi = {
     if (error) {
       throw new Error(`Failed to delete contest: ${error.message}`);
     }
+  },
+
+  /**
+   * List participant codes for a contest with optional status filter
+   * Only selects columns needed for UI display (avoids fetching unnecessary PII)
+   * @param contestId Contest ID
+   * @param filter Filter by status: 'all', 'used', or 'unused'
+   * @returns Array of participants
+   */
+  async listParticipantCodes(
+    contestId: string,
+    filter?: 'all' | 'used' | 'unused'
+  ): Promise<Participant[]> {
+    // Select only columns needed for display (id, code, status, name for used codes)
+    // Avoids fetching organization_name, tlc_name, tlc_email unnecessarily
+    let query = supabase
+      .from('participants')
+      .select('id, contest_id, code, status, name, created_at')
+      .eq('contest_id', contestId)
+      .order('created_at', { ascending: false });
+
+    if (filter === 'used') {
+      query = query.eq('status', 'used');
+    } else if (filter === 'unused') {
+      query = query.eq('status', 'unused');
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(`Failed to fetch participant codes: ${error.message}`);
+    }
+    // Map partial rows to full Participant objects (missing fields will be null)
+    return (data || []).map((row) => ({
+      id: row.id,
+      contestId: row.contest_id,
+      code: row.code,
+      status: row.status as 'unused' | 'used',
+      name: row.name,
+      organizationName: null,
+      tlcName: null,
+      tlcEmail: null,
+      createdAt: row.created_at,
+    }));
+  },
+
+  /**
+   * Generate new participant codes for a contest
+   * Includes error handling for existing codes fetch and retry logic for conflicts
+   * @param contestId Contest ID
+   * @param count Number of codes to generate (default 50)
+   * @returns Array of newly created participants
+   */
+  async generateParticipantCodes(
+    contestId: string,
+    count: number = 50
+  ): Promise<Participant[]> {
+    // Get existing codes to avoid duplicates (with error handling)
+    const { data: existing, error: fetchError } = await supabase
+      .from('participants')
+      .select('code')
+      .eq('contest_id', contestId);
+
+    if (fetchError) {
+      throw new Error(
+        `Failed to fetch existing codes: ${fetchError.message}`
+      );
+    }
+
+    const existingCodes = new Set((existing || []).map((p) => p.code));
+    const newCodes = generateParticipantCodes(count, existingCodes);
+
+    // Insert new codes with retry logic for conflict handling
+    const MAX_RETRIES = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const { data, error } = await supabase
+        .from('participants')
+        .insert(
+          newCodes.map((code) => ({
+            contest_id: contestId,
+            code,
+            status: 'unused' as const,
+          }))
+        )
+        .select();
+
+      if (!error) {
+        return (data as ParticipantRow[]).map(transformParticipant);
+      }
+
+      // Check for unique constraint violation (concurrent insert conflict)
+      if (error.code === '23505' && attempt < MAX_RETRIES) {
+        // Refetch existing codes and regenerate
+        const { data: refreshed, error: refreshError } = await supabase
+          .from('participants')
+          .select('code')
+          .eq('contest_id', contestId);
+
+        if (refreshError) {
+          // If refresh fails, continue to next attempt with original codes
+          lastError = new Error(refreshError.message);
+          continue;
+        }
+
+        const refreshedCodes = new Set((refreshed || []).map((p) => p.code));
+        // Regenerate codes that don't conflict
+        const regeneratedCodes = generateParticipantCodes(count, refreshedCodes);
+        newCodes.length = 0;
+        newCodes.push(...regeneratedCodes);
+        lastError = new Error(error.message);
+        continue;
+      }
+
+      throw new Error(`Failed to generate participant codes: ${error.message}`);
+    }
+
+    throw new Error(
+      `Failed to generate codes after ${MAX_RETRIES} attempts: ${lastError?.message}`
+    );
   },
 };
