@@ -39,7 +39,7 @@ describe('CodeListTable', () => {
     expect(codeCell).toHaveClass('font-mono');
   });
 
-  it('displays unused codes with secondary badge', () => {
+  it('displays unused codes with outline badge (UX19)', () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused')];
 
     render(<CodeListTable codes={codes} />);
