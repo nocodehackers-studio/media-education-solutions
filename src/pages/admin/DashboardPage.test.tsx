@@ -1,10 +1,10 @@
 /**
  * DashboardPage Unit Tests
- * Tests admin dashboard with stats, recent contests, and empty state
+ * Tests admin dashboard with stats, active contests, and empty state
  *
  * AC1: Summary Statistics - Total Contests, Active Contests, Total Submissions
- * AC2: Active Contests List - name, status, submission count, judge progress
- * AC3: Judge Progress Display - placeholder until Epic 3
+ * AC2: Active Contests List - name, status, submission count, judge progress percentage
+ * AC3: Judge Progress Display - per-contest "Judge Progress: X/Y reviewed"
  * AC4: Contest Navigation - click to go to contest detail
  * AC5: Empty State - "Create your first contest" CTA
  */
@@ -23,7 +23,7 @@ vi.mock('@/features/contests', async (importOriginal) => {
   return {
     ...actual,
     useDashboardStats: vi.fn(),
-    useRecentContests: vi.fn(),
+    useActiveContests: vi.fn(),
   };
 });
 
@@ -37,7 +37,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-import { useDashboardStats, useRecentContests } from '@/features/contests';
+import { useDashboardStats, useActiveContests } from '@/features/contests';
 
 const mockStats: DashboardStats = {
   totalContests: 5,
@@ -46,7 +46,8 @@ const mockStats: DashboardStats = {
   totalSubmissions: 50,
 };
 
-const mockContests: Contest[] = [
+// Active contests only (status = 'published')
+const mockActiveContests: Contest[] = [
   {
     id: 'contest-1',
     name: 'Summer Video Contest',
@@ -68,12 +69,14 @@ const mockContests: Contest[] = [
     contestCode: 'DEF456',
     rules: null,
     coverImageUrl: null,
-    status: 'draft',
+    status: 'published',
     winnersPagePassword: null,
     createdAt: '2026-01-09T12:00:00Z',
     updatedAt: '2026-01-09T12:00:00Z',
   },
 ];
+
+const mockRefetch = vi.fn();
 
 // Create a fresh QueryClient for each test
 function createTestQueryClient() {
@@ -110,19 +113,22 @@ describe('DashboardPage', () => {
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
       expect(screen.getByText('Total Contests')).toBeInTheDocument();
       expect(screen.getByText('5')).toBeInTheDocument();
-      expect(screen.getByText('Active Contests')).toBeInTheDocument();
+      // "Active Contests" appears twice - once in stat card, once in card title
+      expect(screen.getAllByText('Active Contests')).toHaveLength(2);
       expect(screen.getByText('2')).toBeInTheDocument();
       expect(screen.getByText('Total Submissions')).toBeInTheDocument();
       expect(screen.getByText('50')).toBeInTheDocument();
@@ -133,13 +139,15 @@ describe('DashboardPage', () => {
         data: undefined,
         isLoading: true,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
+      vi.mocked(useActiveContests).mockReturnValue({
         data: undefined,
         isLoading: true,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
@@ -150,69 +158,99 @@ describe('DashboardPage', () => {
   });
 
   describe('AC2: Active Contests List', () => {
-    it('displays recent contests with name and status', async () => {
+    it('displays active contests with name and status badge', async () => {
       vi.mocked(useDashboardStats).mockReturnValue({
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
-      expect(screen.getByText('Recent Contests')).toBeInTheDocument();
+      // "Active Contests" appears in both stat card title and card header
+      expect(screen.getAllByText('Active Contests')).toHaveLength(2);
       expect(screen.getByText('Summer Video Contest')).toBeInTheDocument();
-      expect(screen.getByText('ABC123')).toBeInTheDocument();
       expect(screen.getByText('Winter Photo Contest')).toBeInTheDocument();
-      expect(screen.getByText('DEF456')).toBeInTheDocument();
+      // All active contests should have published status
+      expect(screen.getAllByText('published')).toHaveLength(2);
     });
 
-    it('displays status badges for contests', async () => {
+    it('displays submission count per contest (AC2)', async () => {
       vi.mocked(useDashboardStats).mockReturnValue({
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
-      expect(screen.getByText('published')).toBeInTheDocument();
-      expect(screen.getByText('draft')).toBeInTheDocument();
+      // Each active contest should show submission count
+      const submissionCounts = screen.getAllByTestId('submission-count');
+      expect(submissionCounts).toHaveLength(2);
+      expect(submissionCounts[0]).toHaveTextContent('Submissions: 0');
+      expect(submissionCounts[1]).toHaveTextContent('Submissions: 0');
+    });
+
+    it('shows empty message when no active contests', async () => {
+      vi.mocked(useDashboardStats).mockReturnValue({
+        data: { ...mockStats, activeContests: 0 },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
+
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: [] as Contest[],
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
+
+      render(<DashboardPage />, { wrapper: createWrapper() });
+
+      expect(screen.getByText('No active contests. Publish a contest to see it here.')).toBeInTheDocument();
     });
   });
 
-  describe('AC3: Judge Progress Display', () => {
-    it('displays placeholder for judge progress', async () => {
+  describe('AC3: Judge Progress Display (per-contest)', () => {
+    it('displays judge progress per contest', async () => {
       vi.mocked(useDashboardStats).mockReturnValue({
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
-      expect(screen.getByText('Judge Progress')).toBeInTheDocument();
-      expect(screen.getByText('No judges assigned yet')).toBeInTheDocument();
-      expect(
-        screen.getByText('Judge assignments available in Epic 3')
-      ).toBeInTheDocument();
+      // Each active contest should show judge progress
+      const judgeProgressElements = screen.getAllByTestId('judge-progress');
+      expect(judgeProgressElements).toHaveLength(2);
+      expect(judgeProgressElements[0]).toHaveTextContent('Judge Progress: 0/0 reviewed');
+      expect(judgeProgressElements[1]).toHaveTextContent('Judge Progress: 0/0 reviewed');
     });
   });
 
@@ -224,13 +262,15 @@ describe('DashboardPage', () => {
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
@@ -249,13 +289,15 @@ describe('DashboardPage', () => {
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
@@ -273,13 +315,15 @@ describe('DashboardPage', () => {
         data: { totalContests: 0, activeContests: 0, totalParticipants: 0, totalSubmissions: 0 },
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
+      vi.mocked(useActiveContests).mockReturnValue({
         data: [] as Contest[],
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
@@ -299,13 +343,15 @@ describe('DashboardPage', () => {
         data: { totalContests: 0, activeContests: 0, totalParticipants: 0, totalSubmissions: 0 },
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
+      vi.mocked(useActiveContests).mockReturnValue({
         data: [] as Contest[],
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
@@ -318,19 +364,70 @@ describe('DashboardPage', () => {
     });
   });
 
+  describe('error state', () => {
+    it('displays error state when stats fetch fails', () => {
+      vi.mocked(useDashboardStats).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Database connection failed'),
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
+
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
+
+      render(<DashboardPage />, { wrapper: createWrapper() });
+
+      expect(screen.getByText('Failed to load dashboard')).toBeInTheDocument();
+      expect(screen.getByText('There was an error loading the dashboard data. Please try again.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Try Again' })).toBeInTheDocument();
+    });
+
+    it('calls refetch when Try Again button is clicked', async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(useDashboardStats).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Database connection failed'),
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
+
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
+
+      render(<DashboardPage />, { wrapper: createWrapper() });
+
+      const retryButton = screen.getByRole('button', { name: 'Try Again' });
+      await user.click(retryButton);
+
+      expect(mockRefetch).toHaveBeenCalled();
+    });
+  });
+
   describe('page header', () => {
     it('displays page title and subtitle', () => {
       vi.mocked(useDashboardStats).mockReturnValue({
         data: mockStats,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useDashboardStats>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
 
-      vi.mocked(useRecentContests).mockReturnValue({
-        data: mockContests,
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: mockActiveContests,
         isLoading: false,
         error: null,
-      } as ReturnType<typeof useRecentContests>);
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 

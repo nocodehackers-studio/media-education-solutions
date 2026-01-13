@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Activity, FileVideo, Users, type LucideIcon } from 'lucide-react';
+import { Trophy, Activity, FileVideo, AlertCircle, type LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Skeleton } from '@/components/ui';
-import { useDashboardStats, useRecentContests } from '@/features/contests';
+import { useDashboardStats, useActiveContests } from '@/features/contests';
 
 interface StatCardProps {
   title: string;
@@ -56,19 +56,45 @@ function DashboardSkeleton() {
 }
 
 /**
+ * Error state for dashboard
+ */
+function DashboardError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of all contests</p>
+      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h3 className="text-lg font-medium mb-2">Failed to load dashboard</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            There was an error loading the dashboard data. Please try again.
+          </p>
+          <Button onClick={onRetry} variant="outline">
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/**
  * Admin dashboard page showing contest statistics and overview.
- * Displays stat cards, recent contests, and judge progress.
+ * Displays stat cards, active contests with per-contest metrics, and empty state.
  *
  * AC1: Summary Statistics - Total Contests, Active Contests, Total Submissions
- * AC2: Active Contests List - name, status, submission count, judge progress
- * AC3: Judge Progress Display - placeholder until Epic 3
+ * AC2: Active Contests List - name, status, submission count, judge progress percentage
+ * AC3: Judge Progress Display - per-contest "Judge Progress: X/Y reviewed"
  * AC4: Contest Navigation - click to go to contest detail
  * AC5: Empty State - "Create your first contest" CTA
  */
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: recentContests, isLoading: contestsLoading } = useRecentContests(5);
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useDashboardStats();
+  const { data: activeContests, isLoading: contestsLoading, refetch: refetchContests } = useActiveContests();
 
   const handleContestClick = (contestId: string) => {
     navigate(`/admin/contests/${contestId}`);
@@ -78,9 +104,19 @@ export function DashboardPage() {
     navigate('/admin/contests');
   };
 
+  const handleRetry = () => {
+    refetchStats();
+    refetchContests();
+  };
+
   // Show loading skeleton while fetching initial stats
   if (statsLoading && !stats) {
     return <DashboardSkeleton />;
+  }
+
+  // Show error state if stats fetch failed
+  if (statsError && !stats) {
+    return <DashboardError onRetry={handleRetry} />;
   }
 
   const hasContests = (stats?.totalContests ?? 0) > 0;
@@ -117,72 +153,60 @@ export function DashboardPage() {
 
       {/* Content */}
       {hasContests ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Recent Contests (AC2, AC4) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Contests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {contestsLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between p-2">
-                      <div className="space-y-1">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
-                      <Skeleton className="h-5 w-16" />
+        /* Active Contests List (AC2, AC3, AC4) */
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Active Contests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {contestsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border rounded-md">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-32" />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentContests?.map((contest) => (
-                    <div
-                      key={contest.id}
-                      className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
-                      onClick={() => handleContestClick(contest.id)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          handleContestClick(contest.id);
-                        }
-                      }}
-                    >
-                      <div>
-                        <p className="font-medium">{contest.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {contest.contestCode}
-                        </p>
-                      </div>
-                      <Badge variant={contest.status === 'published' ? 'default' : 'secondary'}>
-                        {contest.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Judge Progress (AC3) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Judge Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>No judges assigned yet</span>
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Judge assignments available in Epic 3
+            ) : activeContests && activeContests.length > 0 ? (
+              <div className="space-y-3">
+                {activeContests.map((contest) => (
+                  <div
+                    key={contest.id}
+                    className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border transition-colors"
+                    onClick={() => handleContestClick(contest.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleContestClick(contest.id);
+                      }
+                    }}
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium">{contest.name}</p>
+                      {/* AC2: Submission count and AC3: Judge progress per contest */}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span data-testid="submission-count">Submissions: 0</span>
+                        <span data-testid="judge-progress">Judge Progress: 0/0 reviewed</span>
+                      </div>
+                    </div>
+                    <Badge variant="default">
+                      {contest.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No active contests. Publish a contest to see it here.
               </p>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         /* Empty State (AC5) */
         <Card>

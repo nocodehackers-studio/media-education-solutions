@@ -385,8 +385,24 @@ export const contestsApi = {
       .from('submissions')
       .select('*', { count: 'exact', head: true });
 
-    // If submissions table doesn't exist or has error, default to 0
-    const submissions = submissionsError ? 0 : (totalSubmissions ?? 0);
+    // Only ignore "relation does not exist" error (table not created yet)
+    // Re-throw real errors (RLS, config, network issues)
+    let submissions = 0;
+    if (submissionsError) {
+      // PostgreSQL error code 42P01 = undefined_table
+      // Also check message for "relation" errors in case code isn't available
+      const isTableMissing =
+        submissionsError.code === '42P01' ||
+        submissionsError.message?.includes('relation') ||
+        submissionsError.message?.includes('does not exist');
+
+      if (!isTableMissing) {
+        throw new Error(`Failed to fetch submissions count: ${submissionsError.message}`);
+      }
+      // Table doesn't exist yet - this is expected until Epic 4
+    } else {
+      submissions = totalSubmissions ?? 0;
+    }
 
     return {
       totalContests: totalContests ?? 0,
