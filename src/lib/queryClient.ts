@@ -3,12 +3,14 @@ import { QueryClient } from '@tanstack/react-query'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Data is fresh for 5 minutes
-      staleTime: 5 * 60 * 1000,
+      // Data is fresh for 30 seconds before considered stale
+      staleTime: 30_000,
       // Retry failed requests 3 times
       retry: 3,
-      // Don't refetch on window focus in development
-      refetchOnWindowFocus: import.meta.env.PROD,
+      // Disable aggressive refetching globally to prevent input focus spam
+      // AC5.1/AC5.2: Clicking inputs should NOT trigger network requests
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
     },
     mutations: {
       // Retry mutations once
