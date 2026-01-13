@@ -44,13 +44,15 @@ interface EditCategoryFormProps {
   category: Category;
   contestId: string;
   onSuccess?: () => void;
+  /** When true, all fields are disabled (AC3: read-only for published/closed) */
+  readOnly?: boolean;
 }
 
 /**
  * Form component for editing an existing category
- * Only editable when category is in draft status
+ * Supports read-only mode for published/closed categories (AC3)
  */
-export function EditCategoryForm({ category, contestId, onSuccess }: EditCategoryFormProps) {
+export function EditCategoryForm({ category, contestId, onSuccess, readOnly = false }: EditCategoryFormProps) {
   const updateCategory = useUpdateCategory(contestId);
 
   const form = useForm<UpdateCategoryInput>({
@@ -86,9 +88,9 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category Name *</FormLabel>
+              <FormLabel>Category Name {!readOnly && '*'}</FormLabel>
               <FormControl>
-                <Input placeholder="Best Short Film" {...field} />
+                <Input placeholder="Best Short Film" disabled={readOnly} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,8 +102,8 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Submission Type *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Submission Type {!readOnly && '*'}</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select submission type" />
@@ -125,12 +127,13 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
           name="deadline"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Submission Deadline *</FormLabel>
+              <FormLabel>Submission Deadline {!readOnly && '*'}</FormLabel>
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger asChild disabled={readOnly}>
                   <FormControl>
                     <Button
                       variant="outline"
+                      disabled={readOnly}
                       className={cn(
                         'w-full pl-3 text-left font-normal',
                         !field.value && 'text-muted-foreground'
@@ -178,6 +181,7 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
                   placeholder="Describe what this category is about..."
                   className="resize-none"
                   rows={3}
+                  disabled={readOnly}
                   {...field}
                 />
               </FormControl>
@@ -197,6 +201,7 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
                   placeholder="Specific rules for this category..."
                   className="resize-none"
                   rows={4}
+                  disabled={readOnly}
                   {...field}
                 />
               </FormControl>
@@ -205,16 +210,18 @@ export function EditCategoryForm({ category, contestId, onSuccess }: EditCategor
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button
-            type="submit"
-            disabled={form.formState.isSubmitting || updateCategory.isPending}
-          >
-            {form.formState.isSubmitting || updateCategory.isPending
-              ? 'Saving...'
-              : 'Save Changes'}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting || updateCategory.isPending}
+            >
+              {form.formState.isSubmitting || updateCategory.isPending
+                ? 'Saving...'
+                : 'Save Changes'}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );

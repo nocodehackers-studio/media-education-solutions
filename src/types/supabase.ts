@@ -159,7 +159,7 @@ export type Database = {
           category_id: string
           participant_id: string
           media_url: string
-          status: 'pending' | 'approved' | 'rejected'
+          status: 'submitted' | 'disqualified'
           created_at: string
         }
         Insert: {
@@ -167,14 +167,14 @@ export type Database = {
           category_id: string
           participant_id: string
           media_url: string
-          status?: 'pending' | 'approved' | 'rejected'
+          status?: 'submitted' | 'disqualified'
           created_at?: string
         }
         Update: {
           category_id?: string
           participant_id?: string
           media_url?: string
-          status?: 'pending' | 'approved' | 'rejected'
+          status?: 'submitted' | 'disqualified'
         }
         Relationships: [
           {

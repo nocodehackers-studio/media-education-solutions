@@ -218,32 +218,34 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           </div>
 
           <div className="flex gap-2">
-          {isEditable && (
-            <>
-              <Sheet open={editOpen} onOpenChange={setEditOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Edit Category</SheetTitle>
-                  </SheetHeader>
-                  <EditCategoryForm
-                    category={category}
-                    contestId={contestId}
-                    onSuccess={() => setEditOpen(false)}
-                  />
-                </SheetContent>
-              </Sheet>
+            {/* AC3: View button for published/closed (read-only form), Edit+Delete for draft */}
+            <Sheet open={editOpen} onOpenChange={setEditOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {isEditable ? 'Edit' : 'View'}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>
+                    {isEditable ? 'Edit Category' : 'View Category'}
+                  </SheetTitle>
+                </SheetHeader>
+                <EditCategoryForm
+                  category={category}
+                  contestId={contestId}
+                  onSuccess={() => setEditOpen(false)}
+                  readOnly={!isEditable}
+                />
+              </SheetContent>
+            </Sheet>
+            {isEditable && (
               <DeleteCategoryButton
                 categoryId={category.id}
                 contestId={contestId}
                 categoryName={category.name}
               />
-            </>
-          )}
+            )}
           </div>
         </div>
       </CardFooter>

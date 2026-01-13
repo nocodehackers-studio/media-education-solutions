@@ -108,7 +108,7 @@ describe('CategoryCard', () => {
     expect(screen.getByTestId('delete-category-button')).toBeInTheDocument();
   });
 
-  it('hides Edit and Delete buttons for published category (AC3)', () => {
+  it('shows View button and hides Edit/Delete for published category (AC3)', () => {
     renderWithProviders(
       <CategoryCard
         category={{ ...baseMockCategory, status: 'published' }}
@@ -116,11 +116,13 @@ describe('CategoryCard', () => {
       />
     );
 
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    // AC3: View button visible, Edit/Delete hidden
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId('delete-category-button')).not.toBeInTheDocument();
   });
 
-  it('hides Edit and Delete buttons for closed category (AC3)', () => {
+  it('shows View button and hides Edit/Delete for closed category (AC3)', () => {
     renderWithProviders(
       <CategoryCard
         category={{ ...baseMockCategory, status: 'closed' }}
@@ -128,7 +130,9 @@ describe('CategoryCard', () => {
       />
     );
 
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    // AC3: View button visible, Edit/Delete hidden
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId('delete-category-button')).not.toBeInTheDocument();
   });
 
