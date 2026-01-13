@@ -246,11 +246,11 @@ describe('DashboardPage', () => {
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
-      // Each active contest should show judge progress with percentage (AC2) and X/Y format (AC3)
+      // Each active contest should show judge progress placeholder (AC3 note: "No judges assigned" until Epic 3)
       const judgeProgressElements = screen.getAllByTestId('judge-progress');
       expect(judgeProgressElements).toHaveLength(2);
-      expect(judgeProgressElements[0]).toHaveTextContent('Judge Progress: 0/0 reviewed (0%)');
-      expect(judgeProgressElements[1]).toHaveTextContent('Judge Progress: 0/0 reviewed (0%)');
+      expect(judgeProgressElements[0]).toHaveTextContent('No judges assigned');
+      expect(judgeProgressElements[1]).toHaveTextContent('No judges assigned');
     });
   });
 

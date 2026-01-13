@@ -192,7 +192,7 @@ export function DashboardPage() {
                       {/* AC2: Submission count and judge progress percentage, AC3: X/Y reviewed format */}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span data-testid="submission-count">Submissions: 0</span>
-                        <span data-testid="judge-progress">Judge Progress: 0/0 reviewed (0%)</span>
+                        <span data-testid="judge-progress">No judges assigned</span>
                       </div>
                     </div>
                     <Badge variant="default">
