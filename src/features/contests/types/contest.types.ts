@@ -73,6 +73,16 @@ export interface Participant {
 }
 
 /**
+ * Dashboard statistics for admin overview
+ */
+export interface DashboardStats {
+  totalContests: number;
+  activeContests: number;
+  totalParticipants: number;
+  totalSubmissions: number;
+}
+
+/**
  * Transform database row (snake_case) to application object (camelCase)
  */
 export function transformParticipant(row: ParticipantRow): Participant {

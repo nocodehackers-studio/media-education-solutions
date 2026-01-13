@@ -5,6 +5,7 @@ import type {
   Contest,
   ContestRow,
   ContestStatus,
+  DashboardStats,
   Participant,
   ParticipantRow,
 } from '../types/contest.types';
@@ -343,5 +344,108 @@ export const contestsApi = {
     throw new Error(
       `Failed to generate codes after ${MAX_RETRIES} attempts: ${lastError?.message}`
     );
+  },
+
+  /**
+   * Get dashboard statistics
+   * @returns Dashboard stats: total contests, active contests, total participants, total submissions
+   */
+  async getStats(): Promise<DashboardStats> {
+    // Total contests
+    const { count: totalContests, error: contestsError } = await supabase
+      .from('contests')
+      .select('*', { count: 'exact', head: true });
+
+    if (contestsError) {
+      throw new Error(`Failed to fetch contests count: ${contestsError.message}`);
+    }
+
+    // Active contests (published)
+    const { count: activeContests, error: activeError } = await supabase
+      .from('contests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
+
+    if (activeError) {
+      throw new Error(`Failed to fetch active contests count: ${activeError.message}`);
+    }
+
+    // Total participants (codes generated)
+    const { count: totalParticipants, error: participantsError } = await supabase
+      .from('participants')
+      .select('*', { count: 'exact', head: true });
+
+    if (participantsError) {
+      throw new Error(`Failed to fetch participants count: ${participantsError.message}`);
+    }
+
+    // Total submissions (0 until Epic 4)
+    // submissions table may not exist yet - handle gracefully
+    const { count: totalSubmissions, error: submissionsError } = await supabase
+      .from('submissions')
+      .select('*', { count: 'exact', head: true });
+
+    // Only ignore "relation does not exist" error (table not created yet)
+    // Re-throw real errors (RLS, config, network issues)
+    let submissions = 0;
+    if (submissionsError) {
+      // PostgreSQL error code 42P01 = undefined_table
+      // Also check message for "relation" errors in case code isn't available
+      const isTableMissing =
+        submissionsError.code === '42P01' ||
+        submissionsError.message?.includes('relation') ||
+        submissionsError.message?.includes('does not exist');
+
+      if (!isTableMissing) {
+        throw new Error(`Failed to fetch submissions count: ${submissionsError.message}`);
+      }
+      // Table doesn't exist yet - this is expected until Epic 4
+    } else {
+      submissions = totalSubmissions ?? 0;
+    }
+
+    return {
+      totalContests: totalContests ?? 0,
+      activeContests: activeContests ?? 0,
+      totalParticipants: totalParticipants ?? 0,
+      totalSubmissions: submissions,
+    };
+  },
+
+  /**
+   * List recent contests ordered by creation date
+   * @param limit Maximum number of contests to return (default 5)
+   * @returns Array of recent contests
+   */
+  async listRecentContests(limit: number = 5): Promise<Contest[]> {
+    const { data, error } = await supabase
+      .from('contests')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`Failed to fetch recent contests: ${error.message}`);
+    }
+
+    return (data as ContestRow[]).map(transformContestRow);
+  },
+
+  /**
+   * List active contests (published status)
+   * @returns Array of active contests
+   */
+  async listActiveContests(): Promise<Contest[]> {
+    const { data, error } = await supabase
+      .from('contests')
+      .select('*')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch active contests: ${error.message}`);
+    }
+
+    return (data as ContestRow[]).map(transformContestRow);
   },
 };

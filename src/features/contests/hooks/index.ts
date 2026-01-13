@@ -7,3 +7,6 @@ export { useUpdateContestStatus } from './useUpdateContestStatus';
 export { useDeleteContest } from './useDeleteContest';
 export { useParticipantCodes } from './useParticipantCodes';
 export { useGenerateCodes } from './useGenerateCodes';
+export { useDashboardStats } from './useDashboardStats';
+export { useRecentContests } from './useRecentContests';
+export { useActiveContests } from './useActiveContests';
