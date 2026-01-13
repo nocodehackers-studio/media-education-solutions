@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Card,
@@ -34,26 +34,24 @@ const statusOptions: { value: ContestStatus; label: string }[] = [
  */
 export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [optimisticStatus, setOptimisticStatus] = useState<ContestStatus>(contest.status);
+  const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
   const updateStatus = useUpdateContestStatus();
 
-  // Sync optimistic state when contest.status changes (refetch, navigation, external update)
-  useEffect(() => {
-    setOptimisticStatus(contest.status);
-  }, [contest.status]);
+  // Display pending status during mutation, otherwise use prop value
+  const displayStatus = pendingStatus ?? contest.status;
 
   const handleStatusChange = async (newStatus: ContestStatus) => {
-    const previousStatus = optimisticStatus;
-    setOptimisticStatus(newStatus); // Optimistic update
+    setPendingStatus(newStatus); // Optimistic update
 
     try {
       await updateStatus.mutateAsync({ id: contest.id, status: newStatus });
       toast.success('Status updated');
     } catch (error) {
-      setOptimisticStatus(previousStatus); // Revert on error
       toast.error(
         error instanceof Error ? error.message : 'Failed to update status'
       );
+    } finally {
+      setPendingStatus(null); // Clear pending state, prop will have correct value
     }
   };
 
@@ -67,7 +65,7 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
         <CardTitle>Contest Details</CardTitle>
         <div className="flex gap-2">
           <Select
-            value={optimisticStatus}
+            value={displayStatus}
             onValueChange={(value) => handleStatusChange(value as ContestStatus)}
             disabled={updateStatus.isPending}
           >
