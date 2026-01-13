@@ -111,6 +111,81 @@ export type Database = {
           }
         ]
       }
+      categories: {
+        Row: {
+          id: string
+          contest_id: string
+          name: string
+          type: 'video' | 'photo'
+          rules: string | null
+          description: string | null
+          deadline: string
+          status: 'draft' | 'published' | 'closed'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contest_id: string
+          name: string
+          type: 'video' | 'photo'
+          rules?: string | null
+          description?: string | null
+          deadline: string
+          status?: 'draft' | 'published' | 'closed'
+          created_at?: string
+        }
+        Update: {
+          contest_id?: string
+          name?: string
+          type?: 'video' | 'photo'
+          rules?: string | null
+          description?: string | null
+          deadline?: string
+          status?: 'draft' | 'published' | 'closed'
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'categories_contest_id_fkey'
+            columns: ['contest_id']
+            isOneToOne: false
+            referencedRelation: 'contests'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      submissions: {
+        Row: {
+          id: string
+          category_id: string
+          participant_id: string
+          media_url: string
+          status: 'submitted' | 'disqualified'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          category_id: string
+          participant_id: string
+          media_url: string
+          status?: 'submitted' | 'disqualified'
+          created_at?: string
+        }
+        Update: {
+          category_id?: string
+          participant_id?: string
+          media_url?: string
+          status?: 'submitted' | 'disqualified'
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'submissions_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'categories'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

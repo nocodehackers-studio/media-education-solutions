@@ -12,7 +12,14 @@ export const ERROR_CODES = {
 
   // Contest & Category
   CONTEST_NOT_FOUND: 'CONTEST_NOT_FOUND',
+  CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   CATEGORY_CLOSED: 'CATEGORY_CLOSED',
+  CATEGORY_HAS_SUBMISSIONS: 'CATEGORY_HAS_SUBMISSIONS',
+  CATEGORY_CREATE_FAILED: 'CATEGORY_CREATE_FAILED',
+  CATEGORY_UPDATE_FAILED: 'CATEGORY_UPDATE_FAILED',
+  CATEGORY_DELETE_FAILED: 'CATEGORY_DELETE_FAILED',
+  CATEGORY_STATUS_UPDATE_FAILED: 'CATEGORY_STATUS_UPDATE_FAILED',
+  CATEGORY_LOAD_FAILED: 'CATEGORY_LOAD_FAILED',
 
   // File Upload
   SUBMISSION_LIMIT_EXCEEDED: 'SUBMISSION_LIMIT_EXCEEDED',
@@ -36,7 +43,14 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   AUTH_SESSION_EXPIRED: 'Your session has expired. Please log in again.',
   AUTH_UNAUTHORIZED: 'You are not authorized to access this resource.',
   CONTEST_NOT_FOUND: 'Contest not found.',
+  CATEGORY_NOT_FOUND: 'Category not found.',
   CATEGORY_CLOSED: 'This category is no longer accepting submissions.',
+  CATEGORY_HAS_SUBMISSIONS: 'Cannot modify category - it has submissions.',
+  CATEGORY_CREATE_FAILED: 'Failed to create category.',
+  CATEGORY_UPDATE_FAILED: 'Failed to update category.',
+  CATEGORY_DELETE_FAILED: 'Failed to delete category.',
+  CATEGORY_STATUS_UPDATE_FAILED: 'Failed to update category status.',
+  CATEGORY_LOAD_FAILED: 'Failed to load categories.',
   SUBMISSION_LIMIT_EXCEEDED: 'You have reached the submission limit.',
   FILE_TOO_LARGE: 'File size exceeds the maximum allowed.',
   INVALID_FILE_TYPE: 'This file type is not supported.',

@@ -20,6 +20,7 @@ import {
   useContest,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
+import { CategoriesTab } from '@/features/categories';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string }> = {
@@ -123,20 +124,7 @@ export function ContestDetailPage() {
         </TabsContent>
 
         <TabsContent value="categories" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-              <CardDescription>
-                Category management will be implemented in Story 2.5
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                This tab will allow you to create and manage contest categories,
-                each with their own submission requirements.
-              </p>
-            </CardContent>
-          </Card>
+          <CategoriesTab contest={contest} />
         </TabsContent>
 
         <TabsContent value="codes" className="mt-6">
