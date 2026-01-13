@@ -246,11 +246,11 @@ describe('DashboardPage', () => {
 
       render(<DashboardPage />, { wrapper: createWrapper() });
 
-      // Each active contest should show judge progress
+      // Each active contest should show judge progress with percentage (AC2) and X/Y format (AC3)
       const judgeProgressElements = screen.getAllByTestId('judge-progress');
       expect(judgeProgressElements).toHaveLength(2);
-      expect(judgeProgressElements[0]).toHaveTextContent('Judge Progress: 0/0 reviewed');
-      expect(judgeProgressElements[1]).toHaveTextContent('Judge Progress: 0/0 reviewed');
+      expect(judgeProgressElements[0]).toHaveTextContent('Judge Progress: 0/0 reviewed (0%)');
+      expect(judgeProgressElements[1]).toHaveTextContent('Judge Progress: 0/0 reviewed (0%)');
     });
   });
 
@@ -384,6 +384,27 @@ describe('DashboardPage', () => {
 
       expect(screen.getByText('Failed to load dashboard')).toBeInTheDocument();
       expect(screen.getByText('There was an error loading the dashboard data. Please try again.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Try Again' })).toBeInTheDocument();
+    });
+
+    it('displays error state when active contests fetch fails', () => {
+      vi.mocked(useDashboardStats).mockReturnValue({
+        data: mockStats,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useDashboardStats>);
+
+      vi.mocked(useActiveContests).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch active contests'),
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useActiveContests>);
+
+      render(<DashboardPage />, { wrapper: createWrapper() });
+
+      expect(screen.getByText('Failed to load dashboard')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Try Again' })).toBeInTheDocument();
     });
 

@@ -94,7 +94,7 @@ function DashboardError({ onRetry }: { onRetry: () => void }) {
 export function DashboardPage() {
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useDashboardStats();
-  const { data: activeContests, isLoading: contestsLoading, refetch: refetchContests } = useActiveContests();
+  const { data: activeContests, isLoading: contestsLoading, error: contestsError, refetch: refetchContests } = useActiveContests();
 
   const handleContestClick = (contestId: string) => {
     navigate(`/admin/contests/${contestId}`);
@@ -114,8 +114,9 @@ export function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
-  // Show error state if stats fetch failed
-  if (statsError && !stats) {
+  // Show error state if stats or contests fetch failed
+  const hasError = (statsError && !stats) || (contestsError && !activeContests);
+  if (hasError) {
     return <DashboardError onRetry={handleRetry} />;
   }
 
@@ -188,10 +189,10 @@ export function DashboardPage() {
                   >
                     <div className="space-y-1">
                       <p className="font-medium">{contest.name}</p>
-                      {/* AC2: Submission count and AC3: Judge progress per contest */}
+                      {/* AC2: Submission count and judge progress percentage, AC3: X/Y reviewed format */}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span data-testid="submission-count">Submissions: 0</span>
-                        <span data-testid="judge-progress">Judge Progress: 0/0 reviewed</span>
+                        <span data-testid="judge-progress">Judge Progress: 0/0 reviewed (0%)</span>
                       </div>
                     </div>
                     <Badge variant="default">
