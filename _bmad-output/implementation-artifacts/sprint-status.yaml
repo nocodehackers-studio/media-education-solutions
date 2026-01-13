@@ -56,8 +56,8 @@ development_status:
   2-3-create-contest: done
   2-4-contest-list-status-management: done
   2-5-category-management: done
-  2-6-participant-code-management: review
-  2-7-admin-dashboard-with-stats: backlog
+  2-6-participant-code-management: done
+  2-7-admin-dashboard-with-stats: ready-for-dev
   2-8-epic-2-stabilization-optimization: backlog
   epic-2-retrospective: optional
 
