@@ -71,6 +71,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [optimisticStatus, setOptimisticStatus] = useState<CategoryStatus>(category.status);
   const [submissionCount, setSubmissionCount] = useState<number | null>(null);
+  const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [submissionCountError, setSubmissionCountError] = useState(false);
   const updateStatus = useUpdateCategoryStatus(contestId);
 
@@ -79,36 +80,44 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
     setOptimisticStatus(category.status);
   }, [category.status]);
 
+  // Fetch submission count - used on mount and before Draft status change
+  const fetchSubmissionCount = async (): Promise<number> => {
+    setIsLoadingCount(true);
+    setSubmissionCountError(false);
+    try {
+      const count = await categoriesApi.getSubmissionCount(category.id);
+      setSubmissionCount(count);
+      setIsLoadingCount(false);
+      return count;
+    } catch {
+      setSubmissionCountError(true);
+      setIsLoadingCount(false);
+      throw new Error('Failed to verify submission count');
+    }
+  };
+
   // Load submission count on mount for AC4 status change rules
   useEffect(() => {
-    let mounted = true;
-    categoriesApi.getSubmissionCount(category.id)
-      .then((count) => {
-        if (mounted) {
-          setSubmissionCount(count);
-          setSubmissionCountError(false);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setSubmissionCountError(true);
-        }
-      });
-    return () => { mounted = false; };
+    fetchSubmissionCount().catch(() => {
+      // Error state already set in fetchSubmissionCount
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category.id]);
 
   const isDraft = optimisticStatus === 'draft';
   const isEditable = isDraft;
   const deadlinePassed = new Date(category.deadline) < new Date();
 
-  // AC4: Draft is only disabled if category has submissions (not based on current status)
+  // AC4: Draft disabled while loading, if has submissions, or on error
   const hasSubmissions = submissionCount !== null && submissionCount > 0;
-  const draftDisabled = hasSubmissions || submissionCountError;
-  const draftTooltip = hasSubmissions
-    ? 'Cannot set to Draft - category has submissions'
-    : submissionCountError
-      ? 'Cannot verify submission count'
-      : undefined;
+  const draftDisabled = isLoadingCount || hasSubmissions || submissionCountError;
+  const draftRestrictionReason = isLoadingCount
+    ? 'Checking submissions...'
+    : hasSubmissions
+      ? `Cannot set to Draft - category has ${submissionCount} submission${submissionCount === 1 ? '' : 's'}`
+      : submissionCountError
+        ? 'Cannot verify submission count'
+        : null;
 
   // Auto-close category if deadline passed (AC5 - client-side check)
   useEffect(() => {
@@ -120,14 +129,16 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   }, [deadlinePassed]);
 
   const handleStatusChange = async (newStatus: CategoryStatus) => {
-    // AC4: Block Draft status if category has submissions
+    // AC4: For Draft status, always refetch submission count first
     if (newStatus === 'draft') {
-      if (submissionCountError) {
+      try {
+        const freshCount = await fetchSubmissionCount();
+        if (freshCount > 0) {
+          toast.error(`Cannot set to Draft - category has ${freshCount} submission${freshCount === 1 ? '' : 's'}`);
+          return;
+        }
+      } catch {
         toast.error('Cannot verify submission count - please try again');
-        return;
-      }
-      if (hasSubmissions) {
-        toast.error('Cannot set to Draft - category has submissions');
         return;
       }
     }
@@ -182,29 +193,31 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
         </CardContent>
       )}
 
-      <CardFooter className="flex justify-between">
-        <Select
-          value={optimisticStatus}
-          onValueChange={(value) => handleStatusChange(value as CategoryStatus)}
-          disabled={updateStatus.isPending}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem
-              value="draft"
-              disabled={draftDisabled}
-              title={draftTooltip}
+      <CardFooter className="flex flex-col gap-2">
+        <div className="flex w-full justify-between">
+          <div className="flex flex-col gap-1">
+            <Select
+              value={optimisticStatus}
+              onValueChange={(value) => handleStatusChange(value as CategoryStatus)}
+              disabled={updateStatus.isPending || isLoadingCount}
             >
-              Draft
-            </SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft" disabled={draftDisabled}>
+                  Draft
+                </SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            {draftRestrictionReason && optimisticStatus !== 'draft' && (
+              <p className="text-xs text-muted-foreground">{draftRestrictionReason}</p>
+            )}
+          </div>
 
-        <div className="flex gap-2">
+          <div className="flex gap-2">
           {isEditable && (
             <>
               <Sheet open={editOpen} onOpenChange={setEditOpen}>
@@ -231,6 +244,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
               />
             </>
           )}
+          </div>
         </div>
       </CardFooter>
     </Card>

@@ -790,6 +790,7 @@ New files created:
 - src/features/categories/components/DeleteCategoryButton.tsx
 - src/features/categories/components/DeleteCategoryButton.test.tsx
 - src/features/categories/components/EditCategoryForm.tsx
+- src/features/categories/components/EditCategoryForm.test.tsx
 - src/features/categories/components/index.ts
 - src/features/categories/hooks/index.ts
 - src/features/categories/hooks/useCategories.ts
@@ -803,10 +804,11 @@ New files created:
 - src/features/categories/types/index.ts
 
 Modified files:
-- package.json (added date-fns, react-day-picker, @radix-ui/react-popover)
+- package.json (added react-day-picker, @radix-ui/react-popover)
 - package-lock.json
 - src/components/ui/index.ts (added Calendar, Popover exports)
 - src/features/categories/index.ts (full feature exports)
+- src/lib/errorCodes.ts (added category-specific error codes)
 - src/pages/admin/ContestDetailPage.tsx (integrated CategoriesTab)
 - src/test/setup.ts (added Radix UI mocks)
 - src/types/supabase.ts (added categories and submissions types)
@@ -817,3 +819,4 @@ Modified files:
 | Date | Change | Files |
 |------|--------|-------|
 | 2026-01-13 | Story 2-5 implementation complete | 31 files (see File List) |
+| 2026-01-13 | Code review fixes: AC4 loading state, refetch before Draft, inline restriction message, standardized error codes, Intl.DateTimeFormat, React type imports | CategoryCard.tsx, categoriesApi.ts, errorCodes.ts, forms, tests |
