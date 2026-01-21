@@ -1,26 +1,19 @@
 import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts'
-import { Skeleton } from '@/components/ui'
 
 interface JudgeRouteProps {
   children: ReactNode
 }
 
 /**
- * Loading screen for auth check.
+ * Minimal loading screen for auth check.
+ * AC3: Uses CSS-only animation to avoid pulling in UI components to initial bundle.
  */
 function LoadingScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="space-y-4 w-full max-w-md p-4">
-        <Skeleton className="h-8 w-3/4 mx-auto" />
-        <Skeleton className="h-4 w-1/2 mx-auto" />
-        <div className="space-y-2 pt-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      </div>
+      <div className="animate-pulse text-muted-foreground">Loading...</div>
     </div>
   )
 }
@@ -30,21 +23,30 @@ function LoadingScreen() {
  * Redirects:
  * - Unauthenticated users → /login
  * - Admins can also access judge routes (admin is superset of judge)
+ *
+ * AC1: Handles case where session exists but profile still loading.
  */
 export function JudgeRoute({ children }: JudgeRouteProps) {
   const { user, isLoading, isAuthenticated } = useAuth()
   const location = useLocation()
 
+  // Still loading auth state
   if (isLoading) {
     return <LoadingScreen />
   }
 
+  // No session - redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Both admin and judge can access judge routes
-  if (user?.role !== 'admin' && user?.role !== 'judge') {
+  // AC1: Session exists but profile still loading in background
+  if (!user) {
+    return <LoadingScreen />
+  }
+
+  // Profile loaded, check role - both admin and judge can access judge routes
+  if (user.role !== 'admin' && user.role !== 'judge') {
     return <Navigate to="/login" replace />
   }
 

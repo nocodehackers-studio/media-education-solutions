@@ -22,6 +22,9 @@ export { useUpdateContestStatus } from './hooks/useUpdateContestStatus';
 export { useDeleteContest } from './hooks/useDeleteContest';
 export { useParticipantCodes } from './hooks/useParticipantCodes';
 export { useGenerateCodes } from './hooks/useGenerateCodes';
+export { useDashboardStats } from './hooks/useDashboardStats';
+export { useRecentContests } from './hooks/useRecentContests';
+export { useActiveContests } from './hooks/useActiveContests';
 
 // === API ===
 export { contestsApi } from './api/contestsApi';
@@ -39,6 +42,7 @@ export type {
   Contest,
   ContestRow,
   ContestStatus,
+  DashboardStats,
   Participant,
   ParticipantRow,
   ParticipantStatus,

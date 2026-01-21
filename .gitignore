@@ -70,10 +70,6 @@ tsconfig.node.tsbuildinfo
 *.chat-history
 *.llm-cache
 
-# BMAD Workflows & Planning Artifacts
-_bmad/
-_bmad-output/
-
 # Local working/staging directory
 .ignore/
 
