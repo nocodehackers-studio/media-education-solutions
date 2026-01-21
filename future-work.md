@@ -15,3 +15,8 @@
 - **AC4 tooltip requirement**: Draft option should show tooltip when disabled (submissions exist). Current inline helper text does not meet the spec. (src/features/categories/components/CategoryCard.tsx)
 - **Deadline picker date handling**: Selecting a date uses `toISOString()` and disables "today"; this can shift the day for non-UTC users. Store a date-only value or normalize to end-of-day, and allow same-day selection. (src/features/categories/components/CreateCategoryForm.tsx, src/features/categories/components/EditCategoryForm.tsx)
 - **Missing interaction tests**: Status dropdown and date picker behaviors are untested due to jsdom limitations; add Playwright coverage for AC4 and deadline selection. (src/features/categories/components/CategoryCard.test.tsx, src/features/categories/components/CreateCategoryForm.test.tsx)
+
+## Story 2-8 Review Items
+
+- **AC1 session/profile failure fallback**: Profile fetch failure leaves session authenticated but profile null, which keeps route guards in a loading state indefinitely. Add a bounded fallback or explicit error state so dashboard doesn't hang. (src/contexts/AuthProvider.tsx, src/router/AdminRoute.tsx, src/router/JudgeRoute.tsx)
+- **AC4 manual checklist**: AC4 requires end-to-end manual verification; checklist is deferred and remains incomplete. Run and record results or keep story in-progress until QA completes. (_bmad-output/implementation-artifacts/2-8-epic-2-stabilization-optimization.md)
