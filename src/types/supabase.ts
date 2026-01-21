@@ -1,5 +1,5 @@
-// Database types will be generated via: npx supabase gen types typescript
-// For now, use a minimal placeholder
+// Database types - manually maintained with type-safe enums
+// Story 2-9: Added divisions table, updated categories to use division_id
 
 export type Database = {
   public: {
@@ -69,6 +69,37 @@ export type Database = {
         }
         Relationships: []
       }
+      // Story 2-9: Divisions table for organizing categories by competition level
+      divisions: {
+        Row: {
+          id: string
+          contest_id: string
+          name: string
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contest_id: string
+          name: string
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          contest_id?: string
+          name?: string
+          display_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'divisions_contest_id_fkey'
+            columns: ['contest_id']
+            isOneToOne: false
+            referencedRelation: 'contests'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       participants: {
         Row: {
           id: string
@@ -111,10 +142,11 @@ export type Database = {
           }
         ]
       }
+      // Story 2-9: Categories now reference division_id instead of contest_id
       categories: {
         Row: {
           id: string
-          contest_id: string
+          division_id: string
           name: string
           type: 'video' | 'photo'
           rules: string | null
@@ -125,7 +157,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          contest_id: string
+          division_id: string
           name: string
           type: 'video' | 'photo'
           rules?: string | null
@@ -135,7 +167,7 @@ export type Database = {
           created_at?: string
         }
         Update: {
-          contest_id?: string
+          division_id?: string
           name?: string
           type?: 'video' | 'photo'
           rules?: string | null
@@ -145,10 +177,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'categories_contest_id_fkey'
-            columns: ['contest_id']
+            foreignKeyName: 'categories_division_id_fkey'
+            columns: ['division_id']
             isOneToOne: false
-            referencedRelation: 'contests'
+            referencedRelation: 'divisions'
             referencedColumns: ['id']
           }
         ]

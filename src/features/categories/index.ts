@@ -14,6 +14,7 @@ export {
 // === Hooks ===
 export {
   useCategories,
+  useCategoriesByDivision,
   useCategory,
   useCreateCategory,
   useDeleteCategory,

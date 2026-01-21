@@ -116,3 +116,27 @@ export {
   TableCell,
   TableCaption,
 } from './table'
+
+// === Collapsible ===
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from './collapsible'
+
+// === Dialog ===
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './dialog'
+
+// === Checkbox ===
+export { Checkbox } from './checkbox'

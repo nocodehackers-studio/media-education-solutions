@@ -46,7 +46,7 @@ function renderWithProviders(ui: ReactElement) {
 
 const baseMockCategory: Category = {
   id: 'cat-1',
-  contestId: 'contest-123',
+  divisionId: 'div-1',
   name: 'Best Video',
   type: 'video',
   rules: 'Some rules',

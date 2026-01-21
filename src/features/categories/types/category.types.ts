@@ -5,9 +5,10 @@ export type CategoryStatus = 'draft' | 'published' | 'closed';
 export type CategoryType = 'video' | 'photo';
 
 // Database row (snake_case from Supabase)
+// Story 2-9: Categories now reference division_id instead of contest_id
 export interface CategoryRow {
   id: string;
-  contest_id: string;
+  division_id: string;
   name: string;
   type: CategoryType;
   rules: string | null;
@@ -20,7 +21,7 @@ export interface CategoryRow {
 // Application type (camelCase for React)
 export interface Category {
   id: string;
-  contestId: string;
+  divisionId: string;
   name: string;
   type: CategoryType;
   rules: string | null;
@@ -34,7 +35,7 @@ export interface Category {
 export function transformCategory(row: CategoryRow): Category {
   return {
     id: row.id,
-    contestId: row.contest_id,
+    divisionId: row.division_id,
     name: row.name,
     type: row.type,
     rules: row.rules,

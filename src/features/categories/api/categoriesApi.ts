@@ -9,15 +9,40 @@ import type { CategoryRow, CategoryStatus } from '../types/category.types';
 
 export const categoriesApi = {
   /**
-   * List all categories for a contest
+   * List all categories for a contest (via divisions)
+   * Story 2-9: Categories now go through divisions
    * @param contestId Contest ID to filter by
-   * @returns Array of categories ordered by creation date
+   * @returns Array of categories ordered by division display_order then creation date
    */
   async listByContest(contestId: string) {
+    // Join through divisions to get categories for this contest
+    const { data, error } = await supabase
+      .from('categories')
+      .select(`
+        *,
+        divisions!inner(contest_id, display_order)
+      `)
+      .eq('divisions.contest_id', contestId)
+      .order('divisions(display_order)', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
+    }
+
+    return (data as CategoryRow[]).map(transformCategory);
+  },
+
+  /**
+   * List all categories for a specific division
+   * @param divisionId Division ID to filter by
+   * @returns Array of categories ordered by creation date
+   */
+  async listByDivision(divisionId: string) {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .eq('contest_id', contestId)
+      .eq('division_id', divisionId)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -47,16 +72,17 @@ export const categoriesApi = {
   },
 
   /**
-   * Create a new category for a contest
-   * @param contestId Contest ID to create category in
+   * Create a new category for a division
+   * Story 2-9: Categories now belong to divisions, not contests directly
+   * @param divisionId Division ID to create category in
    * @param input Category creation data
    * @returns Created category with draft status
    */
-  async create(contestId: string, input: CreateCategoryInput) {
+  async create(divisionId: string, input: CreateCategoryInput) {
     const { data, error } = await supabase
       .from('categories')
       .insert({
-        contest_id: contestId,
+        division_id: divisionId,
         name: input.name,
         type: input.type,
         description: input.description || null,

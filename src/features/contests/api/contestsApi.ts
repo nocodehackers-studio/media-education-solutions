@@ -121,6 +121,21 @@ export const contestsApi = {
       );
     }
 
+    // Story 2-9: Auto-create default "General" division for new contests
+    const { error: divisionError } = await supabase
+      .from('divisions')
+      .insert({
+        contest_id: contest.id,
+        name: 'General',
+        display_order: 0,
+      });
+
+    if (divisionError) {
+      // Rollback contest creation if division fails
+      await supabase.from('contests').delete().eq('id', contest.id);
+      throw new Error('Failed to create default division');
+    }
+
     return transformContestRow(contest);
   },
 
