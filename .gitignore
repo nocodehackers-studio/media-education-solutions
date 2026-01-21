@@ -70,9 +70,6 @@ tsconfig.node.tsbuildinfo
 *.chat-history
 *.llm-cache
 
-# Local working/staging directory
-.ignore/
-
 # Vite cache and temp
 .vite-cache/
 .vite-temp/
