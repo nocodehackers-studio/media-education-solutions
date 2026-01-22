@@ -1,6 +1,6 @@
 # Story 3.1: Assign Judge to Category
 
-Status: review
+Status: done
 
 ## Story
 
@@ -507,6 +507,12 @@ Story 3-1 implementation complete. All acceptance criteria satisfied:
 - AC5: Remove judge with AlertDialog confirmation and success toast "Judge removed"
 - AC6: Database migration adds assigned_judge_id and invited_at columns to categories table
 
+Review fixes applied:
+- Clear invited_at on judge assignment to avoid stale invitation state
+- Switch judge lookup to O(1) getUserByEmail
+- Invalidate all category queries after assign/remove
+- Reset AssignJudgeSheet form when closing
+
 Quality gates:
 - TypeScript: Pass
 - ESLint: Pass (pre-existing warnings in shadcn/ui components only)
@@ -524,6 +530,7 @@ Quality gates:
 - src/features/categories/hooks/useRemoveJudge.ts
 
 **Modified Files:**
+- _bmad-output/implementation-artifacts/3-1-assign-judge-to-category.md
 - src/features/categories/types/category.types.ts
 - src/features/categories/types/index.ts
 - src/features/categories/api/categoriesApi.ts
@@ -535,4 +542,3 @@ Quality gates:
 - src/features/categories/components/index.ts
 - src/features/categories/index.ts
 - _bmad-output/implementation-artifacts/sprint-status.yaml
-
