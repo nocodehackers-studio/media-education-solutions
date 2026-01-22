@@ -69,13 +69,12 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Check if user already exists with this email
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    );
+    // Check if user already exists with this email using O(1) lookup
+    const { data: existingUserData, error: lookupError } =
+      await supabaseAdmin.auth.admin.getUserByEmail(email.toLowerCase());
 
-    if (existingUser) {
+    if (existingUserData?.user) {
+      const existingUser = existingUserData.user;
       // User exists - check if they're already a judge
       const { data: existingProfile } = await supabaseAdmin
         .from('profiles')
@@ -95,6 +94,11 @@ Deno.serve(async (req) => {
         // User exists but not as judge (e.g., admin) - don't convert
         throw new Error('User exists with a different role');
       }
+    }
+
+    // lookupError with code 'user_not_found' is expected when user doesn't exist
+    if (lookupError && !lookupError.message?.includes('not found')) {
+      throw lookupError;
     }
 
     // Create new auth user (trigger will auto-create profile with role='judge')

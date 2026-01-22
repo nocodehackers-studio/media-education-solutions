@@ -286,10 +286,14 @@ export const categoriesApi = {
     }
 
     // 3. Update category with judge assignment
+    // Clear invited_at since this is a new assignment (invite will be sent later by Story 3.2)
     // Cast needed as Supabase generated types may not include new columns from recent migrations
     const { error: updateError } = await supabase
       .from('categories')
-      .update({ assigned_judge_id: judgeId } as Partial<CategoryRow>)
+      .update({
+        assigned_judge_id: judgeId,
+        invited_at: null, // Clear any previous invitation timestamp
+      } as Partial<CategoryRow>)
       .eq('id', categoryId);
 
     if (updateError) throw updateError;

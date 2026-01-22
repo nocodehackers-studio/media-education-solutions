@@ -5,18 +5,17 @@ import { categoriesApi } from '../api/categoriesApi';
 /**
  * Mutation hook for removing a judge from a category
  * Note: Any existing reviews by the judge remain in the database
- * @param contestId Contest ID for cache invalidation
  * @returns TanStack mutation
  */
-export function useRemoveJudge(contestId: string) {
+export function useRemoveJudge() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (categoryId: string) => categoriesApi.removeJudge(categoryId),
     onSuccess: () => {
-      // Invalidate all category queries for this contest
-      queryClient.invalidateQueries({ queryKey: ['categories', contestId] });
-      // Also invalidate division-level queries
+      // Invalidate ALL category queries (covers both contest-level and division-level)
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      // Also invalidate division queries in case they include category counts
       queryClient.invalidateQueries({ queryKey: ['divisions'] });
     },
   });

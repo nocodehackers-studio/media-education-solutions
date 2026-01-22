@@ -10,19 +10,18 @@ interface AssignJudgeParams {
 /**
  * Mutation hook for assigning a judge to a category
  * If the judge doesn't exist, creates a new judge profile via Edge Function
- * @param contestId Contest ID for cache invalidation
  * @returns TanStack mutation with isNewJudge result
  */
-export function useAssignJudge(contestId: string) {
+export function useAssignJudge() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ categoryId, email }: AssignJudgeParams) =>
       categoriesApi.assignJudge(categoryId, email),
     onSuccess: () => {
-      // Invalidate all category queries for this contest
-      queryClient.invalidateQueries({ queryKey: ['categories', contestId] });
-      // Also invalidate division-level queries
+      // Invalidate ALL category queries (covers both contest-level and division-level)
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      // Also invalidate division queries in case they include category counts
       queryClient.invalidateQueries({ queryKey: ['divisions'] });
     },
   });

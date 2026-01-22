@@ -86,7 +86,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [submissionCountError, setSubmissionCountError] = useState(false);
   const updateStatus = useUpdateCategoryStatus(contestId);
-  const removeJudge = useRemoveJudge(contestId);
+  const removeJudge = useRemoveJudge();
 
   // Sync optimistic status with prop changes (per story 2-4 pattern)
   useEffect(() => {
@@ -262,7 +262,6 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
             <AssignJudgeSheet
               categoryId={category.id}
               categoryName={category.name}
-              contestId={contestId}
             />
           )}
         </div>

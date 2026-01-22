@@ -39,7 +39,6 @@ type AssignJudgeInput = z.infer<typeof assignJudgeSchema>;
 interface AssignJudgeSheetProps {
   categoryId: string;
   categoryName: string;
-  contestId: string;
 }
 
 /**
@@ -51,10 +50,9 @@ interface AssignJudgeSheetProps {
 export function AssignJudgeSheet({
   categoryId,
   categoryName,
-  contestId,
 }: AssignJudgeSheetProps) {
   const [open, setOpen] = useState(false);
-  const assignJudge = useAssignJudge(contestId);
+  const assignJudge = useAssignJudge();
 
   const form = useForm<AssignJudgeInput>({
     resolver: zodResolver(assignJudgeSchema),
@@ -63,6 +61,14 @@ export function AssignJudgeSheet({
       email: '',
     },
   });
+
+  // Reset form when sheet closes (handles Cancel and outside clicks)
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      form.reset();
+    }
+    setOpen(newOpen);
+  };
 
   const onSubmit = async (data: AssignJudgeInput) => {
     try {
@@ -79,8 +85,7 @@ export function AssignJudgeSheet({
         toast.success('Judge assigned');
       }
 
-      form.reset();
-      setOpen(false);
+      handleOpenChange(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to assign judge'
@@ -89,7 +94,7 @@ export function AssignJudgeSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm">
           <UserPlus className="mr-2 h-4 w-4" />
@@ -134,7 +139,7 @@ export function AssignJudgeSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>

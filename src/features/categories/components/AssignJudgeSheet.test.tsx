@@ -49,8 +49,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     expect(screen.getByRole('button', { name: /assign judge/i })).toBeInTheDocument();
@@ -63,8 +62,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -83,8 +81,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -101,8 +98,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -123,8 +119,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -150,8 +145,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -185,8 +179,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -214,8 +207,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
@@ -242,8 +234,7 @@ describe('AssignJudgeSheet', () => {
       <AssignJudgeSheet
         categoryId="cat-1"
         categoryName="Best Video"
-        contestId="contest-123"
-      />
+              />
     );
 
     await user.click(screen.getByRole('button', { name: /assign judge/i }));
