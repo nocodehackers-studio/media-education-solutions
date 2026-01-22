@@ -55,6 +55,9 @@ const mockCategory: Category = {
   deadline: new Date('2026-12-31').toISOString(),
   status: 'draft',
   createdAt: new Date().toISOString(),
+  assignedJudgeId: null,
+  invitedAt: null,
+  assignedJudge: null,
 };
 
 describe('EditCategoryForm', () => {

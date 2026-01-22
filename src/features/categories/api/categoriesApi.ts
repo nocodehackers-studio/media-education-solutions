@@ -1,27 +1,41 @@
-// Categories API - Story 2.5
+// Categories API - Story 2.5, Story 3-1
 // Supabase CRUD operations for categories
 
 import { supabase } from '@/lib/supabase';
 import { ERROR_CODES, getErrorMessage } from '@/lib/errorCodes';
 import { transformCategory } from '../types/category.types';
 import type { CreateCategoryInput, UpdateCategoryInput } from '../types/category.schemas';
-import type { CategoryRow, CategoryStatus } from '../types/category.types';
+import type {
+  CategoryRow,
+  CategoryRowWithJudge,
+  CategoryStatus,
+} from '../types/category.types';
 
 export const categoriesApi = {
   /**
    * List all categories for a contest (via divisions)
    * Story 2-9: Categories now go through divisions
+   * Story 3-1: Now includes assigned judge info via join
    * @param contestId Contest ID to filter by
    * @returns Array of categories ordered by division display_order then creation date
    */
   async listByContest(contestId: string) {
     // Join through divisions to get categories for this contest
+    // Story 3-1: Also join profiles to get assigned judge info
     const { data, error } = await supabase
       .from('categories')
-      .select(`
+      .select(
+        `
         *,
-        divisions!inner(contest_id, display_order)
-      `)
+        divisions!inner(contest_id, display_order),
+        profiles:assigned_judge_id (
+          id,
+          email,
+          first_name,
+          last_name
+        )
+      `
+      )
       .eq('divisions.contest_id', contestId)
       .order('divisions(display_order)', { ascending: true })
       .order('created_at', { ascending: true });
@@ -30,18 +44,30 @@ export const categoriesApi = {
       throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
     }
 
-    return (data as CategoryRow[]).map(transformCategory);
+    // Cast via unknown since Supabase types may not reflect recent migrations
+    return (data as unknown as CategoryRowWithJudge[]).map(transformCategory);
   },
 
   /**
    * List all categories for a specific division
+   * Story 3-1: Now includes assigned judge info via join
    * @param divisionId Division ID to filter by
    * @returns Array of categories ordered by creation date
    */
   async listByDivision(divisionId: string) {
     const { data, error } = await supabase
       .from('categories')
-      .select('*')
+      .select(
+        `
+        *,
+        profiles:assigned_judge_id (
+          id,
+          email,
+          first_name,
+          last_name
+        )
+      `
+      )
       .eq('division_id', divisionId)
       .order('created_at', { ascending: true });
 
@@ -49,7 +75,8 @@ export const categoriesApi = {
       throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
     }
 
-    return (data as CategoryRow[]).map(transformCategory);
+    // Cast via unknown since Supabase types may not reflect recent migrations
+    return (data as unknown as CategoryRowWithJudge[]).map(transformCategory);
   },
 
   /**
@@ -199,5 +226,96 @@ export const categoriesApi = {
     }
 
     return count ?? 0;
+  },
+
+  // ==========================================================================
+  // Story 3-1: Judge Assignment Methods
+  // ==========================================================================
+
+  /**
+   * Get judge profile by email (for checking existing judges)
+   * @param email Email address to search for
+   * @returns Judge profile if found, null otherwise
+   */
+  async getJudgeByEmail(
+    email: string
+  ): Promise<{ id: string; email: string } | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', email.toLowerCase())
+      .eq('role', 'judge')
+      .single();
+
+    // PGRST116 = no rows found - this is expected when judge doesn't exist
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
+  },
+
+  /**
+   * Assign a judge to a category
+   * If email doesn't exist, creates new judge profile via Edge Function
+   * @param categoryId Category ID to assign judge to
+   * @param email Judge's email address
+   * @returns Whether the judge was newly created
+   */
+  async assignJudge(
+    categoryId: string,
+    email: string
+  ): Promise<{ isNewJudge: boolean }> {
+    // 1. Check if profile exists
+    const existingJudge = await this.getJudgeByEmail(email);
+
+    let judgeId: string;
+    let isNewJudge = false;
+
+    if (existingJudge) {
+      judgeId = existingJudge.id;
+    } else {
+      // 2. Create new judge via Edge Function
+      const { data, error } = await supabase.functions.invoke('create-judge', {
+        body: { email: email.toLowerCase() },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      judgeId = data.judgeId;
+      isNewJudge = !data.isExisting;
+    }
+
+    // 3. Update category with judge assignment
+    // Clear invited_at since this is a new assignment (invite will be sent later by Story 3.2)
+    // Cast needed as Supabase generated types may not include new columns from recent migrations
+    const { error: updateError } = await supabase
+      .from('categories')
+      .update({
+        assigned_judge_id: judgeId,
+        invited_at: null, // Clear any previous invitation timestamp
+      } as Partial<CategoryRow>)
+      .eq('id', categoryId);
+
+    if (updateError) throw updateError;
+
+    return { isNewJudge };
+  },
+
+  /**
+   * Remove judge from category
+   * Note: Reviews by the judge remain in the database (not deleted)
+   * @param categoryId Category ID to remove judge from
+   */
+  async removeJudge(categoryId: string): Promise<void> {
+    // Cast needed as Supabase generated types may not include new columns from recent migrations
+    const { error } = await supabase
+      .from('categories')
+      .update({
+        assigned_judge_id: null,
+        invited_at: null, // Also clear invited_at since judge is removed
+      } as Partial<CategoryRow>)
+      .eq('id', categoryId);
+
+    if (error) throw error;
   },
 };
