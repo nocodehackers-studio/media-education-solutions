@@ -49,17 +49,19 @@ development_status:
   1-5-ci-cd-environment-configuration: done
   epic-1-retrospective: done  # 2026-01-12: 6 action items added to project-context.md
 
-  # Epic 2: Super Admin Authentication & Contest Management (8 stories)
-  epic-2: in-progress
+  # Epic 2: Super Admin Authentication & Contest Management (9 stories) - REOPENED for Change Proposal
+  # CHANGE PROPOSAL: sprint-change-proposal-2026-01-21.md (APPROVED)
+  epic-2: in-progress  # Reopened for Story 2.9 + Story 2.6 modifications
   2-1-super-admin-login: done
   2-2-admin-layout-dashboard-shell: done
   2-3-create-contest: done
   2-4-contest-list-status-management: done
-  2-5-category-management: done
-  2-6-participant-code-management: done
+  2-5-category-management: done  # Needs modification for divisions
+  2-6-participant-code-management: done  # Needs modification for single code + org name
   2-7-admin-dashboard-with-stats: done
   2-8-epic-2-stabilization-optimization: done
-  epic-2-retrospective: optional
+  2-9-division-management: done  # Completed (2026-01-22)
+  epic-2-retrospective: done  # 2026-01-21: Patterns documented, 5 deferred items identified
 
   # Epic 3: Judge Onboarding & Assignment (5 stories)
   epic-3: backlog

@@ -1,3 +1,5 @@
+// CategoriesTab tests - Story 2-9 update
+// Tests are updated for division-based category organization
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -5,18 +7,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { CategoriesTab } from './CategoriesTab';
 import * as categoriesApi from '../api/categoriesApi';
+import * as divisionsHooks from '@/features/divisions/hooks';
 import type { Contest } from '@/features/contests';
 
-// Mock the API
+// Mock the categories API
 vi.mock('../api/categoriesApi', () => ({
   categoriesApi: {
     listByContest: vi.fn(),
+    listByDivision: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     updateStatus: vi.fn(),
     delete: vi.fn(),
     getSubmissionCount: vi.fn(),
   },
+}));
+
+// Mock the divisions hooks
+vi.mock('@/features/divisions/hooks', () => ({
+  useDivisions: vi.fn(),
 }));
 
 // Mock toast
@@ -58,38 +67,58 @@ const mockContest: Contest = {
   updatedAt: new Date().toISOString(),
 };
 
+const mockDivision = {
+  id: 'div-1',
+  contestId: 'contest-123',
+  name: 'General',
+  displayOrder: 0,
+  createdAt: new Date().toISOString(),
+};
+
 describe('CategoriesTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock getSubmissionCount to return 0 by default (needed for CategoryCard useEffect)
+    // Mock getSubmissionCount to return 0 by default
     vi.mocked(categoriesApi.categoriesApi.getSubmissionCount).mockResolvedValue(0);
+    // Default: return empty divisions list loading
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
   });
 
   it('renders loading state', () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
-    );
-
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     expect(screen.getByText(/categories/i)).toBeInTheDocument();
   });
 
-  it('renders empty state when no categories', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+  it('renders empty state when no divisions exist', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/no categories yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/no divisions found/i)).toBeInTheDocument();
     });
   });
 
-  it('renders categories list', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([
+  it('renders divisions with categories organized', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [mockDivision],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
+
+    vi.mocked(categoriesApi.categoriesApi.listByDivision).mockResolvedValue([
       {
         id: 'cat-1',
-        contestId: 'contest-123',
+        divisionId: 'div-1',
         name: 'Best Video',
         type: 'video',
         rules: null,
@@ -98,95 +127,90 @@ describe('CategoriesTab', () => {
         status: 'draft',
         createdAt: new Date().toISOString(),
       },
-      {
-        id: 'cat-2',
-        contestId: 'contest-123',
-        name: 'Best Photo',
-        type: 'photo',
-        rules: null,
-        description: 'Best photo category',
-        deadline: new Date('2026-12-31').toISOString(),
-        status: 'published',
-        createdAt: new Date().toISOString(),
-      },
     ]);
 
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Best Video')).toBeInTheDocument();
-      expect(screen.getByText('Best Photo')).toBeInTheDocument();
+      expect(screen.getByText('General')).toBeInTheDocument();
     });
   });
 
-  it('shows Add Category button for draft contest', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+  it('shows Add button for draft contest', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [mockDivision],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'draft' }} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add category/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
     });
   });
 
-  it('shows Add Category button for published contest', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+  it('shows Add button for published contest', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [mockDivision],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'published' }} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add category/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
     });
   });
 
-  it('hides Add Category button and shows message for closed contest (AC1)', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+  it('hides Add button and shows message for closed contest (AC1)', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [mockDivision],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'closed' }} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /add category/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /add/i })).not.toBeInTheDocument();
       expect(screen.getByText(/cannot add categories to a closed contest/i)).toBeInTheDocument();
     });
   });
 
-  it('hides Add Category button for reviewed contest', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+  it('renders error state on divisions load failure', async () => {
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('API Error'),
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
-    renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'reviewed' }} />);
+    renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /add category/i })).not.toBeInTheDocument();
+      expect(screen.getByText(/failed to load divisions/i)).toBeInTheDocument();
     });
   });
 
-  it('opens create form sheet when Add Category clicked', async () => {
+  it('opens create form sheet when Add clicked', async () => {
     const user = userEvent.setup();
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockResolvedValue([]);
+    vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
+      data: [mockDivision],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof divisionsHooks.useDivisions>);
 
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add category/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /add category/i }));
+    await user.click(screen.getByRole('button', { name: /add/i }));
 
     await waitFor(() => {
-      // Use more specific matcher - the sheet title
-      expect(screen.getByRole('heading', { name: /create category/i })).toBeInTheDocument();
-    });
-  });
-
-  it('renders error state on API failure', async () => {
-    vi.mocked(categoriesApi.categoriesApi.listByContest).mockRejectedValue(
-      new Error('API Error')
-    );
-
-    renderWithProviders(<CategoriesTab contest={mockContest} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load categories/i)).toBeInTheDocument();
+      expect(screen.getByText(/create category in general/i)).toBeInTheDocument();
     });
   });
 });

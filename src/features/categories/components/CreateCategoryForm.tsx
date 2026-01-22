@@ -40,16 +40,18 @@ function formatDate(dateString: string): string {
 }
 
 interface CreateCategoryFormProps {
+  divisionId: string;
   contestId: string;
   onSuccess?: () => void;
 }
 
 /**
  * Form component for creating a new category
+ * Story 2-9: Categories now belong to divisions
  * Validates with Zod schema and submits via TanStack Query mutation
  */
-export function CreateCategoryForm({ contestId, onSuccess }: CreateCategoryFormProps) {
-  const createCategory = useCreateCategory(contestId);
+export function CreateCategoryForm({ divisionId, contestId, onSuccess }: CreateCategoryFormProps) {
+  const createCategory = useCreateCategory(divisionId, contestId);
 
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),

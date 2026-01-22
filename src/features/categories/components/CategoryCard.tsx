@@ -28,6 +28,7 @@ import { useUpdateCategoryStatus } from '../hooks/useUpdateCategoryStatus';
 import { categoriesApi } from '../api/categoriesApi';
 import { EditCategoryForm } from './EditCategoryForm';
 import { DeleteCategoryButton } from './DeleteCategoryButton';
+import { DuplicateCategoryDialog } from '@/features/divisions';
 import type { Category, CategoryStatus } from '../types/category.types';
 
 interface CategoryCardProps {
@@ -218,6 +219,13 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           </div>
 
           <div className="flex gap-2">
+            {/* Story 2-9: Duplicate category to other divisions */}
+            <DuplicateCategoryDialog
+              categoryId={category.id}
+              categoryName={category.name}
+              contestId={contestId}
+              currentDivisionId={category.divisionId}
+            />
             {/* AC3: View button for published/closed (read-only form), Edit+Delete for draft */}
             <Sheet open={editOpen} onOpenChange={setEditOpen}>
               <SheetTrigger asChild>

@@ -22,6 +22,7 @@ import {
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
 import { CategoriesTab } from '@/features/categories';
+import { DivisionList } from '@/features/divisions';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string }> = {
@@ -115,6 +116,7 @@ export function ContestDetailPage() {
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="divisions">Divisions</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="codes">Codes</TabsTrigger>
           <TabsTrigger value="judges">Judges</TabsTrigger>
@@ -122,6 +124,10 @@ export function ContestDetailPage() {
 
         <TabsContent value="details" className="mt-6">
           <ContestDetailsTab contest={contest} />
+        </TabsContent>
+
+        <TabsContent value="divisions" className="mt-6">
+          <DivisionList contestId={contest.id} />
         </TabsContent>
 
         <TabsContent value="categories" className="mt-6">

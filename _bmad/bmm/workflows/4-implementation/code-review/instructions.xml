@@ -22,22 +22,21 @@
       metadata</action>
     <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Agent Record → File List, Change Log</action>
 
-    <!-- Discover actual changes via git - compare branch against main -->
+    <!-- Discover actual changes via git -->
     <action>Check if git repository detected in current directory</action>
     <check if="git repository exists">
-      <action>Run `git branch --show-current` to identify current branch</action>
-      <action>Run `git diff main...HEAD --name-only` to see ALL files changed in this branch vs main</action>
-      <action>Run `git log main..HEAD --oneline` to see all commits on this branch</action>
-      <action>Run `git status --porcelain` to find any uncommitted changes</action>
-      <action>Compile comprehensive list from branch diff (main...HEAD) + any uncommitted changes</action>
+      <action>Run `git status --porcelain` to find uncommitted changes</action>
+      <action>Run `git diff --name-only` to see modified files</action>
+      <action>Run `git diff --cached --name-only` to see staged files</action>
+      <action>Compile list of actually changed files from git output</action>
     </check>
 
-    <!-- Cross-reference story File List vs git branch diff -->
-    <action>Compare story's Dev Agent Record → File List with actual branch changes (from git diff main...HEAD)</action>
+    <!-- Cross-reference story File List vs git reality -->
+    <action>Compare story's Dev Agent Record → File List with actual git changes</action>
     <action>Note discrepancies:
-      - Files changed in branch but not documented in story File List
-      - Files in story File List but not in branch diff
-      - Uncommitted changes that should be committed before review
+      - Files in git but not in story File List
+      - Files in story File List but no git changes
+      - Missing documentation of what was actually changed
     </action>
 
     <invoke-protocol name="discover_inputs" />
@@ -60,15 +59,15 @@
   <step n="3" goal="Execute adversarial review">
     <critical>VALIDATE EVERY CLAIM - Check git reality vs story claims</critical>
 
-    <!-- Branch Diff vs Story Discrepancies -->
-    <action>Review branch diff (main...HEAD) vs story File List discrepancies:
-      1. **Files in branch diff but not in story File List** → MEDIUM finding (incomplete documentation)
-      2. **Story lists files but not in branch diff** → HIGH finding (false claims)
-      3. **Uncommitted changes exist** → HIGH finding (must commit before review)
+    <!-- Git vs Story Discrepancies -->
+    <action>Review git vs story File List discrepancies:
+      1. **Files changed but not in story File List** → MEDIUM finding (incomplete documentation)
+      2. **Story lists files but no git changes** → HIGH finding (false claims)
+      3. **Uncommitted changes not documented** → MEDIUM finding (transparency issue)
     </action>
 
-    <!-- Use combined file list: story File List + branch diff files -->
-    <action>Create comprehensive review file list from story File List and branch diff (git diff main...HEAD)</action>
+    <!-- Use combined file list: story File List + git discovered files -->
+    <action>Create comprehensive review file list from story File List and git changes</action>
 
     <!-- AC Validation -->
     <action>For EACH Acceptance Criterion:

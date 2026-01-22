@@ -135,7 +135,7 @@
   </step>
 
   <step n="1.5" goal="Validate and ensure correct git branch (MANDATORY)" tag="git-branch">
-    <critical>🔥 BRANCH DISCIPLINE ENFORCEMENT - This step is MANDATORY and CANNOT be skipped 🔥</critical>
+    <critical>BRANCH DISCIPLINE ENFORCEMENT - This step is MANDATORY and CANNOT be skipped</critical>
     <critical>Every story MUST be on its own dedicated branch for parallel development</critical>
     <critical>Branch name MUST exactly match story filename without .md extension</critical>
 
@@ -146,26 +146,26 @@
 
     <!-- Branch existence check -->
     <check if="branch story/{{story_key}} exists locally">
-      <output>🔍 **Branch Found:** story/{{story_key}} exists locally</output>
+      <output>**Branch Found:** story/{{story_key}} exists locally</output>
 
       <check if="current branch != story/{{story_key}}">
         <action>Run `git checkout story/{{story_key}}`</action>
-        <output>✅ Switched to existing branch: story/{{story_key}}</output>
+        <output>Switched to existing branch: story/{{story_key}}</output>
       </check>
 
       <check if="current branch == story/{{story_key}}">
-        <output>✅ Already on correct branch: story/{{story_key}}</output>
+        <output>Already on correct branch: story/{{story_key}}</output>
       </check>
     </check>
 
     <check if="branch story/{{story_key}} does NOT exist locally but exists remotely">
-      <output>🔍 **Remote Branch Found:** story/{{story_key}} exists on remote</output>
+      <output>**Remote Branch Found:** story/{{story_key}} exists on remote</output>
       <action>Run `git checkout -b story/{{story_key}} origin/story/{{story_key}}`</action>
-      <output>✅ Checked out remote branch: story/{{story_key}}</output>
+      <output>Checked out remote branch: story/{{story_key}}</output>
     </check>
 
     <check if="branch story/{{story_key}} does NOT exist anywhere">
-      <output>🆕 **Creating New Branch:** story/{{story_key}}
+      <output>**Creating New Branch:** story/{{story_key}}
 
         This is a fresh story implementation - creating dedicated branch from main.
       </output>
@@ -173,7 +173,7 @@
       <action>Run `git checkout main` to ensure we're on main first</action>
       <action>Run `git pull origin main` to get latest changes (if remote exists)</action>
       <action>Run `git checkout -b story/{{story_key}}` to create new branch</action>
-      <output>✅ Created and switched to new branch: story/{{story_key}}</output>
+      <output>Created and switched to new branch: story/{{story_key}}</output>
     </check>
 
     <!-- Final verification -->
@@ -181,7 +181,7 @@
     <action>Store {{current_branch}} from git output</action>
 
     <check if="{{current_branch}} != story/{{story_key}}">
-      <output>🚨 **CRITICAL ERROR: Branch Mismatch!**
+      <output>**CRITICAL ERROR: Branch Mismatch!**
 
         **Expected:** story/{{story_key}}
         **Actual:** {{current_branch}}
@@ -194,7 +194,7 @@
     </check>
 
     <check if="{{current_branch}} == story/{{story_key}}">
-      <output>✅ **Branch Validation PASSED**
+      <output>**Branch Validation PASSED**
 
         Current branch: story/{{story_key}}
         Story: {{story_key}}
@@ -212,7 +212,7 @@
     <action>Load comprehensive context from story file's Dev Notes section</action>
     <action>Extract developer guidance from Dev Notes: architecture requirements, previous learnings, technical specifications</action>
     <action>Use enhanced story context to inform implementation decisions and approaches</action>
-    <output>✅ **Context Loaded**
+    <output>**Context Loaded**
       Story and project context available for implementation
     </output>
   </step>
@@ -234,7 +234,7 @@
       <action>Count unchecked [ ] review follow-up tasks in "Review Follow-ups (AI)" subsection</action>
       <action>Store list of unchecked review items as {{pending_review_items}}</action>
 
-      <output>⏯️ **Resuming Story After Code Review** ({{review_date}})
+      <output>**Resuming Story After Code Review** ({{review_date}})
 
         **Review Outcome:** {{review_outcome}}
         **Action Items:** {{unchecked_review_count}} remaining to address
@@ -248,7 +248,7 @@
       <action>Set review_continuation = false</action>
       <action>Set {{pending_review_items}} = empty</action>
 
-      <output>🚀 **Starting Fresh Implementation**
+      <output>**Starting Fresh Implementation**
 
         Story: {{story_key}}
         Story Status: {{current_status}}
@@ -265,19 +265,19 @@
 
       <check if="current status == 'ready-for-dev' OR review_continuation == true">
         <action>Update the story in the sprint status report to = "in-progress"</action>
-        <output>🚀 Starting work on story {{story_key}}
+        <output>Starting work on story {{story_key}}
           Status updated: ready-for-dev → in-progress
         </output>
       </check>
 
       <check if="current status == 'in-progress'">
-        <output>⏯️ Resuming work on story {{story_key}}
+        <output>Resuming work on story {{story_key}}
           Story is already marked in-progress
         </output>
       </check>
 
       <check if="current status is neither ready-for-dev nor in-progress">
-        <output>⚠️ Unexpected story status: {{current_status}}
+        <output>Unexpected story status: {{current_status}}
           Expected ready-for-dev or in-progress. Continuing anyway...
         </output>
       </check>
@@ -286,7 +286,7 @@
     </check>
 
     <check if="{{sprint_status}} file does NOT exist">
-      <output>ℹ️ No sprint status file exists - story progress will be tracked in story file only</output>
+      <output>No sprint status file exists - story progress will be tracked in story file only</output>
       <action>Set {{current_sprint_status}} = "no-sprint-tracking"</action>
     </check>
   </step>
@@ -360,7 +360,7 @@
       <action>Find matching action item in "Senior Developer Review (AI) → Action Items" section by matching description</action>
       <action>Mark that action item checkbox [x] as resolved</action>
 
-      <action>Add to Dev Agent Record → Completion Notes: "✅ Resolved review finding [{{severity}}]: {{description}}"</action>
+      <action>Add to Dev Agent Record → Completion Notes: "Resolved review finding [{{severity}}]: {{description}}"</action>
     </check>
 
     <!-- ONLY MARK COMPLETE IF ALL VALIDATION PASS -->
@@ -397,13 +397,13 @@
     <action>Execute enhanced definition-of-done validation</action>
 
     <!-- Git Pre-Review Validation (MANDATORY) -->
-    <critical>🔥 GIT VALIDATION - Story CANNOT be marked review without clean git state 🔥</critical>
+    <critical>GIT VALIDATION - Story CANNOT be marked review without clean git state</critical>
 
     <action>Run `git branch --show-current` to confirm still on story/{{story_key}} branch</action>
     <action>Run `git status --porcelain` to check for uncommitted changes</action>
 
     <check if="uncommitted changes exist">
-      <output>🚨 **CANNOT MARK REVIEW: Uncommitted Changes Detected**
+      <output>**CANNOT MARK REVIEW: Uncommitted Changes Detected**
 
         **Working tree is NOT clean!**
 
@@ -418,21 +418,15 @@
       <action>HALT - Uncommitted changes must be committed before review</action>
     </check>
 
-    <action>Run `git log origin/story/{{story_key}}..HEAD --oneline 2>/dev/null` to check if branch is pushed</action>
+    <!-- COMMIT ONLY - DO NOT PUSH -->
+    <critical>DO NOT PUSH TO REMOTE - Code review workflow needs to compare branch against main</critical>
+    <output>**Changes Committed - Ready for Code Review**
 
-    <check if="branch has unpushed commits OR branch doesn't exist on remote">
-      <output>📤 **Pushing Branch to Remote**
+      Branch story/{{story_key}} has local commits ready for review.
 
-        Branch story/{{story_key}} has unpushed commits or doesn't exist on remote.
-        Pushing now for code review...
-      </output>
-      <action>Run `git push -u origin story/{{story_key}}`</action>
-      <output>✅ Branch pushed to remote: story/{{story_key}}</output>
-    </check>
-
-    <check if="branch is up to date with remote">
-      <output>✅ Branch already pushed to remote: story/{{story_key}}</output>
-    </check>
+      **IMPORTANT:** Do NOT push until code-review workflow approves the changes.
+      The code-review workflow will compare this branch against main to verify all changes.
+    </output>
 
     <action>Update the story Status to: "review"</action>
 
@@ -458,15 +452,15 @@
       <action>Verify current status is "in-progress" (expected previous state)</action>
       <action>Update development_status[{{story_key}}] = "review"</action>
       <action>Save file, preserving ALL comments and structure including STATUS DEFINITIONS</action>
-      <output>✅ Story status updated to "review" in sprint-status.yaml</output>
+      <output>Story status updated to "review" in sprint-status.yaml</output>
     </check>
 
     <check if="{sprint_status} file does NOT exist OR {{current_sprint_status}} == 'no-sprint-tracking'">
-      <output>ℹ️ Story status updated to "review" in story file (no sprint tracking configured)</output>
+      <output>Story status updated to "review" in story file (no sprint tracking configured)</output>
     </check>
 
     <check if="story key not found in sprint status">
-      <output>⚠️ Story file updated, but sprint-status update failed: {{story_key}} not found
+      <output>Story file updated, but sprint-status update failed: {{story_key}} not found
 
         Story status is set to "review" in file, but sprint-status.yaml may be out of sync.
       </output>
@@ -509,7 +503,7 @@
       - Optional: Run TEA `*automate` to expand guardrail tests
     </action>
 
-    <output>💡 **Tip:** For best results, run `code-review` using a **different** LLM than the one that implemented this story.</output>
+    <output>**Tip:** For best results, run `code-review` using a **different** LLM than the one that implemented this story.</output>
     <check if="{sprint_status} file exists">
       <action>Suggest checking {sprint_status} to see project progress</action>
     </check>

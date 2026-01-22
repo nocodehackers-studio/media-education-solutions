@@ -48,7 +48,7 @@ describe('CreateCategoryForm', () => {
   });
 
   it('renders all form fields', () => {
-    renderWithProviders(<CreateCategoryForm contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
 
     expect(screen.getByLabelText(/category name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/submission type/i)).toBeInTheDocument();
@@ -60,7 +60,7 @@ describe('CreateCategoryForm', () => {
 
   it('shows validation error for empty name', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<CreateCategoryForm contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
 
     const submitButton = screen.getByRole('button', { name: /create category/i });
     await user.click(submitButton);
@@ -72,7 +72,7 @@ describe('CreateCategoryForm', () => {
 
   it('shows validation error for missing deadline', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<CreateCategoryForm contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
 
     const nameInput = screen.getByLabelText(/category name/i);
     await user.type(nameInput, 'Test Category');
@@ -90,14 +90,14 @@ describe('CreateCategoryForm', () => {
   // The core form validation logic is tested through the validation error tests above.
 
   it('renders type dropdown', () => {
-    renderWithProviders(<CreateCategoryForm contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
 
     // Verify type dropdown is present
     expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
   it('renders date picker button', () => {
-    renderWithProviders(<CreateCategoryForm contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
 
     // The date picker shows "Pick a date" or a selected date
     expect(screen.getByLabelText(/submission deadline/i)).toBeInTheDocument();
