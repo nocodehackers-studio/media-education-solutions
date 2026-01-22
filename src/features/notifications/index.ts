@@ -1,6 +1,6 @@
 // features/notifications/index.ts
 // Notifications feature - Email notifications via Brevo
-// Status: Placeholder (Epic 7)
+// Status: Minimal (Story 3-2), expanded in Epic 7
 
 // === Components ===
 // export { NotificationPreferences } from './components/NotificationPreferences';
@@ -12,6 +12,8 @@
 // export { notificationsApi } from './api/notificationsApi';
 
 // === Types ===
-// export type { Notification, NotificationType } from './types/notification.types';
-
-export {}
+export type {
+  NotificationType,
+  JudgeInvitationPayload,
+  JudgeInvitationResponse,
+} from './types/notification.types';

@@ -1,4 +1,4 @@
-// Categories API - Story 2.5, Story 3-1
+// Categories API - Story 2.5, Story 3-1, Story 3-2
 // Supabase CRUD operations for categories
 
 import { supabase } from '@/lib/supabase';
@@ -317,5 +317,116 @@ export const categoriesApi = {
       .eq('id', categoryId);
 
     if (error) throw error;
+  },
+
+  // ==========================================================================
+  // Story 3-2: Judge Invitation Methods
+  // ==========================================================================
+
+  /**
+   * Send judge invitation email when category is closed
+   * Calls Edge Function to send email via Brevo and update invited_at
+   * @param categoryId Category ID to send invitation for
+   * @returns Result with success status and optional error code
+   */
+  async sendJudgeInvitation(
+    categoryId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    // First, get category with judge and contest info (through division)
+    const { data: category, error: fetchError } = await supabase
+      .from('categories')
+      .select(
+        `
+        id,
+        name,
+        invited_at,
+        assigned_judge_id,
+        profiles:assigned_judge_id (
+          id,
+          email,
+          first_name,
+          last_name
+        ),
+        divisions!inner (
+          contests!inner (
+            id,
+            name
+          )
+        )
+      `
+      )
+      .eq('id', categoryId)
+      .single();
+
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+
+    // Type assertion for nested join structure
+    const categoryData = category as unknown as {
+      id: string;
+      name: string;
+      invited_at: string | null;
+      assigned_judge_id: string | null;
+      profiles: {
+        id: string;
+        email: string;
+        first_name: string | null;
+        last_name: string | null;
+      } | null;
+      divisions: {
+        contests: {
+          id: string;
+          name: string;
+        };
+      };
+    };
+
+    // Check if judge assigned (AC3: no email if no judge)
+    if (!categoryData.assigned_judge_id || !categoryData.profiles) {
+      return { success: false, error: 'NO_JUDGE_ASSIGNED' };
+    }
+
+    // Check if already invited (AC4: prevent duplicate emails)
+    if (categoryData.invited_at) {
+      return { success: false, error: 'ALREADY_INVITED' };
+    }
+
+    // Get submission count for the email content
+    const { count: submissionCount } = await supabase
+      .from('submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', categoryId);
+
+    // Build judge name from profile
+    const judgeName = categoryData.profiles.first_name
+      ? `${categoryData.profiles.first_name} ${categoryData.profiles.last_name || ''}`.trim()
+      : undefined;
+
+    // Call Edge Function to send email
+    const { data, error } = await supabase.functions.invoke(
+      'send-judge-invitation',
+      {
+        body: {
+          categoryId,
+          judgeEmail: categoryData.profiles.email,
+          judgeName,
+          categoryName: categoryData.name,
+          contestName: categoryData.divisions.contests.name,
+          submissionCount: submissionCount ?? 0,
+        },
+      }
+    );
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Check for error in response body
+    if (data && !data.success) {
+      return { success: false, error: data.error || 'Unknown error' };
+    }
+
+    return { success: true };
   },
 };
