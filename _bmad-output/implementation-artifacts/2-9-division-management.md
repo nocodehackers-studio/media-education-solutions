@@ -1,6 +1,6 @@
 # Story 2.9: Division Management
 
-Status: review
+Status: done
 
 ## Story
 
