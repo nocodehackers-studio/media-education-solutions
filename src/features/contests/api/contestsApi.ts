@@ -307,8 +307,8 @@ export const contestsApi = {
       );
     }
 
-    const existingCodes = new Set((existing || []).map((p) => p.code));
-    const [newCode] = generateParticipantCodes(1, existingCodes);
+    let currentCodes = new Set((existing || []).map((p) => p.code));
+    let codeToInsert = generateParticipantCodes(1, currentCodes)[0];
 
     // Insert new code with organization name
     const MAX_RETRIES = 3;
@@ -319,7 +319,7 @@ export const contestsApi = {
         .from('participants')
         .insert({
           contest_id: contestId,
-          code: newCode,
+          code: codeToInsert,
           status: 'unused' as const,
           organization_name: organizationName,
         })
@@ -332,15 +332,14 @@ export const contestsApi = {
 
       // Check for unique constraint violation (concurrent insert conflict)
       if (error.code === '23505' && attempt < MAX_RETRIES) {
-        // Regenerate code and retry
+        // Refresh existing codes and regenerate
         const { data: refreshed } = await supabase
           .from('participants')
           .select('code')
           .eq('contest_id', contestId);
 
-        const refreshedCodes = new Set((refreshed || []).map((p) => p.code));
-        const [regeneratedCode] = generateParticipantCodes(1, refreshedCodes);
-        Object.assign(newCode, regeneratedCode);
+        currentCodes = new Set((refreshed || []).map((p) => p.code));
+        codeToInsert = generateParticipantCodes(1, currentCodes)[0];
         lastError = new Error(error.message);
         continue;
       }

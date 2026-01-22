@@ -51,6 +51,14 @@ export function AddCodeDialog({ contestId, variant = 'outline' }: AddCodeDialogP
     },
   });
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    // Reset form when dialog closes (via X button, overlay click, or cancel)
+    if (!isOpen) {
+      form.reset();
+    }
+  };
+
   const onSubmit = async (data: AddCodeInput) => {
     try {
       const participant = await generateCode.mutateAsync(data.organizationName);
@@ -63,7 +71,7 @@ export function AddCodeDialog({ contestId, variant = 'outline' }: AddCodeDialogP
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button variant={variant}>Add Code</Button>
       </SheetTrigger>
@@ -94,7 +102,7 @@ export function AddCodeDialog({ contestId, variant = 'outline' }: AddCodeDialogP
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>

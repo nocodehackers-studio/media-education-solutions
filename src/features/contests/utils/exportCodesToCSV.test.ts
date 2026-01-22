@@ -166,4 +166,41 @@ describe('exportCodesToCSV', () => {
 
     expect(capturedBlob?.type).toBe('text/csv;charset=utf-8;');
   });
+
+  it('does NOT include PII in CSV export (regression test)', async () => {
+    // Create participant with all PII fields populated
+    const codes: Participant[] = [
+      {
+        id: 'id-1',
+        contestId: 'contest-123',
+        code: '12345678',
+        status: 'used',
+        name: 'John Doe',
+        organizationName: 'Springfield Elementary',
+        tlcName: 'Jane Smith',
+        tlcEmail: 'jane@example.com',
+        createdAt: '2026-01-13T00:00:00Z',
+      },
+    ];
+
+    exportCodesToCSV(codes, 'ABC123');
+
+    // Verify CSV content does NOT contain PII
+    expect(capturedBlob).not.toBeNull();
+    const content = await readBlobContent(capturedBlob!);
+
+    // CSV should only have Code and Status - no PII
+    expect(content).not.toContain('John Doe');
+    expect(content).not.toContain('Springfield Elementary');
+    expect(content).not.toContain('Jane Smith');
+    expect(content).not.toContain('jane@example.com');
+    expect(content).not.toContain('name');
+    expect(content).not.toContain('organization');
+    expect(content).not.toContain('tlc');
+
+    // Verify only expected columns exist
+    const lines = content.split('\n');
+    expect(lines[0]).toBe('Code,Status');
+    expect(lines[1]).toBe('12345678,used');
+  });
 });
