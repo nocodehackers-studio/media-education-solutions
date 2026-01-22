@@ -24,6 +24,7 @@ import { useGenerateSingleCode } from '../hooks/useGenerateSingleCode';
 const addCodeSchema = z.object({
   organizationName: z
     .string()
+    .trim()
     .min(1, 'Organization name is required')
     .max(200, 'Organization name must be 200 characters or less'),
 });

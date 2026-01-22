@@ -333,10 +333,16 @@ export const contestsApi = {
       // Check for unique constraint violation (concurrent insert conflict)
       if (error.code === '23505' && attempt < MAX_RETRIES) {
         // Refresh existing codes and regenerate
-        const { data: refreshed } = await supabase
+        const { data: refreshed, error: refreshError } = await supabase
           .from('participants')
           .select('code')
           .eq('contest_id', contestId);
+
+        if (refreshError) {
+          // If refresh fails, continue to next attempt with current codes
+          lastError = new Error(refreshError.message);
+          continue;
+        }
 
         currentCodes = new Set((refreshed || []).map((p) => p.code));
         codeToInsert = generateParticipantCodes(1, currentCodes)[0];

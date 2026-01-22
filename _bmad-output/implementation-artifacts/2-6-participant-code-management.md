@@ -1,6 +1,6 @@
 # Story 2.6: Participant Code Management
 
-Status: review
+Status: done
 
 ## Story
 
