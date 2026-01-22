@@ -252,11 +252,11 @@ export const contestsApi = {
     contestId: string,
     filter?: 'all' | 'used' | 'unused'
   ): Promise<Participant[]> {
-    // Select only columns needed for display (id, code, status, name for used codes)
-    // Avoids fetching organization_name, tlc_name, tlc_email unnecessarily
+    // Select columns needed for display (id, code, organization_name, status, name for used codes)
+    // Avoids fetching tlc_name, tlc_email unnecessarily
     let query = supabase
       .from('participants')
-      .select('id, contest_id, code, status, name, created_at')
+      .select('id, contest_id, code, status, name, organization_name, created_at')
       .eq('contest_id', contestId)
       .order('created_at', { ascending: false });
 
@@ -277,7 +277,7 @@ export const contestsApi = {
       code: row.code,
       status: row.status as 'unused' | 'used',
       name: row.name,
-      organizationName: null,
+      organizationName: row.organization_name,
       tlcName: null,
       tlcEmail: null,
       createdAt: row.created_at,
@@ -285,11 +285,81 @@ export const contestsApi = {
   },
 
   /**
-   * Generate new participant codes for a contest
+   * Generate a single participant code for an organization
+   * Per change proposal 1.3: Single code generation with organization name
+   * @param contestId Contest ID
+   * @param organizationName Name of the organization/school
+   * @returns Newly created participant with code
+   */
+  async generateSingleCode(
+    contestId: string,
+    organizationName: string
+  ): Promise<Participant> {
+    // Get existing codes to avoid duplicates
+    const { data: existing, error: fetchError } = await supabase
+      .from('participants')
+      .select('code')
+      .eq('contest_id', contestId);
+
+    if (fetchError) {
+      throw new Error(
+        `Failed to fetch existing codes: ${fetchError.message}`
+      );
+    }
+
+    const existingCodes = new Set((existing || []).map((p) => p.code));
+    const [newCode] = generateParticipantCodes(1, existingCodes);
+
+    // Insert new code with organization name
+    const MAX_RETRIES = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const { data, error } = await supabase
+        .from('participants')
+        .insert({
+          contest_id: contestId,
+          code: newCode,
+          status: 'unused' as const,
+          organization_name: organizationName,
+        })
+        .select()
+        .single();
+
+      if (!error) {
+        return transformParticipant(data as ParticipantRow);
+      }
+
+      // Check for unique constraint violation (concurrent insert conflict)
+      if (error.code === '23505' && attempt < MAX_RETRIES) {
+        // Regenerate code and retry
+        const { data: refreshed } = await supabase
+          .from('participants')
+          .select('code')
+          .eq('contest_id', contestId);
+
+        const refreshedCodes = new Set((refreshed || []).map((p) => p.code));
+        const [regeneratedCode] = generateParticipantCodes(1, refreshedCodes);
+        Object.assign(newCode, regeneratedCode);
+        lastError = new Error(error.message);
+        continue;
+      }
+
+      throw new Error(`Failed to generate participant code: ${error.message}`);
+    }
+
+    throw new Error(
+      `Failed to generate code after ${MAX_RETRIES} attempts: ${lastError?.message}`
+    );
+  },
+
+  /**
+   * Generate new participant codes for a contest (batch)
    * Includes error handling for existing codes fetch and retry logic for conflicts
    * @param contestId Contest ID
    * @param count Number of codes to generate (default 50)
    * @returns Array of newly created participants
+   * @deprecated Use generateSingleCode instead per change proposal 1.3
    */
   async generateParticipantCodes(
     contestId: string,

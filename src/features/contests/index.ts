@@ -12,6 +12,7 @@ export { CodesTab } from './components/CodesTab';
 export { CodeListTable } from './components/CodeListTable';
 export { GenerateCodesButton } from './components/GenerateCodesButton';
 export { ExportCodesButton } from './components/ExportCodesButton';
+export { AddCodeDialog } from './components/AddCodeDialog';
 
 // === Hooks ===
 export { useContests } from './hooks/useContests';
@@ -22,6 +23,7 @@ export { useUpdateContestStatus } from './hooks/useUpdateContestStatus';
 export { useDeleteContest } from './hooks/useDeleteContest';
 export { useParticipantCodes } from './hooks/useParticipantCodes';
 export { useGenerateCodes } from './hooks/useGenerateCodes';
+export { useGenerateSingleCode } from './hooks/useGenerateSingleCode';
 export { useDashboardStats } from './hooks/useDashboardStats';
 export { useRecentContests } from './hooks/useRecentContests';
 export { useActiveContests } from './hooks/useActiveContests';

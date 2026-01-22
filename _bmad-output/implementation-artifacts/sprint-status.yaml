@@ -57,7 +57,7 @@ development_status:
   2-3-create-contest: done
   2-4-contest-list-status-management: done
   2-5-category-management: done  # Needs modification for divisions
-  2-6-participant-code-management: done  # Needs modification for single code + org name
+  2-6-participant-code-management: review  # Modification complete - single code + org name (per change proposal)
   2-7-admin-dashboard-with-stats: done
   2-8-epic-2-stabilization-optimization: done
   2-9-division-management: done  # Completed (2026-01-22)

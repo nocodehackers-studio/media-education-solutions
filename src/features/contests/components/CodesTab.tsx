@@ -13,7 +13,7 @@ import {
 } from '@/components/ui';
 import { useParticipantCodes } from '../hooks/useParticipantCodes';
 import { CodeListTable } from './CodeListTable';
-import { GenerateCodesButton } from './GenerateCodesButton';
+import { AddCodeDialog } from './AddCodeDialog';
 import { ExportCodesButton } from './ExportCodesButton';
 import type { Contest } from '../types/contest.types';
 
@@ -23,9 +23,9 @@ interface CodesTabProps {
 
 /**
  * Tab content for managing participant codes
- * AC1: Displays CodeListTable with all codes
+ * AC1 (Updated): Displays CodeListTable with Code, Organization, Status, Participant Name columns
  * AC3: Status filter (All, Used, Unused)
- * AC4: Generate 50 More button
+ * AC4 (Updated): Add Code button opens dialog for single code generation with organization name
  * AC5: Export button
  */
 export function CodesTab({ contest }: CodesTabProps) {
@@ -101,14 +101,14 @@ export function CodesTab({ contest }: CodesTabProps) {
             </SelectContent>
           </Select>
           <ExportCodesButton codes={allCodes} contestCode={contest.contestCode} />
-          <GenerateCodesButton contestId={contest.id} />
+          <AddCodeDialog contestId={contest.id} />
         </div>
       </CardHeader>
       <CardContent>
         {allCodes.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">No codes yet</p>
-            <GenerateCodesButton contestId={contest.id} variant="default" />
+            <AddCodeDialog contestId={contest.id} variant="default" />
           </div>
         ) : (
           <CodeListTable codes={allCodes} />

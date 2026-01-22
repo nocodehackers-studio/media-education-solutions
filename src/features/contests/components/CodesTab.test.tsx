@@ -9,9 +9,17 @@ import type { Contest, Participant } from '../types/contest.types';
 vi.mock('../api/contestsApi', () => ({
   contestsApi: {
     listParticipantCodes: vi.fn(),
-    generateParticipantCodes: vi.fn(),
+    generateSingleCode: vi.fn(),
   },
 }));
+
+// Mock Radix UI pointer capture (needed for Sheet/Dialog)
+beforeEach(() => {
+  Element.prototype.hasPointerCapture = vi.fn(() => false);
+  Element.prototype.setPointerCapture = vi.fn();
+  Element.prototype.releasePointerCapture = vi.fn();
+  Element.prototype.scrollIntoView = vi.fn();
+});
 
 // Mock toast
 vi.mock('@/components/ui', async () => {
@@ -88,7 +96,7 @@ describe('CodesTab', () => {
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
-  it('shows empty state with generate button when no codes', async () => {
+  it('shows empty state with Add Code button when no codes (AC4 Updated)', async () => {
     vi.mocked(contestsApi.listParticipantCodes).mockResolvedValue([]);
 
     renderComponent();
@@ -96,9 +104,9 @@ describe('CodesTab', () => {
     await waitFor(() => {
       expect(screen.getByText('No codes yet')).toBeInTheDocument();
     });
-    // Should show generate button in empty state with default variant
+    // Should show Add Code button in empty state with default variant
     expect(
-      screen.getAllByRole('button', { name: 'Generate 50 More' })
+      screen.getAllByRole('button', { name: 'Add Code' })
     ).toHaveLength(2); // One in header, one in empty state
   });
 
@@ -186,7 +194,7 @@ describe('CodesTab', () => {
     });
   });
 
-  it('has Generate 50 More button in header', async () => {
+  it('has Add Code button in header (AC4 Updated)', async () => {
     vi.mocked(contestsApi.listParticipantCodes).mockResolvedValue([
       createMockParticipant('12345678', 'unused'),
     ]);
@@ -195,7 +203,7 @@ describe('CodesTab', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Generate 50 More' })
+        screen.getByRole('button', { name: 'Add Code' })
       ).toBeInTheDocument();
     });
   });
@@ -247,7 +255,7 @@ describe('CodesTab', () => {
     expect(screen.getByText('Network error')).toBeInTheDocument();
   });
 
-  it('error state does not show generate or export buttons', async () => {
+  it('error state does not show add code or export buttons', async () => {
     vi.mocked(contestsApi.listParticipantCodes).mockRejectedValue(
       new Error('Server error')
     );
@@ -261,7 +269,7 @@ describe('CodesTab', () => {
     });
     // Should not show action buttons in error state
     expect(
-      screen.queryByRole('button', { name: 'Generate 50 More' })
+      screen.queryByRole('button', { name: 'Add Code' })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Export' })

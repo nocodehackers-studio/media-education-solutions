@@ -1,6 +1,6 @@
 # Story 2.6: Participant Code Management
 
-Status: done
+Status: review
 
 ## Story
 
@@ -770,3 +770,89 @@ The architecture mapping assigns FR15–FR19 to `features/participants/`, but th
 | 2026-01-13 | Fix code review findings: error handling, PII over-fetching, retry logic, test coverage | CodesTab.tsx, contestsApi.ts, CodesTab.test.tsx, exportCodesToCSV.test.ts |
 | 2026-01-13 | Fix QA round 2: retry path error handling, skeleton loading state | contestsApi.ts, CodesTab.tsx, CodesTab.test.tsx |
 | 2026-01-13 | Documentation: Add sprint-status to file list, document architecture boundary decision | This story file |
+| 2026-01-22 | Story reopened for modifications per sprint-change-proposal-2026-01-21.md | Status: done → in-progress |
+
+---
+
+## Modifications (Change Proposal 2026-01-21)
+
+**Reference:** `_bmad-output/planning-artifacts/sprint-change-proposal-2026-01-21.md`
+
+### Approved Changes
+
+**Proposal 1.3:** Change code generation from batch (50) to single code with organization name
+**Proposal 1.4:** Update code list display to show organization name
+
+### Modified Acceptance Criteria
+
+**AC1 (Updated):** Code List now shows: Code, Organization Name, Status, Participant Name (if used)
+**AC4 (Updated):** Instead of "Generate 50 More", admin clicks "Add Code" → dialog with Organization Name field → generates single code
+
+### Modification Tasks
+
+- [x] **Mod Task 1: Update CodeListTable to show Organization Name**
+  - [x] Add "Organization Name" column after Code column
+  - [x] Display organizationName value (shows "-" if null)
+  - [x] Update CodeListTable tests
+
+- [x] **Mod Task 2: Replace batch generation with single code dialog**
+  - [x] Create AddCodeDialog component (Sheet with form)
+  - [x] Form includes: Organization Name (required), generates single 8-digit code
+  - [x] On submit: calls API, shows success toast with code, closes dialog
+  - [x] Replace GenerateCodesButton with AddCodeDialog in CodesTab
+  - [x] Create AddCodeDialog tests (10 tests)
+
+- [x] **Mod Task 3: Update API for single code with organization name**
+  - [x] Create new method `generateSingleCode(contestId, organizationName)` in contestsApi
+  - [x] Create useGenerateSingleCode hook
+  - [x] Keep batch generation for backward compatibility (deprecated)
+
+- [x] **Mod Task 4: Update CodesTab integration**
+  - [x] Replace GenerateCodesButton with AddCodeDialog in CodesTab
+  - [x] Update empty state to show AddCodeDialog
+  - [x] Update CodesTab tests
+
+- [x] **Mod Task 5: Quality Gates**
+  - [x] Run npm run type-check - PASSED
+  - [x] Run npm run lint - PASSED (only pre-existing shadcn warnings)
+  - [x] Run npm run test - PASSED (114 tests in contests feature)
+  - [x] Run npm run build - PASSED
+
+### Modification Completion Notes
+
+**Implementation Summary (2026-01-22):**
+- Updated CodeListTable to display Organization Name column between Code and Status
+- Created AddCodeDialog component using Sheet pattern with organization name input
+- Added generateSingleCode API method for single code generation with organization name
+- Created useGenerateSingleCode hook for the mutation
+- Replaced GenerateCodesButton with AddCodeDialog in CodesTab
+- Updated API to fetch organization_name in listParticipantCodes
+
+**Test Coverage:**
+- 3 new tests in CodeListTable.test.tsx for organization name display
+- 10 new tests in AddCodeDialog.test.tsx for dialog functionality
+- Updated CodesTab.test.tsx for Add Code button (12 tests)
+- Total: 114 tests pass in contests feature
+
+**Modified Acceptance Criteria Verification:**
+- AC1 (Updated): CodeListTable now shows Code, Organization, Status, Participant Name columns ✅
+- AC4 (Updated): "Add Code" button opens dialog, generates single code with org name, shows success toast ✅
+
+### Modification File List
+
+**New Files:**
+- src/features/contests/components/AddCodeDialog.tsx
+- src/features/contests/components/AddCodeDialog.test.tsx
+- src/features/contests/hooks/useGenerateSingleCode.ts
+
+**Modified Files:**
+- src/features/contests/api/contestsApi.ts (added generateSingleCode method)
+- src/features/contests/components/CodeListTable.tsx (added Organization column)
+- src/features/contests/components/CodeListTable.test.tsx (added org name tests)
+- src/features/contests/components/CodesTab.tsx (replaced GenerateCodesButton with AddCodeDialog)
+- src/features/contests/components/CodesTab.test.tsx (updated for Add Code button)
+- src/features/contests/components/index.ts (added AddCodeDialog export)
+- src/features/contests/hooks/index.ts (added useGenerateSingleCode export)
+- src/features/contests/index.ts (added AddCodeDialog and useGenerateSingleCode exports)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (status: done → in-progress)
+- _bmad-output/implementation-artifacts/2-6-participant-code-management.md (this file)

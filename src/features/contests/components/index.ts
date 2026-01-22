@@ -8,3 +8,4 @@ export { CodesTab } from './CodesTab';
 export { CodeListTable } from './CodeListTable';
 export { GenerateCodesButton } from './GenerateCodesButton';
 export { ExportCodesButton } from './ExportCodesButton';
+export { AddCodeDialog } from './AddCodeDialog';
