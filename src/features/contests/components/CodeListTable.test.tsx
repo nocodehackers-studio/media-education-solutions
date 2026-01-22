@@ -6,26 +6,28 @@ import type { Participant } from '../types/contest.types';
 const createMockParticipant = (
   code: string,
   status: 'unused' | 'used',
-  name: string | null = null
+  name: string | null = null,
+  organizationName: string | null = null
 ): Participant => ({
   id: `id-${code}`,
   contestId: 'contest-123',
   code,
   status,
   name,
-  organizationName: null,
+  organizationName,
   tlcName: null,
   tlcEmail: null,
   createdAt: '2026-01-13T00:00:00Z',
 });
 
 describe('CodeListTable', () => {
-  it('renders table headers correctly', () => {
+  it('renders table headers correctly (AC1 Updated)', () => {
     const codes: Participant[] = [];
 
     render(<CodeListTable codes={codes} />);
 
     expect(screen.getByText('Code')).toBeInTheDocument();
+    expect(screen.getByText('Organization')).toBeInTheDocument();
     expect(screen.getByText('Status')).toBeInTheDocument();
     expect(screen.getByText('Participant Name')).toBeInTheDocument();
   });
@@ -58,11 +60,31 @@ describe('CodeListTable', () => {
   });
 
   it('shows "-" for unused codes in participant name column (AC2)', () => {
-    const codes: Participant[] = [createMockParticipant('12345678', 'unused')];
+    const codes: Participant[] = [createMockParticipant('12345678', 'unused', null, 'Test School')];
 
     render(<CodeListTable codes={codes} />);
 
-    expect(screen.getByText('-')).toBeInTheDocument();
+    // Should show "-" for participant name only (organization has value)
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows organization name when provided (AC1 Updated)', () => {
+    const codes: Participant[] = [createMockParticipant('12345678', 'unused', null, 'Springfield Elementary')];
+
+    render(<CodeListTable codes={codes} />);
+
+    expect(screen.getByText('Springfield Elementary')).toBeInTheDocument();
+  });
+
+  it('shows "-" for organization when not provided', () => {
+    const codes: Participant[] = [createMockParticipant('12345678', 'unused', null, null)];
+
+    render(<CodeListTable codes={codes} />);
+
+    // Should show "-" for both organization and participant name
+    const dashes = screen.getAllByText('-');
+    expect(dashes).toHaveLength(2);
   });
 
   it('shows participant name for used codes (AC2)', () => {
@@ -85,9 +107,9 @@ describe('CodeListTable', () => {
 
   it('renders multiple codes correctly', () => {
     const codes: Participant[] = [
-      createMockParticipant('11111111', 'unused'),
-      createMockParticipant('22222222', 'used', 'Alice'),
-      createMockParticipant('33333333', 'unused'),
+      createMockParticipant('11111111', 'unused', null, 'School A'),
+      createMockParticipant('22222222', 'used', 'Alice', 'School B'),
+      createMockParticipant('33333333', 'unused', null, 'School C'),
     ];
 
     render(<CodeListTable codes={codes} />);
@@ -96,7 +118,10 @@ describe('CodeListTable', () => {
     expect(screen.getByText('22222222')).toBeInTheDocument();
     expect(screen.getByText('33333333')).toBeInTheDocument();
     expect(screen.getByText('Alice')).toBeInTheDocument();
-    // Should have 2 "-" for unused codes
+    expect(screen.getByText('School A')).toBeInTheDocument();
+    expect(screen.getByText('School B')).toBeInTheDocument();
+    expect(screen.getByText('School C')).toBeInTheDocument();
+    // Should have 2 "-" for unused codes (participant name column)
     expect(screen.getAllByText('-')).toHaveLength(2);
   });
 

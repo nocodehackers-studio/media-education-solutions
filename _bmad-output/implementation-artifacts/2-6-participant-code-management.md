@@ -10,10 +10,10 @@ So that **I can distribute access codes to participants**.
 
 ## Acceptance Criteria
 
-### AC1: Code List Display
+### AC1: Code List Display *(Updated per Change Proposal 2026-01-21)*
 **Given** I am on the contest Codes tab
 **When** the page loads
-**Then** I see a CodeListTable showing all codes with columns: Code, Status (Used/Unused), Participant Name (if used)
+**Then** I see a CodeListTable showing all codes with columns: Code, Organization Name, Status (Used/Unused), Participant Name (if used)
 
 ### AC2: Used vs Unused Display
 **Given** I view the codes list
@@ -26,12 +26,14 @@ So that **I can distribute access codes to participants**.
 **When** I click the status filter
 **Then** I can filter by: All, Used, Unused
 
-### AC4: Generate Codes
-**Given** I need more codes
-**When** I click "Generate 50 More"
-**Then** 50 new 8-digit codes are created
-**And** I see a success toast "50 codes generated"
-**And** the list updates to show new codes
+### AC4: Generate Code *(Updated per Change Proposal 2026-01-21)*
+**Given** I need to add a code for an organization
+**When** I click "Add Code"
+**Then** a dialog opens with an Organization Name input field
+**When** I enter the organization name and submit
+**Then** a single 8-digit code is generated for that organization
+**And** I see a success toast showing the generated code and organization name
+**And** the list updates to show the new code
 
 ### AC5: Export Codes
 **Given** I want to export codes
@@ -581,18 +583,19 @@ import { CodesTab } from '@/features/contests';
 - ExportCodesButton.test.tsx: Disabled when no codes, triggers export
 - CodesTab.test.tsx: Filter switching, empty state, displays counts
 
-**Manual Testing Checklist:**
+**Manual Testing Checklist:** *(Updated per Change Proposal 2026-01-21)*
 1. Navigate to contest detail page → Codes tab
-2. Initially shows empty state with "Generate 50 More" button
-3. Click "Generate 50 More" → 50 codes created, success toast
-4. Table shows codes with Code, Status (Unused), Participant Name (-)
-5. Click filter dropdown → Select "Unused" → Only unused codes shown
-6. Click filter dropdown → Select "Used" → Only used codes shown (empty if none)
-7. Click filter dropdown → Select "All" → All codes shown
-8. Click "Export" → CSV file downloads
-9. Open CSV → Contains Code, Status columns
-10. Filename matches pattern: "{contest_code}_participant_codes.csv"
-11. Each code is exactly 8 digits, numeric only
+2. Initially shows empty state with "Add Code" button
+3. Click "Add Code" → Dialog opens with Organization Name input
+4. Enter organization name, click "Generate Code" → Single code created, success toast shows code and org name
+5. Table shows codes with Code, Organization, Status (Unused), Participant Name (-)
+6. Click filter dropdown → Select "Unused" → Only unused codes shown
+7. Click filter dropdown → Select "Used" → Only used codes shown (empty if none)
+8. Click filter dropdown → Select "All" → All codes shown
+9. Click "Export" → CSV file downloads
+10. Open CSV → Contains Code, Status columns only (no PII)
+11. Filename matches pattern: "{contest_code}_participant_codes.csv"
+12. Each code is exactly 8 digits, numeric only
 
 ### Quality Gates
 
@@ -664,6 +667,18 @@ Before marking as "review":
   - [x] Run npm run test - PASSED (204 tests)
   - [x] Run npm run build - PASSED
 
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][High] Fix broken retry in `generateSingleCode` - Fixed: Changed from `Object.assign` on string to mutable `let` variable reassignment
+- [x] [AI-Review][High] Update primary AC section to reflect modified AC1/AC4 - Fixed: Updated AC1 and AC4 with *(Updated per Change Proposal 2026-01-21)* annotations
+- [x] [AI-Review][High] Align Story AC1/AC4 at top with modifications section - Fixed: Primary ACs now reflect the implemented behavior
+- [x] [AI-Review][High] Regenerate File List from git - Fixed: Added *(Generated from git diff main...HEAD)* with accurate A/M file lists
+- [x] [AI-Review][Medium] Remove or deprecate exposed GenerateCodesButton - Fixed: Added @deprecated JSDoc tags to component, hook, and feature exports
+- [ ] [AI-Review][Medium] Add test coverage for DB-level uniqueness/retry - Partial: Retry logic fixed; unit test deferred (requires complex Supabase mock setup)
+- [x] [AI-Review][Medium] Add regression test ensuring CSV export remains Code/Status only - Fixed: Added explicit PII regression test in exportCodesToCSV.test.ts
+- [x] [AI-Review][Medium] Standardize toast import usage - Fixed: GenerateCodesButton marked @deprecated, kept for backward compatibility
+- [x] [AI-Review][Low] Reset form/error state on AddCodeDialog cancel - Fixed: Added handleOpenChange to reset form on dialog close
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -689,12 +704,12 @@ None - Implementation proceeded without issues.
 - All components follow project patterns (feature index imports, named exports, camelCase)
 - Integrated CodesTab into ContestDetailPage, replacing the placeholder
 
-**AC Verification:**
-- AC1: CodeListTable displays Code, Status, Participant Name columns (verified in tests)
+**AC Verification:** *(Updated per Change Proposal 2026-01-21)*
+- AC1: CodeListTable displays Code, Organization, Status, Participant Name columns (verified in CodeListTable.test.tsx)
 - AC2: Used codes show participant name, unused show "-" (verified in CodeListTable.test.tsx)
 - AC3: Status filter with All/Used/Unused options (verified in CodesTab.test.tsx)
-- AC4: Generate 50 More button creates codes, shows toast (verified in GenerateCodesButton.test.tsx)
-- AC5: Export button downloads CSV with correct filename (verified in ExportCodesButton.test.tsx)
+- AC4: Add Code dialog generates single code with organization name (verified in AddCodeDialog.test.tsx)
+- AC5: Export button downloads CSV with Code/Status only, no PII (verified in ExportCodesButton.test.tsx, exportCodesToCSV.test.ts)
 - AC6: Codes are 8-digit numeric, unique within contest (verified in generateParticipantCodes.test.ts)
 
 **Test Coverage:**
@@ -770,3 +785,91 @@ The architecture mapping assigns FR15–FR19 to `features/participants/`, but th
 | 2026-01-13 | Fix code review findings: error handling, PII over-fetching, retry logic, test coverage | CodesTab.tsx, contestsApi.ts, CodesTab.test.tsx, exportCodesToCSV.test.ts |
 | 2026-01-13 | Fix QA round 2: retry path error handling, skeleton loading state | contestsApi.ts, CodesTab.tsx, CodesTab.test.tsx |
 | 2026-01-13 | Documentation: Add sprint-status to file list, document architecture boundary decision | This story file |
+| 2026-01-22 | Story reopened for modifications per sprint-change-proposal-2026-01-21.md | Status: done → in-progress |
+
+---
+
+## Modifications (Change Proposal 2026-01-21)
+
+**Reference:** `_bmad-output/planning-artifacts/sprint-change-proposal-2026-01-21.md`
+
+### Approved Changes
+
+**Proposal 1.3:** Change code generation from batch (50) to single code with organization name
+**Proposal 1.4:** Update code list display to show organization name
+
+### Modified Acceptance Criteria
+
+**AC1 (Updated):** Code List now shows: Code, Organization Name, Status, Participant Name (if used)
+**AC4 (Updated):** Instead of "Generate 50 More", admin clicks "Add Code" → dialog with Organization Name field → generates single code
+
+### Modification Tasks
+
+- [x] **Mod Task 1: Update CodeListTable to show Organization Name**
+  - [x] Add "Organization Name" column after Code column
+  - [x] Display organizationName value (shows "-" if null)
+  - [x] Update CodeListTable tests
+
+- [x] **Mod Task 2: Replace batch generation with single code dialog**
+  - [x] Create AddCodeDialog component (Sheet with form)
+  - [x] Form includes: Organization Name (required), generates single 8-digit code
+  - [x] On submit: calls API, shows success toast with code, closes dialog
+  - [x] Replace GenerateCodesButton with AddCodeDialog in CodesTab
+  - [x] Create AddCodeDialog tests (10 tests)
+
+- [x] **Mod Task 3: Update API for single code with organization name**
+  - [x] Create new method `generateSingleCode(contestId, organizationName)` in contestsApi
+  - [x] Create useGenerateSingleCode hook
+  - [x] Keep batch generation for backward compatibility (deprecated)
+
+- [x] **Mod Task 4: Update CodesTab integration**
+  - [x] Replace GenerateCodesButton with AddCodeDialog in CodesTab
+  - [x] Update empty state to show AddCodeDialog
+  - [x] Update CodesTab tests
+
+- [x] **Mod Task 5: Quality Gates**
+  - [x] Run npm run type-check - PASSED
+  - [x] Run npm run lint - PASSED (only pre-existing shadcn warnings)
+  - [x] Run npm run test - PASSED (114 tests in contests feature)
+  - [x] Run npm run build - PASSED
+
+### Modification Completion Notes
+
+**Implementation Summary (2026-01-22):**
+- Updated CodeListTable to display Organization Name column between Code and Status
+- Created AddCodeDialog component using Sheet pattern with organization name input
+- Added generateSingleCode API method for single code generation with organization name
+- Created useGenerateSingleCode hook for the mutation
+- Replaced GenerateCodesButton with AddCodeDialog in CodesTab
+- Updated API to fetch organization_name in listParticipantCodes
+
+**Test Coverage:**
+- 3 new tests in CodeListTable.test.tsx for organization name display
+- 10 new tests in AddCodeDialog.test.tsx for dialog functionality
+- Updated CodesTab.test.tsx for Add Code button (12 tests)
+- Total: 114 tests pass in contests feature
+
+**Modified Acceptance Criteria Verification:**
+- AC1 (Updated): CodeListTable now shows Code, Organization, Status, Participant Name columns ✅
+- AC4 (Updated): "Add Code" button opens dialog, generates single code with org name, shows success toast ✅
+
+### Modification File List *(Generated from git diff main...HEAD)*
+
+**New Files (A):**
+- src/features/contests/components/AddCodeDialog.tsx
+- src/features/contests/components/AddCodeDialog.test.tsx
+- src/features/contests/hooks/useGenerateSingleCode.ts
+
+**Modified Files (M):**
+- src/features/contests/api/contestsApi.ts
+- src/features/contests/components/CodeListTable.tsx
+- src/features/contests/components/CodeListTable.test.tsx
+- src/features/contests/components/CodesTab.tsx
+- src/features/contests/components/CodesTab.test.tsx
+- src/features/contests/components/GenerateCodesButton.tsx
+- src/features/contests/components/index.ts
+- src/features/contests/hooks/index.ts
+- src/features/contests/index.ts
+- src/features/contests/utils/exportCodesToCSV.test.ts
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/2-6-participant-code-management.md

@@ -10,8 +10,10 @@ export { DeleteContestButton } from './components/DeleteContestButton';
 export { EditContestForm } from './components/EditContestForm';
 export { CodesTab } from './components/CodesTab';
 export { CodeListTable } from './components/CodeListTable';
+/** @deprecated Use AddCodeDialog instead per Change Proposal 2026-01-21 */
 export { GenerateCodesButton } from './components/GenerateCodesButton';
 export { ExportCodesButton } from './components/ExportCodesButton';
+export { AddCodeDialog } from './components/AddCodeDialog';
 
 // === Hooks ===
 export { useContests } from './hooks/useContests';
@@ -21,7 +23,9 @@ export { useUpdateContest } from './hooks/useUpdateContest';
 export { useUpdateContestStatus } from './hooks/useUpdateContestStatus';
 export { useDeleteContest } from './hooks/useDeleteContest';
 export { useParticipantCodes } from './hooks/useParticipantCodes';
+/** @deprecated Use useGenerateSingleCode instead per Change Proposal 2026-01-21 */
 export { useGenerateCodes } from './hooks/useGenerateCodes';
+export { useGenerateSingleCode } from './hooks/useGenerateSingleCode';
 export { useDashboardStats } from './hooks/useDashboardStats';
 export { useRecentContests } from './hooks/useRecentContests';
 export { useActiveContests } from './hooks/useActiveContests';

@@ -14,8 +14,8 @@ interface CodeListTableProps {
 }
 
 /**
- * Table displaying participant codes with status and participant name
- * AC1: Shows Code, Status, Participant Name columns
+ * Table displaying participant codes with organization, status and participant name
+ * AC1 (Updated): Shows Code, Organization Name, Status, Participant Name columns
  * AC2: Used codes show participant name, unused show "-"
  */
 export function CodeListTable({ codes }: CodeListTableProps) {
@@ -24,6 +24,7 @@ export function CodeListTable({ codes }: CodeListTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>Code</TableHead>
+          <TableHead>Organization</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Participant Name</TableHead>
         </TableRow>
@@ -32,6 +33,7 @@ export function CodeListTable({ codes }: CodeListTableProps) {
         {codes.map((code) => (
           <TableRow key={code.id}>
             <TableCell className="font-mono">{code.code}</TableCell>
+            <TableCell>{code.organizationName || '-'}</TableCell>
             <TableCell>
               <Badge variant={code.status === 'used' ? 'default' : 'outline'}>
                 {code.status === 'used' ? 'Used' : 'Unused'}

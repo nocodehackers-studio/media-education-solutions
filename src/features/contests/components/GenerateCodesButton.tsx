@@ -8,8 +8,10 @@ interface GenerateCodesButtonProps {
 }
 
 /**
- * Button to generate 50 new participant codes
- * AC4: Generates 50 codes, shows success toast, updates list
+ * Button to generate 50 new participant codes (batch generation)
+ * @deprecated Use AddCodeDialog instead per Change Proposal 2026-01-21
+ * Original AC4 (superseded): Generates 50 codes, shows success toast, updates list
+ * New AC4: Single code generation with organization name via AddCodeDialog
  */
 export function GenerateCodesButton({
   contestId,
