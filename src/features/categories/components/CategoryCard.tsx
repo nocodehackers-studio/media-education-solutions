@@ -1,9 +1,18 @@
-// CategoryCard - Story 2.5
-// Display a category with status badge, type badge, and actions
+// CategoryCard - Story 2.5, Story 3-1
+// Display a category with status badge, type badge, judge info, and actions
 
 import { useState, useEffect } from 'react';
-import { Video, Camera } from 'lucide-react';
+import { Video, Camera, UserMinus } from 'lucide-react';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Badge,
   Button,
   Card,
@@ -25,9 +34,11 @@ import {
   toast,
 } from '@/components/ui';
 import { useUpdateCategoryStatus } from '../hooks/useUpdateCategoryStatus';
+import { useRemoveJudge } from '../hooks/useRemoveJudge';
 import { categoriesApi } from '../api/categoriesApi';
 import { EditCategoryForm } from './EditCategoryForm';
 import { DeleteCategoryButton } from './DeleteCategoryButton';
+import { AssignJudgeSheet } from './AssignJudgeSheet';
 import { DuplicateCategoryDialog } from '@/features/divisions';
 import type { Category, CategoryStatus } from '../types/category.types';
 
@@ -75,6 +86,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [submissionCountError, setSubmissionCountError] = useState(false);
   const updateStatus = useUpdateCategoryStatus(contestId);
+  const removeJudge = useRemoveJudge(contestId);
 
   // Sync optimistic status with prop changes (per story 2-4 pattern)
   useEffect(() => {
@@ -193,6 +205,68 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           <p className="text-sm text-muted-foreground">{category.description}</p>
         </CardContent>
       )}
+
+      {/* Story 3-1: Judge Assignment Section */}
+      <CardContent className="border-t pt-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Judge:</span>
+          {category.assignedJudge ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {category.assignedJudge.email}
+              </span>
+              {/* AC5: Remove Judge with confirmation */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-destructive hover:text-destructive"
+                    disabled={removeJudge.isPending}
+                  >
+                    <UserMinus className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove Judge</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove{' '}
+                      <strong>{category.assignedJudge.email}</strong> from this
+                      category? Any existing reviews will remain in the database.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        try {
+                          await removeJudge.mutateAsync(category.id);
+                          toast.success('Judge removed');
+                        } catch (error) {
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : 'Failed to remove judge'
+                          );
+                        }
+                      }}
+                    >
+                      Remove
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          ) : (
+            <AssignJudgeSheet
+              categoryId={category.id}
+              categoryName={category.name}
+              contestId={contestId}
+            />
+          )}
+        </div>
+      </CardContent>
 
       <CardFooter className="flex flex-col gap-2">
         <div className="flex w-full justify-between">

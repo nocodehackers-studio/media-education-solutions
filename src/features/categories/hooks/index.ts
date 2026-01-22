@@ -6,3 +6,6 @@ export { useCreateCategory } from './useCreateCategory';
 export { useUpdateCategory } from './useUpdateCategory';
 export { useUpdateCategoryStatus } from './useUpdateCategoryStatus';
 export { useDeleteCategory } from './useDeleteCategory';
+// Story 3-1: Judge assignment hooks
+export { useAssignJudge } from './useAssignJudge';
+export { useRemoveJudge } from './useRemoveJudge';

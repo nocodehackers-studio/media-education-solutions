@@ -1,7 +1,9 @@
 // Category types barrel export
 export type {
+  AssignedJudge,
   Category,
   CategoryRow,
+  CategoryRowWithJudge,
   CategoryStatus,
   CategoryType,
 } from './category.types';

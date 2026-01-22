@@ -16,6 +16,9 @@ vi.mock('../api/categoriesApi', () => ({
     updateStatus: vi.fn(),
     delete: vi.fn(),
     getSubmissionCount: vi.fn(),
+    assignJudge: vi.fn(),
+    removeJudge: vi.fn(),
+    getJudgeByEmail: vi.fn(),
   },
 }));
 
@@ -54,6 +57,9 @@ const baseMockCategory: Category = {
   deadline: new Date('2026-12-31').toISOString(),
   status: 'draft',
   createdAt: new Date().toISOString(),
+  assignedJudgeId: null,
+  invitedAt: null,
+  assignedJudge: null,
 };
 
 describe('CategoryCard', () => {
@@ -184,6 +190,91 @@ describe('CategoryCard', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/edit category/i)).toBeInTheDocument();
+    });
+  });
+
+  // Story 3-1: Judge Assignment Tests
+
+  it('shows Assign Judge button when no judge assigned (AC1)', () => {
+    renderWithProviders(
+      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+    );
+
+    expect(screen.getByRole('button', { name: /assign judge/i })).toBeInTheDocument();
+  });
+
+  it('displays assigned judge email when judge is assigned (AC4)', () => {
+    const categoryWithJudge = {
+      ...baseMockCategory,
+      assignedJudgeId: 'judge-123',
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+    );
+
+    expect(screen.getByText('judge@example.com')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /assign judge/i })).not.toBeInTheDocument();
+  });
+
+  it('shows remove judge button when judge is assigned (AC5)', () => {
+    const categoryWithJudge = {
+      ...baseMockCategory,
+      assignedJudgeId: 'judge-123',
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+    );
+
+    // The remove button is a ghost button with UserMinus icon
+    const removeButtons = screen.getAllByRole('button');
+    const removeJudgeButton = removeButtons.find((btn) =>
+      btn.classList.contains('text-destructive')
+    );
+    expect(removeJudgeButton).toBeInTheDocument();
+  });
+
+  it('opens remove confirmation dialog when remove button clicked (AC5)', async () => {
+    const user = userEvent.setup();
+    const categoryWithJudge = {
+      ...baseMockCategory,
+      assignedJudgeId: 'judge-123',
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+    );
+
+    // Find and click the remove button
+    const removeButtons = screen.getAllByRole('button');
+    const removeJudgeButton = removeButtons.find((btn) =>
+      btn.classList.contains('text-destructive')
+    );
+    await user.click(removeJudgeButton!);
+
+    // Check that confirmation dialog appears
+    await waitFor(() => {
+      expect(screen.getByText(/remove judge/i)).toBeInTheDocument();
+      expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
     });
   });
 });
