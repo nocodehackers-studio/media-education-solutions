@@ -140,7 +140,13 @@ This document tracks valuable features, improvements, and technical debt discove
 ### Epic 4: Participant Submission Experience
 *Items discovered during Epic 4 implementation*
 
-*No items currently tracked*
+- **[Story 4-2]** Optimize validate-participant to return full participant info including tlcName/tlcEmail
+  - **Why:** Currently `enterContest()` only sets `name` and `organizationName` from validation response. The `tlcName` and `tlcEmail` fields require a separate `get-participant` call on the info page. This adds an extra network round-trip for returning users.
+  - **Priority:** Low
+  - **Suggested Epic:** Performance optimization
+  - **Discovered:** 2026-01-26
+  - **Files:** `supabase/functions/validate-participant/index.ts`, `src/contexts/ParticipantSessionProvider.tsx`
+  - **Notes:** The current implementation is correct and meets all ACs. This is an optimization to reduce network calls for returning participants. Would require updating the Edge Function to return additional fields and updating `enterContest()` to store them in session.
 
 ---
 

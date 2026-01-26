@@ -72,10 +72,10 @@ development_status:
   3-5-admin-view-judge-progress: done  # Completed 2026-01-26
   epic-3-retrospective: done  # 2026-01-26: Testing concerns documented, quality checkpoint planned
 
-  # Epic 4: Participant Submission Experience (7 stories) - Story 4-1 COMPLETED 2026-01-26
-  epic-4: done
+  # Epic 4: Participant Submission Experience (7 stories)
+  epic-4: in-progress
   4-1-participant-code-entry-session: done  # Completed 2026-01-26
-  4-2-participant-info-form: backlog
+  4-2-participant-info-form: done  # Completed 2026-01-26
   4-3-view-categories-submission-status: backlog
   4-4-video-upload-with-progress: backlog
   4-5-photo-upload-with-progress: backlog
