@@ -9,9 +9,10 @@ export { ParticipantInfoForm } from './components/ParticipantInfoForm'
 
 // === Hooks ===
 // useParticipantSession is exported from @/contexts (not here)
+export { useParticipant } from './hooks/useParticipant'
 
 // === API ===
-// export { participantsApi } from './api/participantsApi';
+export { participantsApi, type ParticipantData } from './api/participantsApi'
 
 // === Types ===
 export {

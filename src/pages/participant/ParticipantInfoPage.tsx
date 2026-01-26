@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui'
 import {
   ParticipantInfoForm,
+  useParticipant,
   type ParticipantInfoFormData,
 } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
@@ -29,54 +30,41 @@ export function ParticipantInfoPage() {
     extendSession,
     updateParticipantInfo,
   } = useParticipantSession()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(true)
-  const [defaultValues, setDefaultValues] =
-    useState<Partial<ParticipantInfoFormData>>()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Fetch existing participant data using TanStack Query (AC2: pre-fill for returning users)
+  const queryParams = useMemo(
+    () =>
+      session
+        ? {
+            participantId: session.participantId,
+            participantCode: session.code,
+            contestId: session.contestId,
+          }
+        : null,
+    [session]
+  )
+  const { data: participant, isLoading: isFetching } =
+    useParticipant(queryParams)
+
+  // Transform participant data to form default values
+  const defaultValues = useMemo<Partial<ParticipantInfoFormData> | undefined>(
+    () =>
+      participant
+        ? {
+            name: participant.name || '',
+            organizationName: participant.organizationName || '',
+            tlcName: participant.tlcName || '',
+            tlcEmail: participant.tlcEmail || '',
+          }
+        : undefined,
+    [participant]
+  )
 
   const handleLogout = () => {
     endSession()
     navigate('/enter', { replace: true })
   }
-
-  // Fetch existing participant data on mount (for returning participants - AC2)
-  useEffect(() => {
-    async function fetchParticipantData() {
-      if (!session) {
-        setIsFetching(false)
-        return
-      }
-
-      try {
-        const { data, error } = await supabase.functions.invoke(
-          'get-participant',
-          {
-            body: {
-              participantId: session.participantId,
-              participantCode: session.code,
-              contestId: session.contestId,
-            },
-          }
-        )
-
-        if (!error && data?.success && data.participant) {
-          setDefaultValues({
-            name: data.participant.name || '',
-            organizationName: data.participant.organizationName || '',
-            tlcName: data.participant.tlcName || '',
-            tlcEmail: data.participant.tlcEmail || '',
-          })
-        }
-      } catch {
-        // First-time user or fetch failed - show empty form (AC1)
-        console.log('No existing participant data found')
-      } finally {
-        setIsFetching(false)
-      }
-    }
-
-    fetchParticipantData()
-  }, [session])
 
   const handleSubmit = async (data: ParticipantInfoFormData) => {
     if (!session) {
@@ -85,7 +73,7 @@ export function ParticipantInfoPage() {
       return
     }
 
-    setIsLoading(true)
+    setIsSubmitting(true)
     try {
       const { data: result, error } = await supabase.functions.invoke(
         'update-participant',
@@ -120,7 +108,7 @@ export function ParticipantInfoPage() {
         err instanceof Error ? err.message : 'Failed to save information'
       )
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -152,7 +140,7 @@ export function ParticipantInfoPage() {
             <ParticipantInfoForm
               defaultValues={defaultValues}
               onSubmit={handleSubmit}
-              isLoading={isLoading}
+              isLoading={isSubmitting}
             />
           </CardContent>
         </Card>
