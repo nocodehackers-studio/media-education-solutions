@@ -75,6 +75,29 @@ Deno.serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
+    // Create service role client for admin operations (needed for profile check and invite link)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Verify judge email exists in profiles with role='judge'
+    // This prevents generating invite links for non-existent or non-judge users
+    const { data: judgeProfile, error: judgeProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, role')
+      .eq('email', judgeEmail)
+      .single();
+
+    if (judgeProfileError || !judgeProfile) {
+      throw new Error(`No judge profile found for email: ${judgeEmail}`);
+    }
+
+    if (judgeProfile.role !== 'judge') {
+      throw new Error(`User ${judgeEmail} is not a judge (role: ${judgeProfile.role})`);
+    }
+
     // Get Brevo API key
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
     if (!brevoApiKey) {
@@ -83,13 +106,6 @@ Deno.serve(async (req) => {
 
     // Build app URL
     const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
-
-    // Create service role client for admin operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
 
     // Story 3-3: Generate invite link for password setup flow
     // This creates a one-time use link that logs the judge in and redirects to /set-password

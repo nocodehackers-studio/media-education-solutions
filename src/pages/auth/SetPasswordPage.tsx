@@ -63,10 +63,16 @@ export function SetPasswordPage() {
       // (They may have navigated here directly while logged in)
       if (data.session && !isSetupFlow) {
         // Check if user is a judge and redirect appropriately
-        const profile = await authApi.fetchProfile(data.session.user.id)
-        if (profile?.role === 'judge') {
-          navigate('/judge/dashboard', { replace: true })
-        } else {
+        // Wrap in try/catch to handle API failures gracefully
+        try {
+          const profile = await authApi.fetchProfile(data.session.user.id)
+          if (profile?.role === 'judge') {
+            navigate('/judge/dashboard', { replace: true })
+          } else {
+            navigate('/login', { replace: true })
+          }
+        } catch {
+          // On API failure, default to login page as safe fallback
           navigate('/login', { replace: true })
         }
         return

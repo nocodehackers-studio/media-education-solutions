@@ -452,13 +452,13 @@ npx supabase functions deploy send-judge-invitation
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][MEDIUM] Add judge email validation in Edge Function - verify email exists in profiles with role='judge' before generating invite link [supabase/functions/send-judge-invitation/index.ts:74]
-- [ ] [AI-Review][MEDIUM] Add try/catch around fetchProfile call during session check to handle API failures gracefully [src/pages/auth/SetPasswordPage.tsx:66]
-- [ ] [AI-Review][LOW] Add test case for fetchProfile error during redirect logic [src/pages/auth/SetPasswordPage.test.tsx]
-- [ ] [AI-Review][LOW] Extract hardcoded `/set-password` redirect path to constant [supabase/functions/send-judge-invitation/index.ts:101]
-- [ ] [AI-Review][LOW] Improve loading state text: "Verifying..." → "Verifying your invitation link..." [src/pages/auth/SetPasswordPage.tsx:100]
-- [ ] [AI-Review][LOW] Specify invite link expiration duration in email copy [supabase/functions/send-judge-invitation/index.ts:159]
-- [ ] [AI-Review][LOW] Document why 'magiclink' type is accepted (matches ResetPasswordPage pattern) [src/pages/auth/SetPasswordPage.tsx:59]
+- [x] [AI-Review][MEDIUM] Add judge email validation in Edge Function - verify email exists in profiles with role='judge' before generating invite link [supabase/functions/send-judge-invitation/index.ts:74] **FIXED**
+- [x] [AI-Review][MEDIUM] Add try/catch around fetchProfile call during session check to handle API failures gracefully [src/pages/auth/SetPasswordPage.tsx:66] **FIXED**
+- [x] [AI-Review][LOW] Add test case for fetchProfile error during redirect logic → **Deferred to future-work.md**
+- [x] [AI-Review][LOW] Extract hardcoded `/set-password` redirect path to constant → **Deferred to future-work.md**
+- [x] [AI-Review][LOW] Improve loading state text: "Verifying..." → "Verifying your invitation link..." → **Deferred to future-work.md**
+- [x] [AI-Review][LOW] Specify invite link expiration duration in email copy → **Deferred to future-work.md**
+- [x] [AI-Review][LOW] Document why 'magiclink' type is accepted (matches ResetPasswordPage pattern) → **Deferred to future-work.md**
 
 ## Dev Agent Record
 

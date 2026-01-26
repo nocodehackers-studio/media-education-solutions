@@ -100,6 +100,41 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-26
   - **Files:** `src/features/notifications/types/notification.types.ts`
 
+- **[Story 3-3]** Add test case for fetchProfile error during redirect logic
+  - **Why:** SetPasswordPage now has try/catch around fetchProfile, but no test coverage for the error path.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/pages/auth/SetPasswordPage.test.tsx`
+
+- **[Story 3-3]** Extract hardcoded `/set-password` redirect path to constant
+  - **Why:** Path is hardcoded in Edge Function. Should be a shared constant for maintainability.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt cleanup
+  - **Discovered:** 2026-01-26
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts`
+
+- **[Story 3-3]** Improve loading state text in SetPasswordPage
+  - **Why:** "Verifying..." could be more descriptive: "Verifying your invitation link..."
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/pages/auth/SetPasswordPage.tsx:100`
+
+- **[Story 3-3]** Specify invite link expiration duration in email copy
+  - **Why:** Email says "valid for a limited time" but doesn't specify how long. Supabase default is 24h.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-01-26
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts`
+
+- **[Story 3-3]** Document why 'magiclink' type is accepted in SetPasswordPage
+  - **Why:** Code accepts 'magiclink' type for flexibility (matches ResetPasswordPage pattern) but lacks inline comment explaining why.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation / Code clarity
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/pages/auth/SetPasswordPage.tsx:59`
+
 ---
 
 ### Epic 4: Participant Submission Experience
