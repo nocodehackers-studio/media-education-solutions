@@ -9,6 +9,7 @@ import type {
   CategoryRow,
   CategoryRowWithJudge,
   CategoryStatus,
+  CategoryWithContext,
 } from '../types/category.types';
 
 export const categoriesApi = {
@@ -428,5 +429,97 @@ export const categoriesApi = {
     }
 
     return { success: true };
+  },
+
+  // ==========================================================================
+  // Story 3-4: Judge Dashboard Methods
+  // ==========================================================================
+
+  /**
+   * List all categories assigned to a specific judge
+   * Includes contest/division context and submission count
+   *
+   * Security: RLS policies on categories table ensure judges can only see
+   * categories where they are the assigned_judge_id. The judgeId parameter
+   * should match the authenticated user's ID (passed from useAuth).
+   *
+   * @param judgeId Judge's user ID
+   * @returns Array of categories with context, ordered by creation date
+   */
+  async listByJudge(judgeId: string): Promise<CategoryWithContext[]> {
+    // Query categories where assigned_judge_id matches
+    // Join divisions → contests to get contest and division names
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select(
+        `
+        *,
+        divisions!inner (
+          id,
+          name,
+          contests!inner (
+            id,
+            name,
+            status
+          )
+        )
+      `
+      )
+      .eq('assigned_judge_id', judgeId)
+      .in('status', ['published', 'closed'])
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
+    }
+
+    if (!categories || categories.length === 0) {
+      return [];
+    }
+
+    // Get submission counts for each category using efficient count queries
+    // Uses count: 'exact' to avoid fetching all rows into memory
+    const countMap = new Map<string, number>();
+    const countPromises = categories.map(async (category) => {
+      const { count, error: countError } = await supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', category.id);
+
+      if (countError) {
+        // Log warning but don't fail - show 0 count rather than break dashboard
+        console.warn(
+          `Failed to fetch submission count for category ${category.id}:`,
+          countError.message
+        );
+        return;
+      }
+
+      countMap.set(category.id, count ?? 0);
+    });
+
+    await Promise.all(countPromises);
+
+    // Type for joined query result
+    type CategoryWithJoin = CategoryRow & {
+      divisions: {
+        id: string;
+        name: string;
+        contests: {
+          id: string;
+          name: string;
+          status: string;
+        };
+      };
+    };
+
+    // Transform to CategoryWithContext
+    return (categories as unknown as CategoryWithJoin[]).map((category) => ({
+      ...transformCategory(category),
+      contestName: category.divisions.contests.name,
+      contestId: category.divisions.contests.id,
+      divisionName: category.divisions.name,
+      submissionCount: countMap.get(category.id) || 0,
+    }));
   },
 };

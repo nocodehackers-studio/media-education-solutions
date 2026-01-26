@@ -63,12 +63,12 @@ development_status:
   2-9-division-management: done  # Completed (2026-01-22)
   epic-2-retrospective: done  # 2026-01-21: Patterns documented, 5 deferred items identified
 
-  # Epic 3: Judge Onboarding & Assignment (5 stories)
-  epic-3: in-progress
+  # Epic 3: Judge Onboarding & Assignment (5 stories) - COMPLETED 2026-01-26
+  epic-3: done
   3-1-assign-judge-to-category: done
   3-2-judge-invitation-email: done
   3-3-judge-password-setup: done  # Completed 2026-01-26
-  3-4-judge-login-dashboard: ready-for-dev
+  3-4-judge-login-dashboard: done  # Completed 2026-01-26
   3-5-admin-view-judge-progress: done  # Completed 2026-01-26
   epic-3-retrospective: optional
 

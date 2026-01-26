@@ -6,6 +6,7 @@ export type {
   CategoryRowWithJudge,
   CategoryStatus,
   CategoryType,
+  CategoryWithContext,
 } from './category.types';
 export { transformCategory } from './category.types';
 

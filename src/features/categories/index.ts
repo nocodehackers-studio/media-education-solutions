@@ -22,6 +22,8 @@ export {
   useAssignJudge,
   useCategories,
   useCategoriesByDivision,
+  // Story 3-4: Judge dashboard hook
+  useCategoriesByJudge,
   useCategory,
   useCreateCategory,
   useDeleteCategory,
@@ -44,6 +46,8 @@ export type {
   CategoryRowWithJudge,
   CategoryStatus,
   CategoryType,
+  // Story 3-4: Extended type for judge dashboard
+  CategoryWithContext,
 } from './types';
 export { transformCategory } from './types';
 
