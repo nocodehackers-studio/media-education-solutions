@@ -1,6 +1,6 @@
 # Story 3.2: Judge Invitation Email
 
-Status: review
+Status: done
 
 ## Story
 

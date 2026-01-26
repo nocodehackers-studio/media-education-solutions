@@ -20,3 +20,7 @@
 
 - **AC1 session/profile failure fallback**: Profile fetch failure leaves session authenticated but profile null, which keeps route guards in a loading state indefinitely. Add a bounded fallback or explicit error state so dashboard doesn't hang. (src/contexts/AuthProvider.tsx, src/router/AdminRoute.tsx, src/router/JudgeRoute.tsx)
 - **AC4 manual checklist**: AC4 requires end-to-end manual verification; checklist is deferred and remains incomplete. Run and record results or keep story in-progress until QA completes. (_bmad-output/implementation-artifacts/2-8-epic-2-stabilization-optimization.md)
+
+## Story 3-2 Future Guidance
+
+- **Invite flow on live domain**: When Story 3-2 gets revisited, point the Supabase Edge Function + Brevo secrets at the actual live domain (mes.clients.nocodehackers.es or its final replacement), deploy the function, verify the Brevo sender, and re-run the email delivery checklist before closing. Keep a record of each manual gate so the review can finish cleanly. (_bmad-output/implementation-artifacts/3-2-judge-invitation-email.md)

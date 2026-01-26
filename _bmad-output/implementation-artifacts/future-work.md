@@ -65,7 +65,40 @@ This document tracks valuable features, improvements, and technical debt discove
 ### Epic 3: Judge Onboarding & Assignment
 *Items discovered during Epic 3 implementation*
 
-*No items currently tracked*
+- **[Story 3-2]** CategoryCard tests for invitation flow are mock-only, not behavioral
+  - **Why:** Tests at `CategoryCard.test.tsx:287-337` only verify mocks are configured, not actual component behavior. Real close→invitation flow relies on `useUpdateCategoryStatus` which IS tested.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/features/categories/components/CategoryCard.test.tsx`
+
+- **[Story 3-2]** No email format validation before sending judge invitation
+  - **Why:** `sendJudgeInvitation` in categoriesApi doesn't validate email format before calling Edge Function. Could attempt sends to malformed addresses.
+  - **Priority:** Medium
+  - **Suggested Epic:** Epic 7 (Email Notification System)
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/features/categories/api/categoriesApi.ts:332-430`
+
+- **[Story 3-2]** Notification types are exported but unused (duplicate definitions)
+  - **Why:** `JudgeInvitationPayload` and `JudgeInvitationResponse` exported from `notification.types.ts` but actual payload is defined inline in categoriesApi. Types are duplicated.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt cleanup
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/features/notifications/types/notification.types.ts`, `src/features/categories/api/categoriesApi.ts`
+
+- **[Story 3-2]** Edge Function sender email fallback is placeholder
+  - **Why:** `send-judge-invitation/index.ts:98` fallback `'noreply@yourdomain.com'` should be a required env var, not optional fallback.
+  - **Priority:** Low
+  - **Suggested Epic:** Pre-production hardening
+  - **Discovered:** 2026-01-26
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts`
+
+- **[Story 3-2]** NotificationType includes future placeholder values
+  - **Why:** `notification.types.ts:9-10` defines `'judge_complete'` and `'contest_status'` for Epic 7 - dead code paths until implemented.
+  - **Priority:** Low
+  - **Suggested Epic:** Epic 7 (Email Notification System)
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/features/notifications/types/notification.types.ts`
 
 ---
 
@@ -114,14 +147,19 @@ This document tracks valuable features, improvements, and technical debt discove
 ## Technical Debt
 *Code improvements, refactoring, performance optimizations*
 
-<!-- Example:
-- **Refactor auth middleware for better testability**
-  - **Impact:** Improved test coverage, maintainability
+- **[Story 3-2]** Test import pattern is unusual in useUpdateCategoryStatus.test.tsx
+  - **Impact:** Minor readability issue - uses `import * as categoriesApi` then accesses `categoriesApi.categoriesApi.updateStatus`
   - **Effort:** Small
-  - **Priority:** Medium
--->
+  - **Priority:** Low
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/features/categories/hooks/useUpdateCategoryStatus.test.tsx:32`
 
-*No items currently tracked*
+- **[Pre-existing]** Test infrastructure missing Supabase env vars
+  - **Impact:** 8 test suites fail due to missing Supabase environment variables in test environment
+  - **Effort:** Medium (need to configure test setup with mock env vars)
+  - **Priority:** Medium
+  - **Discovered:** 2026-01-26
+  - **Files:** `src/lib/supabase.ts`, various test files
 
 ---
 
