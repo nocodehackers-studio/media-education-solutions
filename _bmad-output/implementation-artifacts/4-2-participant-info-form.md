@@ -1,6 +1,6 @@
 # Story 4.2: Participant Info Form
 
-Status: review
+Status: done
 
 ## Story
 

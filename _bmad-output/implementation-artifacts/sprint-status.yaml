@@ -75,7 +75,7 @@ development_status:
   # Epic 4: Participant Submission Experience (7 stories)
   epic-4: in-progress
   4-1-participant-code-entry-session: done  # Completed 2026-01-26
-  4-2-participant-info-form: ready-for-dev
+  4-2-participant-info-form: done  # Completed 2026-01-26
   4-3-view-categories-submission-status: backlog
   4-4-video-upload-with-progress: backlog
   4-5-photo-upload-with-progress: backlog
