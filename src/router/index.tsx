@@ -51,6 +51,11 @@ const ParticipantInfoPage = lazy(() =>
     default: m.ParticipantInfoPage,
   }))
 )
+const ParticipantCategoriesPage = lazy(() =>
+  import('@/pages/participant/ParticipantCategoriesPage').then((m) => ({
+    default: m.ParticipantCategoriesPage,
+  }))
+)
 
 /**
  * Loading fallback for lazy-loaded routes.
@@ -184,6 +189,16 @@ const router = createBrowserRouter([
       <ParticipantRoute>
         <LazyRoute>
           <ParticipantInfoPage />
+        </LazyRoute>
+      </ParticipantRoute>
+    ),
+  },
+  {
+    path: '/participant/categories',
+    element: (
+      <ParticipantRoute>
+        <LazyRoute>
+          <ParticipantCategoriesPage />
         </LazyRoute>
       </ParticipantRoute>
     ),

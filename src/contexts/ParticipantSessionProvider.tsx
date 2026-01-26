@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react
 import {
   ParticipantSessionContext,
   type ParticipantSession,
+  type ParticipantInfoUpdate,
 } from './ParticipantSessionContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -148,6 +149,21 @@ export function ParticipantSessionProvider({
     setSessionExpired(false)
   }, [])
 
+  // Update participant info in session (after form submission)
+  const updateParticipantInfo = useCallback((info: ParticipantInfoUpdate) => {
+    setSession((prev) => {
+      if (!prev) return null
+      return {
+        ...prev,
+        name: info.name,
+        organizationName: info.organizationName,
+        tlcName: info.tlcName,
+        tlcEmail: info.tlcEmail,
+        lastActivity: Date.now(),
+      }
+    })
+  }, [])
+
   const value = useMemo(
     () => ({
       session,
@@ -160,6 +176,7 @@ export function ParticipantSessionProvider({
       updateActivity,
       extendSession,
       clearExpired,
+      updateParticipantInfo,
     }),
     [
       session,
@@ -171,6 +188,7 @@ export function ParticipantSessionProvider({
       updateActivity,
       extendSession,
       clearExpired,
+      updateParticipantInfo,
     ]
   )
 

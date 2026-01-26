@@ -5,7 +5,7 @@
 // === Components ===
 export { CodeEntryForm } from './components/CodeEntryForm'
 export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
-// export { ParticipantInfoForm } from './components/ParticipantInfoForm';
+export { ParticipantInfoForm } from './components/ParticipantInfoForm'
 
 // === Hooks ===
 // useParticipantSession is exported from @/contexts (not here)
@@ -17,5 +17,7 @@ export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
 export {
   codeEntrySchema,
   type CodeEntryFormData,
+  participantInfoSchema,
+  type ParticipantInfoFormData,
 } from './types/participant.schemas'
 // export type { Participant, ParticipantSession } from './types/participant.types';

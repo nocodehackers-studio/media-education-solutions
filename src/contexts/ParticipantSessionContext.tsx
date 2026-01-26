@@ -14,6 +14,18 @@ export interface ParticipantSession {
   // From participant table (if used before):
   name?: string
   organizationName?: string
+  tlcName?: string
+  tlcEmail?: string
+}
+
+/**
+ * Participant info update payload.
+ */
+export interface ParticipantInfoUpdate {
+  name: string
+  organizationName: string
+  tlcName?: string
+  tlcEmail?: string
 }
 
 /**
@@ -30,6 +42,7 @@ export interface ParticipantSessionContextType {
   updateActivity: () => void
   extendSession: () => void
   clearExpired: () => void // Clear the expired flag after redirect
+  updateParticipantInfo: (info: ParticipantInfoUpdate) => void
 }
 
 /**
