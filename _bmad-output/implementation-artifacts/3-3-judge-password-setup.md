@@ -1,6 +1,6 @@
 # Story 3.3: Judge Password Setup
 
-Status: in-progress
+Status: done
 
 ## Story
 
