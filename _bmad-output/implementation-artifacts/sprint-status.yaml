@@ -69,7 +69,7 @@ development_status:
   3-2-judge-invitation-email: done
   3-3-judge-password-setup: in-progress
   3-4-judge-login-dashboard: ready-for-dev
-  3-5-admin-view-judge-progress: ready-for-dev
+  3-5-admin-view-judge-progress: done  # Completed 2026-01-26
   epic-3-retrospective: optional
 
   # Epic 4: Participant Submission Experience (7 stories)
