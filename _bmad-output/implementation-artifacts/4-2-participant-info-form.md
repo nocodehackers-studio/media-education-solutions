@@ -1,6 +1,6 @@
 # Story 4.2: Participant Info Form
 
-Status: review
+Status: done
 
 ## Story
 
@@ -754,3 +754,15 @@ Edge Functions require deployment before manual testing:
 - src/features/participants/types/participant.schemas.ts
 - src/pages/participant/ParticipantInfoPage.tsx
 - src/router/index.tsx
+
+## Review Notes
+
+- Adversarial review completed
+- Findings: 19 total, 4 fixed, 15 skipped (noise/infrastructure)
+- Resolution approach: auto-fix
+
+### Fixes Applied:
+- F1: Added `.max(255)` validation to tlcEmail schema
+- F2: Added HTTP method validation (POST only) to Edge Functions
+- F3: Added participant status check (banned/inactive/revoked) to Edge Functions
+- F6: Added `form.reset()` for async defaultValues changes
