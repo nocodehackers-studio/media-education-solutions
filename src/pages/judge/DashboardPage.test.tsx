@@ -47,6 +47,7 @@ vi.mock('sonner', () => ({
   toast: {
     error: vi.fn(),
     success: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
@@ -294,7 +295,7 @@ describe('JudgeDashboardPage', () => {
       expect(screen.getByText('Ready for review')).toBeInTheDocument();
     });
 
-    it('navigates to category review when clicking Start Reviewing', async () => {
+    it('shows coming soon toast when clicking Start Reviewing', async () => {
       const user = userEvent.setup();
 
       mockUseCategoriesByJudge.mockReturnValue({
@@ -309,7 +310,8 @@ describe('JudgeDashboardPage', () => {
       const startButton = screen.getByRole('button', { name: /Start Reviewing/i });
       await user.click(startButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1');
+      // TODO: Update to expect navigation when review page is implemented
+      expect(toast.info).toHaveBeenCalledWith('Review page coming soon!');
     });
   });
 

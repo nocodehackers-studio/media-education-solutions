@@ -118,9 +118,10 @@ export function JudgeDashboardPage() {
                 <CategoryCard
                   key={category.id}
                   category={category}
-                  onStartReviewing={() =>
-                    navigate(`/judge/categories/${category.id}`)
-                  }
+                  onStartReviewing={() => {
+                    // TODO: Navigate to /judge/categories/:id when review page is implemented
+                    toast.info('Review page coming soon!');
+                  }}
                 />
               ))}
             </div>

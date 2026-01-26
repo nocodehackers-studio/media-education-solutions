@@ -100,13 +100,69 @@ Adding a loading spinner during logout is a nice-to-have but not critical for MV
 
 ---
 
+---
+
+## QA Review Findings (Deferred)
+
+### QA-1: N+1 Submission Count Queries (Medium Priority)
+**Source:** QA Review
+**Status:** Deferred - Optimization
+
+Current implementation uses Promise.all with individual count queries per category. While improved from fetching all rows, an aggregated query or RPC would be more efficient.
+
+**Future work:** Create Supabase RPC function to return counts grouped by category_id in a single query.
+
+**File:** `src/features/categories/api/categoriesApi.ts:480`
+
+---
+
+### QA-2: Test Date Formatting Brittleness (Medium Priority)
+**Source:** QA Review
+**Status:** Deferred - Minor Test Improvement
+
+Test uses exact match on date-fns output (`/Awaiting deadline: in about/i`). Different locales or date-fns updates could cause failures.
+
+**Future work:** Use more flexible matchers or mock `formatDistanceToNow`.
+
+**File:** `src/pages/judge/DashboardPage.test.tsx:345`
+
+---
+
+### QA-3: QueryKey with Undefined (Low Priority)
+**Source:** QA Review
+**Status:** Deferred - Minor Cleanup
+
+When `judgeId` is undefined, the queryKey includes `undefined`. While the query is disabled, cleaner to use a sentinel value.
+
+**Future work:** Change queryKey to `['categories', 'judge', judgeId ?? 'none']` or similar.
+
+**File:** `src/features/categories/hooks/useCategoriesByJudge.ts:15`
+
+---
+
+### QA-4: Numeric Test Assertions (Low Priority)
+**Source:** QA Review
+**Status:** Deferred - Minor Test Improvement
+
+Tests use `screen.getByText('2')` which could match any "2" on the page. More specific selectors would be more robust.
+
+**Future work:** Add data-testid or use scoped queries within stat cards.
+
+**File:** `src/pages/judge/DashboardPage.test.tsx:200`
+
+---
+
 ## Summary
 
 | ID | Description | Priority | Recommendation |
 |----|-------------|----------|----------------|
 | F5 | API unit tests | Medium | Create in test coverage story |
 | F9 | Accessibility | Medium | Create a11y audit story |
+| QA-1 | N+1 count queries | Medium | Create RPC for aggregated counts |
+| QA-2 | Test date brittleness | Medium | Improve test matchers |
 | F4 | Type casting | Low | Wait for Supabase improvements |
 | F10 | Memoization | Low | Monitor if categories grow |
 | F15 | Logout loading | Low | Add in UX polish pass |
+| QA-3 | QueryKey cleanup | Low | Minor refactor |
+| QA-4 | Test assertions | Low | Add data-testid |
 | F6, F7, F11, F13, F14 | Various | Low | No action needed |

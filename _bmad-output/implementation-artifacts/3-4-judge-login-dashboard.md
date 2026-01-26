@@ -601,6 +601,14 @@ npm run test        # Must pass
 
 - [x] Run quality gates and verify
 
+### Review Follow-ups (AI)
+- [x] [AI-Review][HIGH] Fix "Start Reviewing" navigation - Changed to show toast "Review page coming soon!" until review page is implemented
+- [x] [AI-Review][HIGH] File List verified correct - matches git diff from baseline
+- [ ] [AI-Review][MEDIUM] N+1 count queries → Deferred to `3-4-future-work.md`
+- [ ] [AI-Review][MEDIUM] Test date formatting brittleness → Deferred to `3-4-future-work.md`
+- [ ] [AI-Review][LOW] queryKey with undefined → Deferred to `3-4-future-work.md`
+- [ ] [AI-Review][LOW] Numeric test assertions → Deferred to `3-4-future-work.md`
+
 ## Dev Agent Record
 
 ### Agent Model Used
