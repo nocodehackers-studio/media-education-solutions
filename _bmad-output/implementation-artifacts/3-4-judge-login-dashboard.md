@@ -1,6 +1,6 @@
 # Story 3.4: Judge Login & Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
