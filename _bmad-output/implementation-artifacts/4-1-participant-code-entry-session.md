@@ -1,6 +1,6 @@
 # Story 4.1: Participant Code Entry & Session
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
