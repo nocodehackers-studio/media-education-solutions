@@ -144,7 +144,10 @@ describe('CodeEntryForm', () => {
 
       await user.click(screen.getByRole('button', { name: /enter contest/i }))
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      // Wait for validation errors to appear, then verify no submit
+      await waitFor(() => {
+        expect(screen.getByText(/contest code must be/i)).toBeInTheDocument()
+      })
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
     })

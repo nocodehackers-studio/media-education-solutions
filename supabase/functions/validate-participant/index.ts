@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     const { contestCode, participantCode }: ValidationRequest = await req.json()
 
     if (!contestCode || !participantCode) {
+      console.warn('Validation failed: missing codes')
       return new Response(
         JSON.stringify({ success: false, error: 'MISSING_CODES' } satisfies ValidationResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (contestError || !contest) {
+      console.warn(`Contest not found: ${normalizedContestCode}`)
       return new Response(
         JSON.stringify({ success: false, error: 'CONTEST_NOT_FOUND' } satisfies ValidationResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -71,6 +73,7 @@ Deno.serve(async (req) => {
 
     // 2. Check contest status - must be 'published' to accept submissions
     if (contest.status !== 'published') {
+      console.warn(`Contest not accepting: ${contest.id} (status: ${contest.status})`)
       return new Response(
         JSON.stringify({ success: false, error: 'CONTEST_NOT_ACCEPTING' } satisfies ValidationResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -86,13 +89,24 @@ Deno.serve(async (req) => {
       .single()
 
     if (participantError || !participant) {
+      console.warn(`Invalid participant code for contest ${contest.id}`)
       return new Response(
         JSON.stringify({ success: false, error: 'INVALID_PARTICIPANT_CODE' } satisfies ValidationResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // 4. Success - return participant and contest data
+    // 4. Check participant status - reject inactive/banned participants
+    if (participant.status !== 'active' && participant.status !== 'used') {
+      console.warn(`Participant ${participant.id} denied: status=${participant.status}`)
+      return new Response(
+        JSON.stringify({ success: false, error: 'PARTICIPANT_INACTIVE' } satisfies ValidationResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // 5. Success - return participant and contest data
+    console.log(`Participant ${participant.id} validated for contest ${contest.id}`)
     const response: ValidationResponse = {
       success: true,
       participantId: participant.id,
@@ -110,6 +124,7 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+    console.error('Validation error:', error)
     return new Response(
       JSON.stringify({ success: false, error: message } satisfies ValidationResponse),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

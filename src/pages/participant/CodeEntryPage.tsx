@@ -48,12 +48,12 @@ export function CodeEntryPage() {
       toast.success('Welcome! Please complete your information.')
       navigate('/participant/info', { replace: true })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorCode = error instanceof Error ? error.message : 'Unknown error'
 
-      // Map error codes to user-friendly messages
+      // Map error codes to user-friendly messages (fallback for unknown codes)
       const userMessage =
-        ERROR_MESSAGES[errorMessage as keyof typeof ERROR_MESSAGES] ||
-        getCustomErrorMessage(errorMessage)
+        ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] ||
+        'Something went wrong. Please try again.'
 
       toast.error(userMessage)
     } finally {
@@ -90,22 +90,4 @@ export function CodeEntryPage() {
       </Card>
     </div>
   )
-}
-
-/**
- * Map API error codes to user-friendly messages.
- */
-function getCustomErrorMessage(errorCode: string): string {
-  switch (errorCode) {
-    case 'CONTEST_NOT_FOUND':
-      return 'Contest not found'
-    case 'CONTEST_NOT_ACCEPTING':
-      return 'This contest is not accepting submissions'
-    case 'INVALID_PARTICIPANT_CODE':
-      return 'Invalid participant code'
-    case 'MISSING_CODES':
-      return 'Please enter both codes'
-    default:
-      return 'Something went wrong. Please try again.'
-  }
 }

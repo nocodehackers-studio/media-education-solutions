@@ -70,11 +70,11 @@ development_status:
   3-3-judge-password-setup: done  # Completed 2026-01-26
   3-4-judge-login-dashboard: done  # Completed 2026-01-26
   3-5-admin-view-judge-progress: done  # Completed 2026-01-26
-  epic-3-retrospective: optional
+  epic-3-retrospective: done  # 2026-01-26: Testing concerns documented, quality checkpoint planned
 
   # Epic 4: Participant Submission Experience (7 stories)
-  epic-4: backlog
-  4-1-participant-code-entry-session: backlog
+  epic-4: in-progress
+  4-1-participant-code-entry-session: ready-for-dev
   4-2-participant-info-form: backlog
   4-3-view-categories-submission-status: backlog
   4-4-video-upload-with-progress: backlog

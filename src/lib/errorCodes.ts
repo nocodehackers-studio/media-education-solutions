@@ -17,6 +17,7 @@ export const ERROR_CODES = {
 
   // Participant Session
   INVALID_PARTICIPANT_CODE: 'INVALID_PARTICIPANT_CODE',
+  PARTICIPANT_INACTIVE: 'PARTICIPANT_INACTIVE',
   PARTICIPANT_SESSION_EXPIRED: 'PARTICIPANT_SESSION_EXPIRED',
   MISSING_CODES: 'MISSING_CODES',
 
@@ -61,6 +62,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   CONTEST_NOT_ACCEPTING: 'This contest is not accepting submissions.',
   CATEGORY_NOT_FOUND: 'Category not found.',
   INVALID_PARTICIPANT_CODE: 'Invalid participant code.',
+  PARTICIPANT_INACTIVE: 'This participant code is no longer active.',
   PARTICIPANT_SESSION_EXPIRED: 'Your session has expired. Please enter your codes again.',
   MISSING_CODES: 'Please enter both codes.',
   DIVISION_NOT_FOUND: 'Division not found.',

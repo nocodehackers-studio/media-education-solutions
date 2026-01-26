@@ -49,7 +49,7 @@ export function CodeEntryForm({
         <FormField
           control={form.control}
           name="contestCode"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>Contest Code</FormLabel>
               <FormControl>
@@ -58,6 +58,7 @@ export function CodeEntryForm({
                   maxLength={6}
                   autoComplete="off"
                   disabled={isLoading}
+                  aria-invalid={!!fieldState.error}
                   {...field}
                   onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                 />
@@ -70,7 +71,7 @@ export function CodeEntryForm({
         <FormField
           control={form.control}
           name="participantCode"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>Participant Code</FormLabel>
               <FormControl>
@@ -79,6 +80,7 @@ export function CodeEntryForm({
                   maxLength={8}
                   autoComplete="off"
                   disabled={isLoading}
+                  aria-invalid={!!fieldState.error}
                   {...field}
                   onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                 />

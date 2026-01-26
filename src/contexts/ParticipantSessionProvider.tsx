@@ -127,13 +127,14 @@ export function ParticipantSessionProvider({
     []
   )
 
-  // Update activity timestamp
+  // Update activity timestamp (uses functional update to avoid stale closure)
   const updateActivity = useCallback(() => {
-    if (session) {
-      setSession({ ...session, lastActivity: Date.now() })
-      setShowWarning(false)
-    }
-  }, [session])
+    setSession((prev) => {
+      if (!prev) return null
+      return { ...prev, lastActivity: Date.now() }
+    })
+    setShowWarning(false)
+  }, [])
 
   // Extend session (from warning modal)
   const extendSession = useCallback(() => {
