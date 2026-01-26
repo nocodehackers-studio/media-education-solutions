@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -42,6 +43,18 @@ export function ParticipantInfoForm({
       tlcEmail: defaultValues?.tlcEmail ?? '',
     },
   })
+
+  // Reset form when defaultValues change (e.g., async data arrives)
+  useEffect(() => {
+    if (defaultValues) {
+      form.reset({
+        name: defaultValues.name ?? '',
+        organizationName: defaultValues.organizationName ?? '',
+        tlcName: defaultValues.tlcName ?? '',
+        tlcEmail: defaultValues.tlcEmail ?? '',
+      })
+    }
+  }, [defaultValues, form])
 
   const handleSubmit = async (data: ParticipantInfoFormData) => {
     await onSubmit(data)

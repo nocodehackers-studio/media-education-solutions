@@ -35,6 +35,14 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ success: false, error: 'METHOD_NOT_ALLOWED' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   try {
     const { participantId, participantCode, contestId }: GetRequest =
       await req.json()
@@ -78,6 +86,22 @@ Deno.serve(async (req) => {
         } satisfies GetResponse),
         {
           status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Check participant status - reject banned/inactive participants
+    const blockedStatuses = ['banned', 'inactive', 'revoked']
+    if (blockedStatuses.includes(data.status)) {
+      console.warn(`Participant ${participantId} denied: status=${data.status}`)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'PARTICIPANT_INACTIVE',
+        } satisfies GetResponse),
+        {
+          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       )

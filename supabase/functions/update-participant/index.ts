@@ -39,6 +39,14 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ success: false, error: 'METHOD_NOT_ALLOWED' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   try {
     const {
       participantId,
@@ -90,7 +98,7 @@ Deno.serve(async (req) => {
     // Verify participant exists and code matches (security check)
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('participants')
-      .select('id, code, contest_id')
+      .select('id, code, contest_id, status')
       .eq('id', participantId)
       .eq('code', participantCode.toUpperCase())
       .eq('contest_id', contestId)
@@ -105,6 +113,22 @@ Deno.serve(async (req) => {
         } satisfies UpdateResponse),
         {
           status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Check participant status - reject banned/inactive participants
+    const blockedStatuses = ['banned', 'inactive', 'revoked']
+    if (blockedStatuses.includes(existing.status)) {
+      console.warn(`Participant ${participantId} denied: status=${existing.status}`)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'PARTICIPANT_INACTIVE',
+        } satisfies UpdateResponse),
+        {
+          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       )

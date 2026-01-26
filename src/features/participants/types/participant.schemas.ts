@@ -39,6 +39,7 @@ export const participantInfoSchema = z.object({
   tlcEmail: z
     .string()
     .min(1, 'Email is required')
+    .max(255, 'Email is too long')
     .email('Please enter a valid email address'),
 })
 
