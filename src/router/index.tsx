@@ -13,6 +13,9 @@ const ForgotPasswordPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('@/pages/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
 )
+const SetPasswordPage = lazy(() =>
+  import('@/pages/auth/SetPasswordPage').then((m) => ({ default: m.SetPasswordPage }))
+)
 
 // Lazy load public pages (AC3: keep login page minimal)
 const NotFoundPage = lazy(() =>
@@ -77,6 +80,14 @@ const router = createBrowserRouter([
     element: (
       <LazyRoute>
         <ResetPasswordPage />
+      </LazyRoute>
+    ),
+  },
+  {
+    path: '/set-password',
+    element: (
+      <LazyRoute>
+        <SetPasswordPage />
       </LazyRoute>
     ),
   },

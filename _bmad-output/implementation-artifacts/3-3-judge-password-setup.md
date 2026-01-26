@@ -1,6 +1,6 @@
 # Story 3.3: Judge Password Setup
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -428,36 +428,68 @@ npx supabase functions deploy send-judge-invitation
 
 ## Tasks / Subtasks
 
-- [ ] Create SetPasswordPage component (AC1, AC2, AC3, AC4, AC5)
-  - [ ] Create src/pages/auth/SetPasswordPage.tsx
-  - [ ] Implement session validation (check for invite/recovery type)
-  - [ ] Implement password form with validation
-  - [ ] Handle successful password set with redirect
-  - [ ] Handle invalid/expired link state
-  - [ ] Handle already-has-password redirect (AC5)
-- [ ] Update router with /set-password route
-  - [ ] Add lazy import for SetPasswordPage
-  - [ ] Add route configuration
-- [ ] Update send-judge-invitation Edge Function (AC1)
-  - [ ] Generate invite link using auth.admin.generateLink()
-  - [ ] Update email template to use invite link
-  - [ ] Update email copy: "Set Password & Start Judging"
+- [x] Create SetPasswordPage component (AC1, AC2, AC3, AC4, AC5)
+  - [x] Create src/pages/auth/SetPasswordPage.tsx
+  - [x] Implement session validation (check for invite/recovery type)
+  - [x] Implement password form with validation
+  - [x] Handle successful password set with redirect
+  - [x] Handle invalid/expired link state
+  - [x] Handle already-has-password redirect (AC5)
+- [x] Update router with /set-password route
+  - [x] Add lazy import for SetPasswordPage
+  - [x] Add route configuration
+- [x] Update send-judge-invitation Edge Function (AC1)
+  - [x] Generate invite link using auth.admin.generateLink()
+  - [x] Update email template to use invite link
+  - [x] Update email copy: "Set Password & Start Judging"
   - [ ] Deploy updated function
-- [ ] Export page from pages/index.ts
-- [ ] Write unit tests
-  - [ ] SetPasswordPage.test.tsx with all AC coverage
-  - [ ] Mock Supabase session and URL hash
-- [ ] Run quality gates and verify
+- [x] Export page from pages/index.ts
+- [x] Write unit tests
+  - [x] SetPasswordPage.test.tsx with all AC coverage
+  - [x] Mock Supabase session and URL hash
+- [x] Run quality gates and verify
 - [ ] Complete manual testing checklist
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- All 16 unit tests pass
+- TypeScript compiles cleanly (npm run type-check)
+- ESLint passes with only pre-existing warnings
+
 ### Completion Notes
 
+Implemented judge password setup flow following TDD red-green-refactor:
+
+1. **SetPasswordPage component** - Full implementation with:
+   - Session validation checking URL hash for invite/recovery/magiclink types
+   - Password form with validation using existing resetPasswordSchema
+   - AC5: Redirects logged-in users not from setup flow appropriately
+   - Loading, invalid link, and success states
+
+2. **Router update** - Added /set-password route with lazy loading
+
+3. **Edge Function update** - Modified send-judge-invitation to:
+   - Generate Supabase invite link using auth.admin.generateLink()
+   - Use invite link in email CTA button
+   - Updated email copy to "Set Password & Start Judging"
+
+4. **Unit tests** - 16 tests covering all acceptance criteria
+
 ### File List
+
+**New Files:**
+- src/pages/auth/SetPasswordPage.tsx
+- src/pages/auth/SetPasswordPage.test.tsx
+
+**Modified Files:**
+- src/router/index.tsx
+- src/pages/index.ts
+- supabase/functions/send-judge-invitation/index.ts
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/3-3-judge-password-setup.md

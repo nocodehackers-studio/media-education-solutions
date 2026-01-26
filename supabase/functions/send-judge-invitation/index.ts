@@ -1,6 +1,7 @@
-// Story 3-2: Edge Function to send judge invitation emails
-// CRITICAL: Uses service role to update invited_at timestamp
+// Story 3-2 & 3-3: Edge Function to send judge invitation emails
+// CRITICAL: Uses service role to update invited_at timestamp and generate invite links
 // Uses Brevo API for transactional email delivery
+// Story 3-3: Generate Supabase invite link for password setup flow
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -80,9 +81,34 @@ Deno.serve(async (req) => {
       throw new Error('BREVO_API_KEY not configured');
     }
 
-    // Build login URL
+    // Build app URL
     const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
-    const loginLink = `${appUrl}/login?redirect=/judge`;
+
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Story 3-3: Generate invite link for password setup flow
+    // This creates a one-time use link that logs the judge in and redirects to /set-password
+    const { data: linkData, error: linkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: 'invite',
+        email: judgeEmail,
+        options: {
+          redirectTo: `${appUrl}/set-password`,
+        },
+      });
+
+    if (linkError) {
+      console.error('Failed to generate invite link:', linkError);
+      throw new Error(`Failed to generate invite link: ${linkError.message}`);
+    }
+
+    // Use the generated invite link for the CTA button
+    const setupLink = linkData.properties.action_link;
 
     // Send email via Brevo
     const emailResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -123,14 +149,14 @@ Deno.serve(async (req) => {
                 <p>The submission deadline has passed and the category is now ready for judging.</p>
 
                 <p style="margin: 30px 0;">
-                  <a href="${loginLink}"
+                  <a href="${setupLink}"
                      style="background-color: #2563eb; color: white; padding: 12px 24px;
                             text-decoration: none; border-radius: 6px; display: inline-block;">
-                    Start Judging
+                    Set Password & Start Judging
                   </a>
                 </p>
 
-                <p>If this is your first time logging in, you'll be prompted to set your password.</p>
+                <p>Click the button above to set your password and access your judging dashboard. This link is valid for a limited time.</p>
 
                 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
@@ -149,13 +175,7 @@ Deno.serve(async (req) => {
       throw new Error(`Brevo API error: ${JSON.stringify(errorData)}`);
     }
 
-    // Update invited_at timestamp on category using service role client
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
+    // Update invited_at timestamp on category (supabaseAdmin already created above)
     const { error: updateError } = await supabaseAdmin
       .from('categories')
       .update({ invited_at: new Date().toISOString() })

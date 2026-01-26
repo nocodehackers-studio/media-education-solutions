@@ -7,6 +7,7 @@ export { NotFoundPage } from './public/NotFoundPage'
 export { LoginPage } from './auth/LoginPage'
 export { ForgotPasswordPage } from './auth/ForgotPasswordPage'
 export { ResetPasswordPage } from './auth/ResetPasswordPage'
+export { SetPasswordPage } from './auth/SetPasswordPage'
 
 // Admin
 export { DashboardPage as AdminDashboardPage } from './admin/DashboardPage'
