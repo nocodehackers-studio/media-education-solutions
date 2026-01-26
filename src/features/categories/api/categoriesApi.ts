@@ -9,6 +9,7 @@ import type {
   CategoryRow,
   CategoryRowWithJudge,
   CategoryStatus,
+  CategoryWithContext,
 } from '../types/category.types';
 
 export const categoriesApi = {
@@ -428,5 +429,85 @@ export const categoriesApi = {
     }
 
     return { success: true };
+  },
+
+  // ==========================================================================
+  // Story 3-4: Judge Dashboard Methods
+  // ==========================================================================
+
+  /**
+   * List all categories assigned to a specific judge
+   * Includes contest/division context and submission count
+   * @param judgeId Judge's user ID
+   * @returns Array of categories with context, ordered by creation date
+   */
+  async listByJudge(judgeId: string): Promise<CategoryWithContext[]> {
+    // Query categories where assigned_judge_id matches
+    // Join divisions → contests to get contest and division names
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select(
+        `
+        *,
+        divisions!inner (
+          id,
+          name,
+          contests!inner (
+            id,
+            name,
+            status
+          )
+        )
+      `
+      )
+      .eq('assigned_judge_id', judgeId)
+      .in('status', ['published', 'closed'])
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_LOAD_FAILED));
+    }
+
+    if (!categories || categories.length === 0) {
+      return [];
+    }
+
+    // Get submission counts for each category
+    const categoryIds = categories.map((c) => c.id);
+    const { data: submissionCounts, error: countError } = await supabase
+      .from('submissions')
+      .select('category_id')
+      .in('category_id', categoryIds);
+
+    // If submissions table doesn't exist yet or error, use 0 counts
+    const countMap = new Map<string, number>();
+    if (!countError && submissionCounts) {
+      submissionCounts.forEach((s) => {
+        const current = countMap.get(s.category_id) || 0;
+        countMap.set(s.category_id, current + 1);
+      });
+    }
+
+    // Type for joined query result
+    type CategoryWithJoin = CategoryRow & {
+      divisions: {
+        id: string;
+        name: string;
+        contests: {
+          id: string;
+          name: string;
+          status: string;
+        };
+      };
+    };
+
+    // Transform to CategoryWithContext
+    return (categories as unknown as CategoryWithJoin[]).map((category) => ({
+      ...transformCategory(category),
+      contestName: category.divisions.contests.name,
+      contestId: category.divisions.contests.id,
+      divisionName: category.divisions.name,
+      submissionCount: countMap.get(category.id) || 0,
+    }));
   },
 };

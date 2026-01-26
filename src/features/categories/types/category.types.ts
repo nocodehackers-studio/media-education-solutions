@@ -57,6 +57,15 @@ export interface CategoryRowWithJudge extends CategoryRow {
   } | null;
 }
 
+// Story 3-4: Extended category type for judge dashboard
+// Includes contest/division context and submission count
+export interface CategoryWithContext extends Category {
+  contestName: string;
+  contestId: string;
+  divisionName: string;
+  submissionCount: number;
+}
+
 // Transform database row to application type
 // Story 3-1: Updated to handle assigned judge fields and optional join
 export function transformCategory(
