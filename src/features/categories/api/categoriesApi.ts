@@ -438,6 +438,11 @@ export const categoriesApi = {
   /**
    * List all categories assigned to a specific judge
    * Includes contest/division context and submission count
+   *
+   * Security: RLS policies on categories table ensure judges can only see
+   * categories where they are the assigned_judge_id. The judgeId parameter
+   * should match the authenticated user's ID (passed from useAuth).
+   *
    * @param judgeId Judge's user ID
    * @returns Array of categories with context, ordered by creation date
    */
@@ -472,21 +477,28 @@ export const categoriesApi = {
       return [];
     }
 
-    // Get submission counts for each category
-    const categoryIds = categories.map((c) => c.id);
-    const { data: submissionCounts, error: countError } = await supabase
-      .from('submissions')
-      .select('category_id')
-      .in('category_id', categoryIds);
-
-    // If submissions table doesn't exist yet or error, use 0 counts
+    // Get submission counts for each category using efficient count queries
+    // Uses count: 'exact' to avoid fetching all rows into memory
     const countMap = new Map<string, number>();
-    if (!countError && submissionCounts) {
-      submissionCounts.forEach((s) => {
-        const current = countMap.get(s.category_id) || 0;
-        countMap.set(s.category_id, current + 1);
-      });
-    }
+    const countPromises = categories.map(async (category) => {
+      const { count, error: countError } = await supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', category.id);
+
+      if (countError) {
+        // Log warning but don't fail - show 0 count rather than break dashboard
+        console.warn(
+          `Failed to fetch submission count for category ${category.id}:`,
+          countError.message
+        );
+        return;
+      }
+
+      countMap.set(category.id, count ?? 0);
+    });
+
+    await Promise.all(countPromises);
 
     // Type for joined query result
     type CategoryWithJoin = CategoryRow & {

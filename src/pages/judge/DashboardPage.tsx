@@ -167,9 +167,20 @@ interface CategoryCardProps {
 
 function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
   const isClosed = category.status === 'closed';
-  const deadlineText = isClosed
-    ? 'Ready for review'
-    : `Awaiting deadline: ${formatDistanceToNow(new Date(category.deadline), { addSuffix: true })}`;
+
+  // Defensive date handling - deadline should always exist but guard against edge cases
+  const getDeadlineText = () => {
+    if (isClosed) return 'Ready for review';
+    if (!category.deadline) return 'Awaiting deadline';
+    try {
+      const deadlineDate = new Date(category.deadline);
+      if (isNaN(deadlineDate.getTime())) return 'Awaiting deadline';
+      return `Awaiting deadline: ${formatDistanceToNow(deadlineDate, { addSuffix: true })}`;
+    } catch {
+      return 'Awaiting deadline';
+    }
+  };
+  const deadlineText = getDeadlineText();
 
   return (
     <Card className={isClosed ? 'border-primary shadow-md' : ''}>
