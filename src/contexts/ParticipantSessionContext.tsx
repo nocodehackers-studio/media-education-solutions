@@ -24,10 +24,12 @@ export interface ParticipantSessionContextType {
   isLoading: boolean
   isAuthenticated: boolean
   showWarning: boolean
+  sessionExpired: boolean // True when session timed out (for redirect state)
   enterContest: (contestCode: string, participantCode: string) => Promise<void>
   endSession: () => void
   updateActivity: () => void
   extendSession: () => void
+  clearExpired: () => void // Clear the expired flag after redirect
 }
 
 /**

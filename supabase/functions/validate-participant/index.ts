@@ -96,8 +96,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 4. Check participant status - reject inactive/banned participants
-    if (participant.status !== 'active' && participant.status !== 'used') {
+    // 4. Check participant status - reject banned/inactive participants
+    // Valid statuses: 'unused' (new code), 'active' (in use), 'used' (submitted)
+    const blockedStatuses = ['banned', 'inactive', 'revoked']
+    if (blockedStatuses.includes(participant.status)) {
       console.warn(`Participant ${participant.id} denied: status=${participant.status}`)
       return new Response(
         JSON.stringify({ success: false, error: 'PARTICIPANT_INACTIVE' } satisfies ValidationResponse),

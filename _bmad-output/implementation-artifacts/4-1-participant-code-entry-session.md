@@ -797,9 +797,20 @@ npx supabase functions deploy validate-participant
 - [ ] Write unit tests
   - [ ] CodeEntryForm.test.tsx
   - [ ] ParticipantSessionProvider.test.tsx
-  - [ ] CodeEntryPage.test.tsx
+- [ ] CodeEntryPage.test.tsx
 
 - [ ] Run quality gates and verify
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][High] Allow 'unused' participant status or update status on entry; current validation rejects unused codes. [supabase/functions/validate-participant/index.ts:99]
+- [ ] [AI-Review][High] Implement inactivity tracking by calling updateActivity on user interaction/route changes to satisfy AC6/AC7. [src/contexts/ParticipantSessionProvider.tsx:72]
+- [ ] [AI-Review][Medium] Set `expired` state on redirect to /enter so AC7 message shows. [src/router/ParticipantRoute.tsx:27]
+- [ ] [AI-Review][Medium] Root route should respect participant session (redirect to /participant/info when authenticated). [src/router/index.tsx:192]
+- [ ] [AI-Review][Medium] Add missing tests for entry/session flows. [src/pages/participant/CodeEntryPage.test.tsx:1]
+- [ ] [AI-Review][Medium] Add missing tests for session provider behavior. [src/contexts/ParticipantSessionProvider.test.tsx:1]
+- [ ] [AI-Review][Medium] Update story status and Dev Agent Record/File List to reflect actual work. [_bmad-output/implementation-artifacts/4-1-participant-code-entry-session.md:3]
+- [ ] [AI-Review][Low] Align error message punctuation with AC text. [src/lib/errorCodes.ts:33]
 
 ## Dev Agent Record
 

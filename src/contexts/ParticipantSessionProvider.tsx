@@ -54,6 +54,7 @@ export function ParticipantSessionProvider({
   // No loading state needed - session is restored synchronously via lazy init
   const isLoading = false
   const [showWarning, setShowWarning] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   // Persist session to localStorage when it changes
   useEffect(() => {
@@ -78,9 +79,9 @@ export function ParticipantSessionProvider({
       const remaining = SESSION_TIMEOUT_MS - elapsed
 
       if (remaining <= 0) {
-        // Session expired
+        // Session expired - set flag before clearing session
+        setSessionExpired(true)
         endSession()
-        toast.error('Session expired. Please enter your codes again.')
         return
       }
 
@@ -142,25 +143,34 @@ export function ParticipantSessionProvider({
     toast.success('Session extended')
   }, [updateActivity])
 
+  // Clear expired flag (after redirect handles it)
+  const clearExpired = useCallback(() => {
+    setSessionExpired(false)
+  }, [])
+
   const value = useMemo(
     () => ({
       session,
       isLoading,
       isAuthenticated: !!session,
       showWarning,
+      sessionExpired,
       enterContest,
       endSession,
       updateActivity,
       extendSession,
+      clearExpired,
     }),
     [
       session,
       isLoading,
       showWarning,
+      sessionExpired,
       enterContest,
       endSession,
       updateActivity,
       extendSession,
+      clearExpired,
     ]
   )
 

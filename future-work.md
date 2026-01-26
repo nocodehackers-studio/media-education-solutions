@@ -48,3 +48,12 @@
 - **F13 [LOW] Configurable timeout**: Move SESSION_TIMEOUT_MS and WARNING_BEFORE_MS to environment variables or config file. (src/contexts/ParticipantSessionProvider.tsx)
 - **F14 [LOW] Error boundary**: Add error boundary wrapping participant routes for graceful error handling. (src/router/index.tsx)
 - **F16 [LOW] Missing JSDoc**: Add JSDoc explaining why getCustomErrorMessage existed alongside ERROR_MESSAGES (now removed, but pattern may recur).
+
+### QA Review Findings (Deferred)
+
+- **QA-2 [HIGH] Inactivity tracking**: Implement explicit inactivity tracking by calling `updateActivity()` on user interactions and route changes to fully satisfy AC6/AC7. Current implementation relies on page-level activity; add hooks to track form input, navigation, etc. (src/contexts/ParticipantSessionProvider.tsx)
+- **QA-4 [MEDIUM] Root route session handling**: Root route (`/`) should detect participant session and redirect authenticated participants to `/participant/info` instead of always showing landing. (src/router/index.tsx)
+- **QA-5 [MEDIUM] CodeEntryPage tests**: Add missing integration tests for entry and session flows covering success path, error scenarios, and redirects. (src/pages/participant/CodeEntryPage.test.tsx)
+- **QA-6 [MEDIUM] ParticipantSessionProvider tests**: Add unit tests for session provider covering persistence, expiry, and edge cases. (src/contexts/ParticipantSessionProvider.test.tsx)
+- **QA-7 [MEDIUM] Story status update**: Update story status and Dev Agent Record/File List to reflect actual implementation work. (_bmad-output/implementation-artifacts/4-1-participant-code-entry-session.md)
+- **QA-8 [LOW] Error message punctuation**: Align error message punctuation with AC text (e.g., periods vs no periods). (src/lib/errorCodes.ts)

@@ -12,7 +12,8 @@ interface ParticipantRouteProps {
  * Uses code-based session (NOT Supabase Auth).
  */
 export function ParticipantRoute({ children }: ParticipantRouteProps) {
-  const { isLoading, isAuthenticated } = useParticipantSession()
+  const { isLoading, isAuthenticated, sessionExpired, clearExpired } =
+    useParticipantSession()
   const location = useLocation()
 
   // Still loading session state
@@ -26,6 +27,11 @@ export function ParticipantRoute({ children }: ParticipantRouteProps) {
 
   // No session - redirect to entry page
   if (!isAuthenticated) {
+    // If session timed out, pass expired flag so CodeEntryPage can show message
+    if (sessionExpired) {
+      clearExpired()
+      return <Navigate to="/enter" state={{ from: location, expired: true }} replace />
+    }
     return <Navigate to="/enter" state={{ from: location }} replace />
   }
 
