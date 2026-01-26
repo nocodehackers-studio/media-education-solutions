@@ -1,6 +1,6 @@
 # Story 3.3: Judge Password Setup
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -449,6 +449,16 @@ npx supabase functions deploy send-judge-invitation
   - [x] Mock Supabase session and URL hash
 - [x] Run quality gates and verify
 - [x] Complete manual testing checklist (deferred to review phase)
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] Add judge email validation in Edge Function - verify email exists in profiles with role='judge' before generating invite link [supabase/functions/send-judge-invitation/index.ts:74]
+- [ ] [AI-Review][MEDIUM] Add try/catch around fetchProfile call during session check to handle API failures gracefully [src/pages/auth/SetPasswordPage.tsx:66]
+- [ ] [AI-Review][LOW] Add test case for fetchProfile error during redirect logic [src/pages/auth/SetPasswordPage.test.tsx]
+- [ ] [AI-Review][LOW] Extract hardcoded `/set-password` redirect path to constant [supabase/functions/send-judge-invitation/index.ts:101]
+- [ ] [AI-Review][LOW] Improve loading state text: "Verifying..." → "Verifying your invitation link..." [src/pages/auth/SetPasswordPage.tsx:100]
+- [ ] [AI-Review][LOW] Specify invite link expiration duration in email copy [supabase/functions/send-judge-invitation/index.ts:159]
+- [ ] [AI-Review][LOW] Document why 'magiclink' type is accepted (matches ResetPasswordPage pattern) [src/pages/auth/SetPasswordPage.tsx:59]
 
 ## Dev Agent Record
 
