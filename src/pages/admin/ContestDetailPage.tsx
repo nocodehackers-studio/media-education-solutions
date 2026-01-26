@@ -5,9 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Skeleton,
   Tabs,
   TabsContent,
@@ -21,7 +18,7 @@ import {
   useContest,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
-import { CategoriesTab } from '@/features/categories';
+import { CategoriesTab, JudgesTab } from '@/features/categories';
 import { DivisionList } from '@/features/divisions';
 
 // Status colors per UX spec: ux-consistency-patterns.md
@@ -139,20 +136,7 @@ export function ContestDetailPage() {
         </TabsContent>
 
         <TabsContent value="judges" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Judges</CardTitle>
-              <CardDescription>
-                Judge management will be implemented in Epic 3
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                This tab will allow you to invite and manage judges assigned to
-                this contest's categories.
-              </p>
-            </CardContent>
-          </Card>
+          <JudgesTab contestId={contest.id} />
         </TabsContent>
       </Tabs>
     </div>
