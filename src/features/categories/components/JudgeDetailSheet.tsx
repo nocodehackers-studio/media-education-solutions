@@ -14,7 +14,6 @@ import { useJudgeProgress } from '../hooks/useJudgeProgress';
 interface JudgeDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  judgeId: string;
   judgeName: string;
   categoryId: string;
   categoryName: string;

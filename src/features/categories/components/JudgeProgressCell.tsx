@@ -43,7 +43,14 @@ export function JudgeProgressCell({ categoryId }: JudgeProgressCellProps) {
   // Progress bar (AC2)
   return (
     <div className="flex items-center gap-3 min-w-[140px]">
-      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+      <div
+        className="flex-1 h-2 bg-muted rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Review progress: ${reviewed} of ${total} reviewed`}
+      >
         <div
           className="h-full bg-primary transition-all"
           style={{ width: `${percentage}%` }}

@@ -20,9 +20,11 @@ interface JudgesTableProps {
   categories: Category[];
 }
 
+// TODO: Epic 5 optimization - When reviews table exists, batch-fetch progress
+// for all categories in parent component to avoid N+1 queries from JudgeProgressCell.
+
 export function JudgesTable({ categories }: JudgesTableProps) {
   const [viewingJudge, setViewingJudge] = useState<{
-    judgeId: string;
     judgeName: string;
     categoryId: string;
     categoryName: string;
@@ -51,15 +53,17 @@ export function JudgesTable({ categories }: JudgesTableProps) {
                 {category.assignedJudge ? (
                   <button
                     type="button"
-                    className="text-primary hover:underline cursor-pointer text-left"
-                    onClick={() =>
-                      setViewingJudge({
-                        judgeId: category.assignedJudge!.id,
-                        judgeName: category.assignedJudge!.email,
-                        categoryId: category.id,
-                        categoryName: category.name,
-                      })
-                    }
+                    className="text-primary hover:underline cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                    onClick={() => {
+                      const judge = category.assignedJudge;
+                      if (judge) {
+                        setViewingJudge({
+                          judgeName: judge.email,
+                          categoryId: category.id,
+                          categoryName: category.name,
+                        });
+                      }
+                    }}
                   >
                     {category.assignedJudge.email}
                   </button>
@@ -101,7 +105,6 @@ export function JudgesTable({ categories }: JudgesTableProps) {
         <JudgeDetailSheet
           open={!!viewingJudge}
           onOpenChange={(open) => !open && setViewingJudge(null)}
-          judgeId={viewingJudge.judgeId}
           judgeName={viewingJudge.judgeName}
           categoryId={viewingJudge.categoryId}
           categoryName={viewingJudge.categoryName}
