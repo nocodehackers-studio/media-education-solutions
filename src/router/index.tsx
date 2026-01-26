@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { AdminRoute } from './AdminRoute'
 import { JudgeRoute } from './JudgeRoute'
+import { ParticipantRoute } from './ParticipantRoute'
 
 // Critical path - eagerly loaded (login must be fast)
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -39,6 +40,16 @@ const ContestDetailPage = lazy(() =>
 // Lazy load judge pages
 const JudgeDashboardPage = lazy(() =>
   import('@/pages/judge/DashboardPage').then((m) => ({ default: m.JudgeDashboardPage }))
+)
+
+// Lazy load participant pages
+const CodeEntryPage = lazy(() =>
+  import('@/pages/participant/CodeEntryPage').then((m) => ({ default: m.CodeEntryPage }))
+)
+const ParticipantInfoPage = lazy(() =>
+  import('@/pages/participant/ParticipantInfoPage').then((m) => ({
+    default: m.ParticipantInfoPage,
+  }))
 )
 
 /**
@@ -153,6 +164,30 @@ const router = createBrowserRouter([
     ),
   },
   // More judge routes will be added in Epic 3
+
+  // Participant routes (public entry, protected dashboard)
+  {
+    path: '/enter',
+    element: (
+      <LazyRoute>
+        <CodeEntryPage />
+      </LazyRoute>
+    ),
+  },
+  {
+    path: '/participant',
+    element: <Navigate to="/participant/info" replace />,
+  },
+  {
+    path: '/participant/info',
+    element: (
+      <ParticipantRoute>
+        <LazyRoute>
+          <ParticipantInfoPage />
+        </LazyRoute>
+      </ParticipantRoute>
+    ),
+  },
 
   // Default redirect - send to login
   {

@@ -4,4 +4,11 @@
 export { AuthContext, useAuth } from './AuthContext'
 export { AuthProvider } from './AuthProvider'
 
-// ParticipantSessionContext - to be implemented in Epic 4
+// Participant Session Context - Code-based authentication for participants
+export {
+  ParticipantSessionContext,
+  useParticipantSession,
+  type ParticipantSession,
+  type ParticipantSessionContextType,
+} from './ParticipantSessionContext'
+export { ParticipantSessionProvider } from './ParticipantSessionProvider'
