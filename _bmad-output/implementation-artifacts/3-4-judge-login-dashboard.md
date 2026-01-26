@@ -1,6 +1,6 @@
 # Story 3.4: Judge Login & Dashboard
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -567,48 +567,76 @@ npm run test        # Must pass
 
 ## Tasks / Subtasks
 
-- [ ] Create API method for fetching judge categories (AC2)
-  - [ ] Add `listByJudge()` method to categoriesApi.ts
-  - [ ] Add `CategoryWithContext` type to category.types.ts
-  - [ ] Include submission count in response
-  - [ ] Filter to published/closed categories only
+- [x] Create API method for fetching judge categories (AC2)
+  - [x] Add `listByJudge()` method to categoriesApi.ts
+  - [x] Add `CategoryWithContext` type to category.types.ts
+  - [x] Include submission count in response
+  - [x] Filter to published/closed categories only
 
-- [ ] Create TanStack Query hook (AC2)
-  - [ ] Create src/features/categories/hooks/useCategoriesByJudge.ts
-  - [ ] Update src/features/categories/hooks/index.ts with export
-  - [ ] Update src/features/categories/index.ts with export
+- [x] Create TanStack Query hook (AC2)
+  - [x] Create src/features/categories/hooks/useCategoriesByJudge.ts
+  - [x] Update src/features/categories/hooks/index.ts with export
+  - [x] Update src/features/categories/index.ts with export
 
-- [ ] Implement JudgeDashboardPage (AC1-AC5)
-  - [ ] Update src/pages/judge/DashboardPage.tsx
-  - [ ] Implement header with user greeting and logout
-  - [ ] Implement stat cards (total, closed, awaiting)
-  - [ ] Implement category card component
-  - [ ] Implement closed category styling (AC3)
-  - [ ] Implement published category display (AC4)
-  - [ ] Implement empty state (AC5)
-  - [ ] Implement loading skeleton
-  - [ ] Implement error state with retry
+- [x] Implement JudgeDashboardPage (AC1-AC5)
+  - [x] Update src/pages/judge/DashboardPage.tsx
+  - [x] Implement header with user greeting and logout
+  - [x] Implement stat cards (total, closed, awaiting)
+  - [x] Implement category card component
+  - [x] Implement closed category styling (AC3)
+  - [x] Implement published category display (AC4)
+  - [x] Implement empty state (AC5)
+  - [x] Implement loading skeleton
+  - [x] Implement error state with retry
 
-- [ ] Write unit tests
-  - [ ] Create src/pages/judge/DashboardPage.test.tsx
-  - [ ] Test loading, empty, success, error states
-  - [ ] Test category card variants (closed vs published)
-  - [ ] Test logout functionality
+- [x] Write unit tests
+  - [x] Create src/pages/judge/DashboardPage.test.tsx
+  - [x] Test loading, empty, success, error states
+  - [x] Test category card variants (closed vs published)
+  - [x] Test logout functionality
 
-- [ ] Verify login flow works (AC1, AC6)
-  - [ ] Confirm judge login redirects to /judge/dashboard
-  - [ ] Confirm forgot password flow works for judges
+- [x] Verify login flow works (AC1, AC6)
+  - [x] Confirm judge login redirects to /judge/dashboard (already implemented)
+  - [x] Confirm forgot password flow works for judges (already implemented)
 
-- [ ] Run quality gates and verify
+- [x] Run quality gates and verify
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes
 
+All acceptance criteria implemented:
+- AC1: Judge login redirects to /judge/dashboard (pre-existing in LoginPage.tsx)
+- AC2: Dashboard displays assigned categories with contest name, category name, status, submission count
+- AC3: Closed categories have highlighted border, enabled "Start Reviewing" button
+- AC4: Published categories show "Awaiting deadline: {relative time}", disabled button
+- AC5: Empty state shows "No categories assigned yet" with descriptive text
+- AC6: Forgot password flow works for judges (pre-existing ForgotPasswordPage.tsx)
+
+Quality gates passed:
+- Type check: ✅
+- Build: ✅
+- Lint: ✅ (only pre-existing shadcn warnings)
+- Tests: 20 new tests, all passing
+
 ### File List
+
+**New Files:**
+- src/features/categories/hooks/useCategoriesByJudge.ts
+- src/pages/judge/DashboardPage.test.tsx
+
+**Modified Files:**
+- src/features/categories/api/categoriesApi.ts
+- src/features/categories/hooks/index.ts
+- src/features/categories/index.ts
+- src/features/categories/types/category.types.ts
+- src/features/categories/types/index.ts
+- src/pages/judge/DashboardPage.tsx
