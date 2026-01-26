@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom'
 
+// Mock Supabase environment variables for tests
+// These are test-only values - actual values come from .env in dev/prod
+import.meta.env.VITE_SUPABASE_URL = 'https://test-project.supabase.co'
+import.meta.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key-for-unit-tests'
+
 // Mock matchMedia for components that use media queries
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -12,7 +12,14 @@ export const ERROR_CODES = {
 
   // Contest & Category
   CONTEST_NOT_FOUND: 'CONTEST_NOT_FOUND',
+  CONTEST_NOT_ACCEPTING: 'CONTEST_NOT_ACCEPTING',
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
+
+  // Participant Session
+  INVALID_PARTICIPANT_CODE: 'INVALID_PARTICIPANT_CODE',
+  PARTICIPANT_INACTIVE: 'PARTICIPANT_INACTIVE',
+  PARTICIPANT_SESSION_EXPIRED: 'PARTICIPANT_SESSION_EXPIRED',
+  MISSING_CODES: 'MISSING_CODES',
 
   // Divisions
   DIVISION_NOT_FOUND: 'DIVISION_NOT_FOUND',
@@ -52,7 +59,12 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   AUTH_SESSION_EXPIRED: 'Your session has expired. Please log in again.',
   AUTH_UNAUTHORIZED: 'You are not authorized to access this resource.',
   CONTEST_NOT_FOUND: 'Contest not found.',
+  CONTEST_NOT_ACCEPTING: 'This contest is not accepting submissions.',
   CATEGORY_NOT_FOUND: 'Category not found.',
+  INVALID_PARTICIPANT_CODE: 'Invalid participant code.',
+  PARTICIPANT_INACTIVE: 'This participant code is no longer active.',
+  PARTICIPANT_SESSION_EXPIRED: 'Your session has expired. Please enter your codes again.',
+  MISSING_CODES: 'Please enter both codes.',
   DIVISION_NOT_FOUND: 'Division not found.',
   DIVISION_CREATE_FAILED: 'Failed to create division.',
   DIVISION_UPDATE_FAILED: 'Failed to update division.',
