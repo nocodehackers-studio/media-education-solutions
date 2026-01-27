@@ -1,6 +1,6 @@
 # Story 4.3: View Categories & Submission Status
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -649,56 +649,78 @@ npx supabase functions deploy get-participant-categories
 
 ## Tasks / Subtasks
 
-- [ ] Create get-participant-categories Edge Function
-  - [ ] Create supabase/functions/get-participant-categories/index.ts
-  - [ ] Verify participant belongs to contest
-  - [ ] Fetch categories with status IN ['published', 'closed']
-  - [ ] Check submissions for hasSubmitted flag
-  - [ ] Deploy: `npx supabase functions deploy get-participant-categories`
+- [x] Create get-participant-categories Edge Function
+  - [x] Create supabase/functions/get-participant-categories/index.ts
+  - [x] Verify participant belongs to contest
+  - [x] Fetch categories with status IN ['published', 'closed']
+  - [x] Check submissions for hasSubmitted flag
+  - [x] Deploy: `npx supabase functions deploy get-participant-categories`
 
-- [ ] Create DeadlineCountdown component
-  - [ ] Create src/features/participants/components/DeadlineCountdown.tsx
-  - [ ] Implement countdown with date-fns
-  - [ ] Add urgency styling (normal/warning/urgent)
-  - [ ] Update every minute
+- [x] Create DeadlineCountdown component
+  - [x] Create src/features/participants/components/DeadlineCountdown.tsx
+  - [x] Implement countdown with date-fns
+  - [x] Add urgency styling (normal/warning/urgent)
+  - [x] Update every minute
 
-- [ ] Create ParticipantCategoryCard component
-  - [ ] Create src/features/participants/components/ParticipantCategoryCard.tsx
-  - [ ] Show type icon and badge
-  - [ ] Show deadline countdown
-  - [ ] Show submission status badge
-  - [ ] Handle closed/submitted/open states
+- [x] Create ParticipantCategoryCard component
+  - [x] Create src/features/participants/components/ParticipantCategoryCard.tsx
+  - [x] Show type icon and badge
+  - [x] Show deadline countdown
+  - [x] Show submission status badge
+  - [x] Handle closed/submitted/open states
 
-- [ ] Create useParticipantCategories hook
-  - [ ] Create src/features/participants/hooks/useParticipantCategories.ts
-  - [ ] Call Edge Function with session data
-  - [ ] Return typed category array
+- [x] Create useParticipantCategories hook
+  - [x] Create src/features/participants/hooks/useParticipantCategories.ts
+  - [x] Call Edge Function with session data
+  - [x] Return typed category array
 
-- [ ] Implement ParticipantCategoriesPage
-  - [ ] Update src/pages/participant/ParticipantCategoriesPage.tsx
-  - [ ] Fetch categories on mount
-  - [ ] Display loading/error/empty states
-  - [ ] Render category cards
+- [x] Implement ParticipantCategoriesPage
+  - [x] Update src/pages/participant/ParticipantCategoriesPage.tsx
+  - [x] Fetch categories on mount
+  - [x] Display loading/error/empty states
+  - [x] Render category cards
 
-- [ ] Update feature exports
-  - [ ] Export new components from index.ts
-  - [ ] Export hook from hooks/index.ts
+- [x] Update feature exports
+  - [x] Export new components from index.ts
+  - [x] Export hook from hooks/index.ts
 
-- [ ] Write unit tests
-  - [ ] DeadlineCountdown.test.tsx
-  - [ ] ParticipantCategoryCard.test.tsx
-  - [ ] ParticipantCategoriesPage.test.tsx
+- [x] Write unit tests
+  - [x] DeadlineCountdown.test.tsx
+  - [x] ParticipantCategoryCard.test.tsx
+  - [x] ParticipantCategoriesPage.test.tsx
 
-- [ ] Run quality gates and verify
+- [x] Run quality gates and verify
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+None required - all tests pass.
+
 ### Completion Notes
 
+- All ACs verified through unit tests
+- Edge function deployed to Supabase
+- Fixed pre-existing unused variable in ParticipantInfoPage.test.tsx
+
 ### File List
+
+**New Files:**
+- supabase/functions/get-participant-categories/index.ts
+- src/features/participants/components/DeadlineCountdown.tsx
+- src/features/participants/components/DeadlineCountdown.test.tsx
+- src/features/participants/components/ParticipantCategoryCard.tsx
+- src/features/participants/components/ParticipantCategoryCard.test.tsx
+- src/features/participants/hooks/useParticipantCategories.ts
+- src/pages/participant/ParticipantCategoriesPage.test.tsx
+
+**Modified Files:**
+- src/features/participants/api/participantsApi.ts
+- src/features/participants/hooks/index.ts
+- src/features/participants/index.ts
+- src/pages/participant/ParticipantCategoriesPage.tsx
+- src/pages/participant/ParticipantInfoPage.test.tsx (pre-existing fix)
