@@ -365,8 +365,6 @@ describe('ParticipantInfoPage', () => {
 
   describe('session handling', () => {
     it('redirects to /enter when session expires during submission', async () => {
-      const user = userEvent.setup()
-
       vi.mocked(useParticipant).mockReturnValue({
         data: null,
         isLoading: false,

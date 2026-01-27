@@ -1,53 +1,123 @@
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, Button } from '@/components/ui'
-import { useParticipantSession } from '@/contexts'
-import { SessionTimeoutWarning } from '@/features/participants'
+// Story 4-3: Participant categories page with submission status
+import { useNavigate } from 'react-router-dom';
+import { LogOut, RefreshCw } from 'lucide-react';
+import {
+  Button,
+  Card,
+  CardContent,
+  Skeleton,
+} from '@/components/ui';
+import {
+  ParticipantCategoryCard,
+  SessionTimeoutWarning,
+  useParticipantCategories,
+} from '@/features/participants';
+import { useParticipantSession } from '@/contexts';
 
 /**
- * Participant categories page - placeholder for Story 4.3.
- * Shows available categories for submission.
+ * Participant categories page - displays available categories for submission.
+ * Shows category cards with deadline countdowns and submission status.
  */
 export function ParticipantCategoriesPage() {
-  const navigate = useNavigate()
-  const { session, endSession, showWarning, extendSession } =
-    useParticipantSession()
+  const navigate = useNavigate();
+  const { session, showWarning, endSession, extendSession } = useParticipantSession();
+
+  const {
+    data: categories,
+    isLoading,
+    error,
+    refetch,
+  } = useParticipantCategories({
+    contestId: session?.contestId || '',
+    participantId: session?.participantId || '',
+    participantCode: session?.code || '',
+  });
 
   const handleLogout = () => {
-    endSession()
-    navigate('/enter', { replace: true })
+    endSession();
+    navigate('/enter', { replace: true });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (!session) {
-    return null
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-destructive mb-4">Failed to load categories</p>
+              <Button onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Categories</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              <p>Welcome, {session.name || 'Participant'}!</p>
-              <p>Contest: {session.contestName}</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Category selection coming in Story 4.3...
+    <div className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {session?.contestName || 'Contest'}
+            </h1>
+            <p className="text-muted-foreground">
+              Welcome, {session?.name || 'Participant'}
             </p>
-            <Button variant="outline" className="w-full" onClick={handleLogout}>
-              Log Out
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Exit
+          </Button>
+        </div>
+
+        {/* Categories List */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Available Categories</h2>
+
+          {categories?.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">
+                  No categories are currently accepting submissions.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            categories?.map((category) => (
+              <ParticipantCategoryCard key={category.id} category={category} />
+            ))
+          )}
+        </div>
       </div>
 
+      {/* Session timeout warning */}
       <SessionTimeoutWarning
         open={showWarning}
         onExtend={extendSession}
         onLogout={handleLogout}
       />
-    </>
-  )
+    </div>
+  );
 }

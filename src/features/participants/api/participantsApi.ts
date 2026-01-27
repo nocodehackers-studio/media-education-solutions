@@ -9,6 +9,16 @@ export interface ParticipantData {
   status: string
 }
 
+export interface ParticipantCategory {
+  id: string
+  name: string
+  type: 'video' | 'photo'
+  deadline: string
+  status: 'published' | 'closed'
+  description: string | null
+  hasSubmitted: boolean
+}
+
 interface GetParticipantParams {
   participantId: string
   participantCode: string
@@ -18,6 +28,12 @@ interface GetParticipantParams {
 interface GetParticipantResponse {
   success: boolean
   participant?: ParticipantData
+  error?: string
+}
+
+interface GetCategoriesResponse {
+  success: boolean
+  categories?: ParticipantCategory[]
   error?: string
 }
 
@@ -39,5 +55,22 @@ export const participantsApi = {
     }
 
     return data.participant
+  },
+
+  /**
+   * Fetch categories for a contest with participant's submission status
+   * Story 4-3: Returns only published/closed categories (draft hidden)
+   */
+  async getCategories(params: GetParticipantParams): Promise<ParticipantCategory[]> {
+    const { data, error } = await supabase.functions.invoke<GetCategoriesResponse>(
+      'get-participant-categories',
+      { body: params }
+    )
+
+    if (error || !data?.success) {
+      throw new Error(data?.error || error?.message || 'Failed to fetch categories')
+    }
+
+    return data.categories || []
   },
 }
