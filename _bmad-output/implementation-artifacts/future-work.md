@@ -216,6 +216,21 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Files:** `src/features/submissions/components/VideoUploadForm.tsx:63-72`
   - **Notes:** Add code comment explaining that custom messages are ignored. Behavior is correct - browsers still prompt.
 
+- **[Story 4-4]** Use returned uploadUrl from Edge Function instead of hardcoded endpoint
+  - **Why:** QA flagged that hook hardcodes `https://video.bunnycdn.com/tusupload` instead of using the `uploadUrl` returned by edge function. Both are identical (TUS endpoint is always the same, video-specific info is in headers).
+  - **Priority:** Low
+  - **Suggested Epic:** Code clarity / Consistency
+  - **Discovered:** 2026-01-27
+  - **Files:** `src/features/submissions/hooks/useVideoUpload.ts:93`
+  - **Notes:** Not a bug - using returned value would be more proper but functionally identical.
+
+- **[Story 4-4]** Update story metadata (status/tasks) to match implementation
+  - **Why:** Story file still shows status="in-progress" and unchecked task boxes. Should be updated to "completed" with tasks checked.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation cleanup
+  - **Discovered:** 2026-01-27
+  - **Files:** `_bmad-output/implementation-artifacts/4-4-video-upload-with-progress.md`
+
 ---
 
 ### Epic 5: Judging & Evaluation Workflow

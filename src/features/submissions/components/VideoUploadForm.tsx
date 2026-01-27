@@ -2,6 +2,7 @@
 // Validates file type and size before upload
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useBlocker } from 'react-router-dom'
 import { Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button, Card, CardContent } from '@/components/ui'
@@ -55,7 +56,7 @@ export function VideoUploadForm({
       VIDEO_FORMATS.some((ext) => lowerName.endsWith(ext))
 
     if (!isValidType) {
-      return 'Invalid file type. Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG'
+      return 'Invalid file type. Supported formats: MP4, MKV, M4V, MOV, AVI, WMV, FLV, TS, MPEG'
     }
 
     return null
@@ -104,13 +105,32 @@ export function VideoUploadForm({
     setIsDragging(false)
   }
 
-  // Navigation warning during upload
+  // QA Fix #1: SPA navigation blocking during upload
+  const isUploading =
+    uploadState.status === 'uploading' || uploadState.status === 'processing'
+
+  // Block React Router navigation during upload
+  const blocker = useBlocker(isUploading)
+
+  // Show confirmation when blocked
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const confirmed = window.confirm(
+        'Upload in progress. Are you sure you want to leave? Your upload will be cancelled.'
+      )
+      if (confirmed) {
+        cancelUpload()
+        blocker.proceed()
+      } else {
+        blocker.reset()
+      }
+    }
+  }, [blocker, cancelUpload])
+
+  // Browser navigation warning (refresh/close)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (
-        uploadState.status === 'uploading' ||
-        uploadState.status === 'processing'
-      ) {
+      if (isUploading) {
         e.preventDefault()
         e.returnValue = 'Upload in progress. Are you sure you want to leave?'
         return e.returnValue
@@ -119,10 +139,7 @@ export function VideoUploadForm({
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [uploadState.status])
-
-  const isUploading =
-    uploadState.status === 'uploading' || uploadState.status === 'processing'
+  }, [isUploading])
 
   return (
     <div className="space-y-6">
@@ -144,7 +161,7 @@ export function VideoUploadForm({
               Drop your video here or click to browse
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG
+              Supported formats: MP4, MKV, M4V, MOV, AVI, WMV, FLV, TS, MPEG
             </p>
             <p className="text-sm text-muted-foreground">
               Maximum file size: 500MB

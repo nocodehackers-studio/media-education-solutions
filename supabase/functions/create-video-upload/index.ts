@@ -99,15 +99,19 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verify category is published and belongs to contest
+    // QA Fix #2: Verify category belongs to contest via division join
     const { data: category, error: categoryError } = await supabaseAdmin
       .from('categories')
-      .select('id, type, status, deadline, division_id')
+      .select(`
+        id, type, status, deadline, division_id,
+        divisions!inner ( id, contest_id )
+      `)
       .eq('id', categoryId)
+      .eq('divisions.contest_id', contestId)
       .single()
 
     if (categoryError || !category) {
-      console.warn(`Category not found: ${categoryId}`)
+      console.warn(`Category not found or doesn't belong to contest: ${categoryId}`)
       return new Response(
         JSON.stringify({ success: false, error: 'CATEGORY_NOT_FOUND' }),
         {

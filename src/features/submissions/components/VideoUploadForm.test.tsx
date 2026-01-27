@@ -10,6 +10,15 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn() },
 }))
 
+// Mock react-router-dom useBlocker
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useBlocker: vi.fn(() => ({ state: 'unblocked', reset: vi.fn(), proceed: vi.fn() })),
+  }
+})
+
 vi.mock('../hooks/useVideoUpload', () => ({
   useVideoUpload: vi.fn(() => ({
     uploadState: {
@@ -68,7 +77,7 @@ describe('VideoUploadForm', () => {
         screen.getByText('Drop your video here or click to browse')
       ).toBeInTheDocument()
       expect(
-        screen.getByText('Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG')
+        screen.getByText('Supported formats: MP4, MKV, M4V, MOV, AVI, WMV, FLV, TS, MPEG')
       ).toBeInTheDocument()
       expect(screen.getByText('Maximum file size: 500MB')).toBeInTheDocument()
     })
@@ -122,7 +131,7 @@ describe('VideoUploadForm', () => {
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
-          'Invalid file type. Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG'
+          'Invalid file type. Supported formats: MP4, MKV, M4V, MOV, AVI, WMV, FLV, TS, MPEG'
         )
       })
       expect(mockStartUpload).not.toHaveBeenCalled()
