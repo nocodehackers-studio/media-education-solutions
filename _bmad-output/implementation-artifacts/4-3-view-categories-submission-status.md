@@ -1,6 +1,6 @@
 # Story 4.3: View Categories & Submission Status
 
-Status: review
+Status: done
 
 ## Story
 
@@ -706,6 +706,13 @@ None required - all tests pass.
 - All ACs verified through unit tests
 - Edge function deployed to Supabase
 - Fixed pre-existing unused variable in ParticipantInfoPage.test.tsx
+
+### Review Notes
+
+- Adversarial review completed
+- Findings: 12 total, 10 fixed, 2 deferred (noise)
+- Resolution approach: auto-fix real findings
+- Deferred items added to future-work.md
 
 ### File List
 
