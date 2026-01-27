@@ -61,7 +61,38 @@ describe('DeadlineCountdown', () => {
 
       const countdownEl = container.firstChild as HTMLElement
       expect(countdownEl.className).toContain('text-red-600')
-      expect(countdownEl.className).toContain('animate-pulse')
+      expect(countdownEl.className).toContain('motion-safe:animate-pulse')
+    })
+
+    it('shows warning at exactly 2 hours (boundary)', () => {
+      const futureDate = new Date(Date.now() + 120 * 60 * 1000) // exactly 2 hours
+      const { container } = render(
+        <DeadlineCountdown deadline={futureDate.toISOString()} />
+      )
+
+      const countdownEl = container.firstChild as HTMLElement
+      expect(countdownEl.className).toContain('text-amber-600')
+    })
+
+    it('shows normal at 2 hours 1 minute (just outside warning)', () => {
+      const futureDate = new Date(Date.now() + 121 * 60 * 1000) // 2h 1m
+      const { container } = render(
+        <DeadlineCountdown deadline={futureDate.toISOString()} />
+      )
+
+      const countdownEl = container.firstChild as HTMLElement
+      expect(countdownEl.className).toContain('text-muted-foreground')
+      expect(countdownEl.className).not.toContain('text-amber')
+    })
+
+    it('shows urgent at exactly 10 minutes (boundary)', () => {
+      const futureDate = new Date(Date.now() + 10 * 60 * 1000) // exactly 10 minutes
+      const { container } = render(
+        <DeadlineCountdown deadline={futureDate.toISOString()} />
+      )
+
+      const countdownEl = container.firstChild as HTMLElement
+      expect(countdownEl.className).toContain('text-red-600')
     })
   })
 
@@ -82,5 +113,20 @@ describe('DeadlineCountdown', () => {
 
     const countdownEl = container.firstChild as HTMLElement
     expect(countdownEl.className).toContain('test-class')
+  })
+
+  it('handles invalid date gracefully', () => {
+    render(<DeadlineCountdown deadline="invalid-date" />)
+    expect(screen.getByText(/invalid deadline/i)).toBeInTheDocument()
+  })
+
+  it('has aria-live for accessibility', () => {
+    const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    const { container } = render(
+      <DeadlineCountdown deadline={futureDate.toISOString()} />
+    )
+
+    const countdownEl = container.firstChild as HTMLElement
+    expect(countdownEl).toHaveAttribute('aria-live', 'polite')
   })
 })

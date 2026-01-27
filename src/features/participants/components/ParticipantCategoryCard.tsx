@@ -74,15 +74,15 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
           )}
 
           {/* Action button */}
-          {isClosed ? (
-            // AC4: Closed category
+          {category.hasSubmitted ? (
+            // AC5: Already submitted - can view even if closed (but not edit)
+            <Button variant="outline" onClick={handleViewEdit}>
+              {isClosed ? 'View' : 'View/Edit'}
+            </Button>
+          ) : isClosed ? (
+            // AC4: Closed category, no submission
             <Button variant="outline" disabled>
               Closed
-            </Button>
-          ) : category.hasSubmitted ? (
-            // AC5: Already submitted
-            <Button variant="outline" onClick={handleViewEdit}>
-              View/Edit
             </Button>
           ) : (
             // AC2: Published, not submitted

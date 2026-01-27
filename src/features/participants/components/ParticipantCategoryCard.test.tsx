@@ -136,6 +136,34 @@ describe('ParticipantCategoryCard', () => {
     })
   })
 
+  describe('closed + submitted category', () => {
+    const closedSubmittedCategory: ParticipantCategory = {
+      ...baseCategory,
+      status: 'closed',
+      hasSubmitted: true,
+    }
+
+    it('shows View button (not View/Edit) when closed but has submission', () => {
+      renderCard(closedSubmittedCategory)
+      expect(screen.getByRole('button', { name: /^view$/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /view\/edit/i })).not.toBeInTheDocument()
+    })
+
+    it('still shows Submitted badge', () => {
+      renderCard(closedSubmittedCategory)
+      expect(screen.getByText(/submitted/i)).toBeInTheDocument()
+    })
+
+    it('navigates to submission page on View click', async () => {
+      const user = userEvent.setup()
+      renderCard(closedSubmittedCategory)
+
+      await user.click(screen.getByRole('button', { name: /^view$/i }))
+
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/submission/cat-123')
+    })
+  })
+
   describe('without description', () => {
     it('renders without description', () => {
       renderCard({ ...baseCategory, description: null })

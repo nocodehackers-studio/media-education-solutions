@@ -691,6 +691,16 @@ npx supabase functions deploy get-participant-categories
 
 - [x] Run quality gates and verify
 
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][High] Reconcile story File List with actual git changes; regenerate File List from git or commit/push the work that produced it. [_bmad-output/implementation-artifacts/4-3-view-categories-submission-status.md:727]
+- [ ] [AI-Review][High] Handle closed+submitted state so AC5 "View/Edit" shows when hasSubmitted, or update spec to clarify precedence. [src/features/participants/components/ParticipantCategoryCard.tsx:76]
+- [ ] [AI-Review][High] Fix deadline urgency thresholds to avoid floor-based early warning/urgent (use minutes diff only or compare ms). [src/features/participants/components/DeadlineCountdown.tsx:34]
+- [ ] [AI-Review][Medium] Respect prefers-reduced-motion for urgent pulse (use `motion-safe:` or conditional). [src/features/participants/components/DeadlineCountdown.tsx:49]
+- [ ] [AI-Review][Medium] Resolve primary button hierarchy on list (avoid multiple primary submits; use outline/secondary or per UX guidance). [src/features/participants/components/ParticipantCategoryCard.tsx:88]
+- [ ] [AI-Review][Medium] Replace deep import with feature index export in ParticipantCategoryCard. [src/features/participants/components/ParticipantCategoryCard.tsx:17]
+- [ ] [AI-Review][Medium] Replace deep import with feature index export in useParticipantCategories. [src/features/participants/hooks/useParticipantCategories.ts:3]
+
 ## Dev Agent Record
 
 ### Agent Model Used

@@ -169,6 +169,21 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Files:** `supabase/functions/validate-participant/index.ts`, `src/contexts/ParticipantSessionProvider.tsx`
   - **Notes:** The current implementation is correct and meets all ACs. This is an optimization to reduce network calls for returning participants. Would require updating the Edge Function to return additional fields and updating `enterContest()` to store them in session.
 
+- **[Story 4-3]** Consider primary button hierarchy when multiple categories shown
+  - **Why:** Multiple categories with "Submit" primary buttons visible simultaneously could create visual competition. UX preference - not a bug.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-01-27
+  - **Files:** `src/features/participants/components/ParticipantCategoryCard.tsx`
+  - **Notes:** Design decision - some argue each card is its own action context. Consider if product wants to distinguish "next action" vs "other available actions".
+
+- **[Story 4-3]** Reconcile story File List documentation with actual implementation
+  - **Why:** Tech spec file list may not exactly match implemented files. Documentation sync issue only.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation cleanup
+  - **Discovered:** 2026-01-27
+  - **Files:** `_bmad-output/implementation-artifacts/4-3-view-categories-submission-status.md`
+
 ---
 
 ### Epic 5: Judging & Evaluation Workflow

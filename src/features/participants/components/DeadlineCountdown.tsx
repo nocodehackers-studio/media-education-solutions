@@ -2,7 +2,7 @@
 // Displays time remaining until deadline with color-coded urgency
 
 import { useState, useEffect } from 'react';
-import { formatDistanceToNow, differenceInMinutes, differenceInHours } from 'date-fns';
+import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,21 +32,20 @@ export function DeadlineCountdown({ deadline, className }: DeadlineCountdownProp
   }
 
   const minutesRemaining = differenceInMinutes(deadlineDate, now);
-  const hoursRemaining = differenceInHours(deadlineDate, now);
 
   // Determine urgency level (AC6, AC7)
-  // F3: Use <= for "within 2 hours" to include exactly 2 hours
+  // Use minutes for both thresholds to avoid floor-based rounding issues with differenceInHours
   let urgency: 'normal' | 'warning' | 'urgent' = 'normal';
   if (minutesRemaining <= 10) {
     urgency = 'urgent'; // AC7: Within 10 minutes -> red
-  } else if (hoursRemaining <= 2) {
-    urgency = 'warning'; // AC6: Within 2 hours -> amber
+  } else if (minutesRemaining <= 120) {
+    urgency = 'warning'; // AC6: Within 2 hours (120 min) -> amber
   }
 
   const urgencyStyles = {
     normal: 'text-muted-foreground',
     warning: 'text-amber-600 font-medium',
-    urgent: 'text-red-600 font-bold animate-pulse',
+    urgent: 'text-red-600 font-bold motion-safe:animate-pulse',
   };
 
   // Past deadline
