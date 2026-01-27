@@ -38,6 +38,11 @@ export function ParticipantCategoriesPage() {
     navigate('/enter', { replace: true });
   };
 
+  // F11: Handle null session (ParticipantRoute should redirect, but guard anyway)
+  if (!session) {
+    return null;
+  }
+
   // Loading state
   if (isLoading) {
     return (

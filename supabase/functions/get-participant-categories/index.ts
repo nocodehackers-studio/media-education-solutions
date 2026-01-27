@@ -29,6 +29,7 @@ interface CategoryResponse {
 interface GetCategoriesResponse {
   success: boolean
   categories?: CategoryResponse[]
+  submissionsAvailable?: boolean  // F5: Flag if submissions table was accessible
   error?: string
 }
 
@@ -71,10 +72,26 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
+    // F10: Validate UUID format before queries
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(contestId) || !uuidRegex.test(participantId)) {
+      console.warn('Invalid UUID format in request')
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'INVALID_UUID_FORMAT',
+        } satisfies GetCategoriesResponse),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Verify participant belongs to contest
     const { data: participant, error: participantError } = await supabaseAdmin
       .from('participants')
-      .select('id')
+      .select('id, status')
       .eq('id', participantId)
       .eq('code', participantCode.toUpperCase())
       .eq('contest_id', contestId)
@@ -89,6 +106,22 @@ Deno.serve(async (req) => {
         } satisfies GetCategoriesResponse),
         {
           status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // F1: Check participant status - reject banned/inactive participants
+    const blockedStatuses = ['banned', 'inactive', 'revoked']
+    if (blockedStatuses.includes(participant.status)) {
+      console.warn(`Participant ${participantId} denied: status=${participant.status}`)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'PARTICIPANT_INACTIVE',
+        } satisfies GetCategoriesResponse),
+        {
+          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       )
@@ -131,6 +164,7 @@ Deno.serve(async (req) => {
 
     // Check submissions for this participant (table may not exist yet)
     const submissionMap: Record<string, boolean> = {}
+    let submissionsAvailable = true
     try {
       const categoryIds = categories?.map((c) => c.id) || []
       if (categoryIds.length > 0) {
@@ -147,7 +181,8 @@ Deno.serve(async (req) => {
         }
       }
     } catch {
-      // Submissions table may not exist yet - that's OK per story spec
+      // F5: Flag that submissions table not available - hasSubmitted may be unreliable
+      submissionsAvailable = false
       console.log('Submissions table not available yet')
     }
 
@@ -171,6 +206,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         categories: result,
+        submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
       } satisfies GetCategoriesResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

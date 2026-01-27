@@ -140,6 +140,27 @@ This document tracks valuable features, improvements, and technical debt discove
 ### Epic 4: Participant Submission Experience
 *Items discovered during Epic 4 implementation*
 
+- **[Story 4-3]** Extract hardcoded participant routes to constants
+  - **Why:** Routes like `/participant/submit/{id}` and `/participant/submission/{id}` are hardcoded in ParticipantCategoryCard. Should use route constants for maintainability.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt cleanup
+  - **Discovered:** 2026-01-27
+  - **Files:** `src/features/participants/components/ParticipantCategoryCard.tsx`, `src/router/index.tsx`
+
+- **[Story 4-3]** Add test for DeadlineCountdown interval cleanup on unmount
+  - **Why:** DeadlineCountdown uses setInterval but no explicit test for cleanup on unmount. Covered by React's useEffect cleanup semantics but could add explicit verification.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-01-27
+  - **Files:** `src/features/participants/components/DeadlineCountdown.test.tsx`
+
+- **[Story 4-3]** Add runtime type validation for DB responses in Edge Function
+  - **Why:** Type assertions like `cat.type as 'video' | 'photo'` assume DB CHECK constraints are correct. Low risk since DB has constraints, but runtime validation would be safer.
+  - **Priority:** Low
+  - **Suggested Epic:** Pre-production hardening
+  - **Discovered:** 2026-01-27
+  - **Files:** `supabase/functions/get-participant-categories/index.ts`
+
 - **[Story 4-2]** Optimize validate-participant to return full participant info including tlcName/tlcEmail
   - **Why:** Currently `enterContest()` only sets `name` and `organizationName` from validation response. The `tlcName` and `tlcEmail` fields require a separate `get-participant` call on the info page. This adds an extra network round-trip for returning users.
   - **Priority:** Low

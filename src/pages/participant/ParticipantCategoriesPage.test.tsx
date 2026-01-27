@@ -32,9 +32,12 @@ const mockSession = {
   name: 'John Doe',
 }
 
+// F11: Make session configurable for null session test
+let currentMockSession: typeof mockSession | null = mockSession
+
 vi.mock('@/contexts', () => ({
   useParticipantSession: () => ({
-    session: mockSession,
+    session: currentMockSession,
     showWarning: false,
     endSession: mockEndSession,
     extendSession: mockExtendSession,
@@ -72,6 +75,7 @@ describe('ParticipantCategoriesPage', () => {
     mockEndSession.mockClear()
     mockExtendSession.mockClear()
     mockRefetch.mockClear()
+    currentMockSession = mockSession // Reset to valid session
   })
 
   describe('loading state', () => {
@@ -210,6 +214,24 @@ describe('ParticipantCategoriesPage', () => {
 
       expect(mockEndSession).toHaveBeenCalled()
       expect(mockNavigate).toHaveBeenCalledWith('/enter', { replace: true })
+    })
+  })
+
+  // F11: Test null session handling
+  describe('null session', () => {
+    beforeEach(() => {
+      currentMockSession = null
+      mockCategoriesData = {
+        data: [],
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      }
+    })
+
+    it('renders nothing when session is null', () => {
+      const { container } = renderPage()
+      expect(container.firstChild).toBeNull()
     })
   })
 })

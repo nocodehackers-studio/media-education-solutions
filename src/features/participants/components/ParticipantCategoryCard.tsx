@@ -14,16 +14,10 @@ import {
 } from '@/components/ui';
 import { DeadlineCountdown } from './DeadlineCountdown';
 import { cn } from '@/lib/utils';
+import { type ParticipantCategory } from '../api/participantsApi';
 
-export interface ParticipantCategory {
-  id: string;
-  name: string;
-  type: 'video' | 'photo';
-  deadline: string;
-  status: 'published' | 'closed';
-  description: string | null;
-  hasSubmitted: boolean;
-}
+// F2: Re-export type for convenience (single source in api)
+export type { ParticipantCategory } from '../api/participantsApi';
 
 interface ParticipantCategoryCardProps {
   category: ParticipantCategory;

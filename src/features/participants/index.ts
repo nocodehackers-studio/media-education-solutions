@@ -7,7 +7,8 @@ export { CodeEntryForm } from './components/CodeEntryForm'
 export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
 export { ParticipantInfoForm } from './components/ParticipantInfoForm'
 export { DeadlineCountdown } from './components/DeadlineCountdown'
-export { ParticipantCategoryCard, type ParticipantCategory } from './components/ParticipantCategoryCard'
+export { ParticipantCategoryCard } from './components/ParticipantCategoryCard'
+export type { ParticipantCategory } from './api/participantsApi'
 
 // === Hooks ===
 // useParticipantSession is exported from @/contexts (not here)
