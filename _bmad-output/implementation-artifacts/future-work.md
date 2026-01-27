@@ -184,6 +184,38 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-27
   - **Files:** `_bmad-output/implementation-artifacts/4-3-view-categories-submission-status.md`
 
+- **[Story 4-4]** Hardcoded Bunny CDN URL patterns in finalize-upload
+  - **Why:** Thumbnail URL pattern `https://vz-{LIBRARY_ID}.b-cdn.net/{video_id}/thumbnail.jpg` is hardcoded. If Bunny changes their CDN URL structure, this breaks silently.
+  - **Priority:** Low
+  - **Suggested Epic:** Pre-production hardening
+  - **Discovered:** 2026-01-27
+  - **Files:** `supabase/functions/finalize-upload/index.ts:103-104`
+  - **Notes:** Could extract to env var or fetch from Bunny API. Low risk since Bunny URLs are stable.
+
+- **[Story 4-4]** Add rate limiting to video upload Edge Functions
+  - **Why:** No rate limiting on `create-video-upload` or `finalize-upload`. A malicious participant could spam upload requests to exhaust Bunny API quota or fill storage.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-01-27
+  - **Files:** `supabase/functions/create-video-upload/index.ts`, `supabase/functions/finalize-upload/index.ts`
+  - **Notes:** Consider Redis-based rate limiting or Supabase Edge Function rate limits. Could limit to X uploads per participant per hour.
+
+- **[Story 4-4]** RLS policy doesn't verify category belongs to same contest
+  - **Why:** `Judge read assigned category submissions` policy joins categories to submissions but doesn't verify the category's division belongs to the same contest. Edge case: if a judge ID is reused across contests, could theoretically leak submissions.
+  - **Priority:** Low
+  - **Suggested Epic:** Security hardening
+  - **Discovered:** 2026-01-27
+  - **Files:** `supabase/migrations/20260127170234_create_submissions.sql`
+  - **Notes:** Very low risk since judge IDs are UUIDs and reuse is unlikely. Would require adding division→contest join to RLS policy.
+
+- **[Story 4-4]** beforeunload warning message ignored by modern browsers
+  - **Why:** Modern browsers ignore custom `beforeunload` messages for security. The implementation sets `e.returnValue` but browsers show generic text. Works correctly but could mislead developers.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation / Code clarity
+  - **Discovered:** 2026-01-27
+  - **Files:** `src/features/submissions/components/VideoUploadForm.tsx:63-72`
+  - **Notes:** Add code comment explaining that custom messages are ignored. Behavior is correct - browsers still prompt.
+
 ---
 
 ### Epic 5: Judging & Evaluation Workflow
