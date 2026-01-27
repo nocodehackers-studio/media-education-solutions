@@ -41,20 +41,21 @@ export function VideoUploadForm({
       onComplete: onUploadComplete,
     })
 
+  // F10 Fix: Optimized validation with early returns
   const validateFile = (file: File): string | null => {
-    // Check file type by MIME type or extension
-    const isValidMime = VIDEO_MIME_TYPES.some((type) => file.type === type)
-    const isValidExtension = VIDEO_FORMATS.some((ext) =>
-      file.name.toLowerCase().endsWith(ext)
-    )
-
-    if (!isValidMime && !isValidExtension) {
-      return 'Invalid file type. Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG'
-    }
-
-    // Check file size
+    // Check file size first (cheaper operation)
     if (file.size > MAX_VIDEO_SIZE) {
       return 'File too large. Maximum size is 500MB'
+    }
+
+    // Check file type - short-circuit on first match
+    const lowerName = file.name.toLowerCase()
+    const isValidType =
+      VIDEO_MIME_TYPES.some((type) => file.type === type) ||
+      VIDEO_FORMATS.some((ext) => lowerName.endsWith(ext))
+
+    if (!isValidType) {
+      return 'Invalid file type. Supported formats: MP4, MKV, MOV, AVI, WMV, FLV, TS, MPEG'
     }
 
     return null

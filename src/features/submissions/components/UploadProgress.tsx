@@ -2,7 +2,7 @@
 // Shows file name, progress bar, percentage, and upload speed
 
 import { Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import { Progress } from '@/components/ui'
+import { Button, Progress } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { UploadState } from '../types/submission.types'
 
@@ -82,13 +82,11 @@ export function UploadProgress({
         </div>
       )}
 
+      {/* F7 Fix: Use Button component for consistency */}
       {state.status === 'error' && onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-sm text-primary hover:underline"
-        >
+        <Button variant="outline" size="sm" onClick={onRetry}>
           Retry upload
-        </button>
+        </Button>
       )}
     </div>
   )

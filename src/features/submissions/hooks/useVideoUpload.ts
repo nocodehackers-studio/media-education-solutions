@@ -34,6 +34,8 @@ export function useVideoUpload({
   const submissionIdRef = useRef<string | null>(null)
   const lastProgressTimeRef = useRef<number>(0)
   const lastUploadedRef = useRef<number>(0)
+  // F2 Fix: Use rolling average for smoother speed display
+  const speedSamplesRef = useRef<number[]>([])
 
   const startUpload = useCallback(
     async (file: File) => {
@@ -86,6 +88,7 @@ export function useVideoUpload({
         // Initialize progress tracking
         lastProgressTimeRef.current = Date.now()
         lastUploadedRef.current = 0
+        speedSamplesRef.current = [] // F2 Fix: Reset speed samples
 
         // Create TUS upload
         const upload = new tus.Upload(file, {
@@ -112,11 +115,26 @@ export function useVideoUpload({
           onProgress: (bytesUploaded, bytesTotal) => {
             const progress = (bytesUploaded / bytesTotal) * 100
 
-            // Calculate speed
+            // F2 Fix: Calculate speed with rolling average for smoother display
             const now = Date.now()
             const timeDiff = (now - lastProgressTimeRef.current) / 1000 // seconds
             const bytesDiff = bytesUploaded - lastUploadedRef.current
-            const speed = timeDiff > 0 ? bytesDiff / timeDiff : 0
+
+            if (timeDiff > 0) {
+              const instantSpeed = bytesDiff / timeDiff
+              // Keep last 5 samples for rolling average
+              speedSamplesRef.current.push(instantSpeed)
+              if (speedSamplesRef.current.length > 5) {
+                speedSamplesRef.current.shift()
+              }
+            }
+
+            // Calculate average speed from samples
+            const avgSpeed =
+              speedSamplesRef.current.length > 0
+                ? speedSamplesRef.current.reduce((a, b) => a + b, 0) /
+                  speedSamplesRef.current.length
+                : 0
 
             lastProgressTimeRef.current = now
             lastUploadedRef.current = bytesUploaded
@@ -124,7 +142,7 @@ export function useVideoUpload({
             setUploadState((prev) => ({
               ...prev,
               progress,
-              speed,
+              speed: avgSpeed,
             }))
           },
           onSuccess: async () => {
@@ -210,18 +228,31 @@ export function useVideoUpload({
   }
 }
 
+// F3 Fix: Complete error message mapping for all Edge Function error codes
 function getErrorMessage(errorCode: string): string {
   const messages: Record<string, string> = {
+    // Validation errors
     FILE_TOO_LARGE: 'File too large. Maximum size is 500MB',
+    MISSING_REQUIRED_FIELDS: 'Missing required information. Please try again.',
     INVALID_PARTICIPANT:
       'Invalid participant session. Please re-enter your codes.',
     CATEGORY_NOT_FOUND: 'Category not found.',
     CATEGORY_TYPE_MISMATCH: 'This category does not accept video submissions.',
     CATEGORY_CLOSED: 'This category is no longer accepting submissions.',
     DEADLINE_PASSED: 'The deadline for this category has passed.',
+    // Server errors
+    SUBMISSION_CREATE_FAILED: 'Failed to create submission. Please try again.',
     BUNNY_CONFIG_MISSING:
       'Upload service configuration error. Please contact support.',
+    BUNNY_VIDEO_CREATE_FAILED:
+      'Failed to initialize video storage. Please try again.',
     UPLOAD_INIT_FAILED: 'Failed to initialize upload. Please try again.',
+    // Finalize errors
+    SUBMISSION_NOT_FOUND: 'Submission not found. Please try again.',
+    UNAUTHORIZED: 'You are not authorized to complete this upload.',
+    SUBMISSION_UPDATE_FAILED: 'Failed to save submission. Please try again.',
+    // Generic
+    METHOD_NOT_ALLOWED: 'Invalid request. Please try again.',
   }
   return messages[errorCode] || 'An unexpected error occurred. Please try again.'
 }

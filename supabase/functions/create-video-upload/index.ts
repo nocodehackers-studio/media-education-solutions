@@ -285,7 +285,8 @@ Deno.serve(async (req) => {
   }
 })
 
-// Generate TUS authorization signature for Bunny Stream
+// F4 Fix: Generate TUS authorization signature for Bunny Stream
+// Uses pipe delimiter to prevent potential value collisions
 async function generateTusSignature(
   libraryId: string,
   apiKey: string,
@@ -293,8 +294,9 @@ async function generateTusSignature(
   expirationTime: number
 ): Promise<string> {
   const encoder = new TextEncoder()
+  // Use pipe delimiter between values to prevent collision edge cases
   const data = encoder.encode(
-    `${libraryId}${apiKey}${expirationTime}${videoId}`
+    `${libraryId}|${apiKey}|${expirationTime}|${videoId}`
   )
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))

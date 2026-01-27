@@ -118,10 +118,11 @@ describe('UploadProgress', () => {
       render(<UploadProgress state={state} onRetry={onRetry} />)
 
       expect(screen.getByText('Network error occurred')).toBeInTheDocument()
-      expect(screen.getByText('Retry upload')).toBeInTheDocument()
+      // F7: Now using Button component
+      expect(screen.getByRole('button', { name: 'Retry upload' })).toBeInTheDocument()
 
       const user = userEvent.setup()
-      await user.click(screen.getByText('Retry upload'))
+      await user.click(screen.getByRole('button', { name: 'Retry upload' }))
 
       expect(onRetry).toHaveBeenCalledTimes(1)
     })
