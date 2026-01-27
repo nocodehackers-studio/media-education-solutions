@@ -56,6 +56,11 @@ const ParticipantCategoriesPage = lazy(() =>
     default: m.ParticipantCategoriesPage,
   }))
 )
+const VideoUploadPage = lazy(() =>
+  import('@/pages/participant/VideoUploadPage').then((m) => ({
+    default: m.VideoUploadPage,
+  }))
+)
 
 /**
  * Loading fallback for lazy-loaded routes.
@@ -199,6 +204,31 @@ const router = createBrowserRouter([
       <ParticipantRoute>
         <LazyRoute>
           <ParticipantCategoriesPage />
+        </LazyRoute>
+      </ParticipantRoute>
+    ),
+  },
+  {
+    path: '/participant/submit/:categoryId',
+    element: (
+      <ParticipantRoute>
+        <LazyRoute>
+          <VideoUploadPage />
+        </LazyRoute>
+      </ParticipantRoute>
+    ),
+  },
+  {
+    // Story 4.6 placeholder - Video preview page
+    path: '/participant/preview/:submissionId',
+    element: (
+      <ParticipantRoute>
+        <LazyRoute>
+          <div className="min-h-screen flex items-center justify-center">
+            <p className="text-muted-foreground">
+              Preview page coming in Story 4.6
+            </p>
+          </div>
         </LazyRoute>
       </ParticipantRoute>
     ),

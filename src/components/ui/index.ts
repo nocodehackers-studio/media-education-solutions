@@ -140,3 +140,6 @@ export {
 
 // === Checkbox ===
 export { Checkbox } from './checkbox'
+
+// === Progress ===
+export { Progress } from './progress'
