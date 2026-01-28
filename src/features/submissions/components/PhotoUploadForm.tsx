@@ -105,13 +105,18 @@ export function PhotoUploadForm({
         return
       }
 
+      // QA Fix #5: Revoke previous object URL before creating new one
+      if (preview) {
+        URL.revokeObjectURL(preview)
+      }
+
       // Create preview
       const objectUrl = URL.createObjectURL(file)
       setPreview(objectUrl)
 
       startUpload(file)
     },
-    [startUpload]
+    [startUpload, preview]
   )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

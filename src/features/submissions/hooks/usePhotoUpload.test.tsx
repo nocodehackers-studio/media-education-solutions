@@ -1,16 +1,7 @@
-// Story 4-5: Tests for usePhotoUpload hook
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// Story 4-5: Tests for usePhotoUpload hook (secure server-side proxy version)
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { usePhotoUpload } from './usePhotoUpload'
-
-// Mock supabase
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    functions: {
-      invoke: vi.fn(),
-    },
-  },
-}))
 
 // Mock XMLHttpRequest as a proper constructor
 class MockXMLHttpRequest {
@@ -25,6 +16,7 @@ class MockXMLHttpRequest {
   }
   addEventListener = vi.fn()
   status = 200
+  responseText = ''
 
   constructor() {
     MockXMLHttpRequest.instances.push(this)
@@ -37,11 +29,42 @@ class MockXMLHttpRequest {
   static getLastInstance() {
     return MockXMLHttpRequest.instances[MockXMLHttpRequest.instances.length - 1]
   }
+
+  // Helper to simulate events
+  simulateLoad(status: number, response: object) {
+    this.status = status
+    this.responseText = JSON.stringify(response)
+    const loadHandler = this.addEventListener.mock.calls.find(
+      (call) => call[0] === 'load'
+    )?.[1]
+    if (loadHandler) loadHandler()
+  }
+
+  simulateError() {
+    const errorHandler = this.addEventListener.mock.calls.find(
+      (call) => call[0] === 'error'
+    )?.[1]
+    if (errorHandler) errorHandler()
+  }
+
+  simulateAbort() {
+    const abortHandler = this.addEventListener.mock.calls.find(
+      (call) => call[0] === 'abort'
+    )?.[1]
+    if (abortHandler) abortHandler()
+  }
+
+  simulateProgress(loaded: number, total: number) {
+    const progressHandler = this.upload.addEventListener.mock.calls.find(
+      (call) => call[0] === 'progress'
+    )?.[1]
+    if (progressHandler) {
+      progressHandler({ lengthComputable: true, loaded, total })
+    }
+  }
 }
 
 vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest)
-
-import { supabase } from '@/lib/supabase'
 
 describe('usePhotoUpload', () => {
   const defaultParams = {
@@ -55,6 +78,10 @@ describe('usePhotoUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     MockXMLHttpRequest.reset()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('Initial state', () => {
@@ -82,17 +109,6 @@ describe('usePhotoUpload', () => {
 
   describe('startUpload', () => {
     it('sets uploading state when starting', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: {
-          success: true,
-          submissionId: 'sub-123',
-          uploadUrl: 'https://storage.bunnycdn.com/zone/path',
-          accessKey: 'key-123',
-          contentType: 'image/jpeg',
-        },
-        error: null,
-      })
-
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
@@ -105,52 +121,85 @@ describe('usePhotoUpload', () => {
       expect(result.current.isUploading).toBe(true)
     })
 
-    it('calls create-photo-upload edge function with correct params', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: {
-          success: true,
-          submissionId: 'sub-123',
-          uploadUrl: 'https://storage.bunnycdn.com/zone/path',
-          accessKey: 'key-123',
-          contentType: 'image/jpeg',
-        },
-        error: null,
-      })
-
+    it('sends FormData to upload-photo edge function', async () => {
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-      await act(async () => {
-        await result.current.startUpload(file)
+      act(() => {
+        result.current.startUpload(file)
       })
 
-      expect(supabase.functions.invoke).toHaveBeenCalledWith(
-        'create-photo-upload',
-        {
-          body: {
-            contestId: 'contest-123',
-            categoryId: 'category-456',
-            participantId: 'participant-789',
-            participantCode: 'ABC123',
-            fileName: 'test.jpg',
-            fileSize: file.size,
-            contentType: 'image/jpeg',
-          },
-        }
+      const xhr = MockXMLHttpRequest.getLastInstance()
+      expect(xhr).toBeDefined()
+      // Verify it calls the upload-photo endpoint with POST
+      expect(xhr.open).toHaveBeenCalledWith(
+        'POST',
+        expect.stringContaining('/functions/v1/upload-photo')
       )
+      // Verify auth headers are set (values come from env)
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        'apikey',
+        expect.any(String)
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        'Authorization',
+        expect.stringContaining('Bearer ')
+      )
+
+      // Verify FormData was sent with correct metadata
+      expect(xhr.send).toHaveBeenCalled()
+      const sentFormData = xhr.send.mock.calls[0][0]
+      expect(sentFormData).toBeInstanceOf(FormData)
+      expect(sentFormData.get('file')).toBe(file)
+      expect(sentFormData.get('contestId')).toBe('contest-123')
+      expect(sentFormData.get('categoryId')).toBe('category-456')
+      expect(sentFormData.get('participantId')).toBe('participant-789')
+      expect(sentFormData.get('participantCode')).toBe('ABC123')
     })
 
-    it('sets error state when edge function fails', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: { success: false, error: 'CATEGORY_CLOSED' },
-        error: null,
+    it('handles successful upload response', async () => {
+      const onComplete = vi.fn()
+      const { result } = renderHook(() =>
+        usePhotoUpload({ ...defaultParams, onComplete })
+      )
+      const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
+
+      act(() => {
+        result.current.startUpload(file)
       })
 
+      const xhr = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        xhr.simulateLoad(200, {
+          success: true,
+          submissionId: 'sub-123',
+          mediaUrl: 'https://cdn.example.com/photo.jpg',
+        })
+      })
+
+      await waitFor(() => {
+        expect(result.current.uploadState.status).toBe('complete')
+        expect(result.current.uploadState.progress).toBe(100)
+      })
+      expect(onComplete).toHaveBeenCalledWith('sub-123')
+    })
+
+    it('handles error response from edge function', async () => {
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-      await act(async () => {
-        await result.current.startUpload(file)
+      act(() => {
+        result.current.startUpload(file)
+      })
+
+      const xhr = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        xhr.simulateLoad(200, {
+          success: false,
+          error: 'CATEGORY_CLOSED',
+        })
       })
 
       await waitFor(() => {
@@ -161,58 +210,84 @@ describe('usePhotoUpload', () => {
       })
     })
 
-    it('configures XMLHttpRequest with correct headers', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: {
-          success: true,
-          submissionId: 'sub-123',
-          uploadUrl: 'https://storage.bunnycdn.com/zone/path',
-          accessKey: 'key-123',
-          contentType: 'image/png',
-        },
-        error: null,
-      })
-
+    it('handles HTTP error status', async () => {
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
-      const file = new File(['photo'], 'test.png', { type: 'image/png' })
+      const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-      await act(async () => {
-        await result.current.startUpload(file)
+      act(() => {
+        result.current.startUpload(file)
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
-      expect(xhr).toBeDefined()
-      expect(xhr.open).toHaveBeenCalledWith(
-        'PUT',
-        'https://storage.bunnycdn.com/zone/path'
-      )
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith('AccessKey', 'key-123')
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
-        'Content-Type',
-        'image/png'
-      )
-      expect(xhr.send).toHaveBeenCalledWith(file)
+
+      act(() => {
+        xhr.simulateLoad(500, {
+          success: false,
+          error: 'STORAGE_UPLOAD_FAILED',
+        })
+      })
+
+      await waitFor(() => {
+        expect(result.current.uploadState.status).toBe('error')
+        expect(result.current.uploadState.error).toBe(
+          'Failed to store file. Please try again.'
+        )
+      })
+    })
+
+    it('handles network error', async () => {
+      const { result } = renderHook(() => usePhotoUpload(defaultParams))
+      const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
+
+      act(() => {
+        result.current.startUpload(file)
+      })
+
+      const xhr = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        xhr.simulateError()
+      })
+
+      await waitFor(() => {
+        expect(result.current.uploadState.status).toBe('error')
+        expect(result.current.uploadState.error).toBe(
+          'Network error. Please check your connection and try again.'
+        )
+      })
+    })
+  })
+
+  describe('Upload progress', () => {
+    it('tracks progress percentage', async () => {
+      vi.useFakeTimers()
+      const { result } = renderHook(() => usePhotoUpload(defaultParams))
+      const file = new File(['photo content here'], 'test.jpg', {
+        type: 'image/jpeg',
+      })
+
+      act(() => {
+        result.current.startUpload(file)
+      })
+
+      const xhr = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        vi.advanceTimersByTime(100)
+        xhr.simulateProgress(5000, 10000)
+      })
+
+      expect(result.current.uploadState.progress).toBe(50)
     })
   })
 
   describe('cancelUpload', () => {
     it('resets state to idle and aborts XHR', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: {
-          success: true,
-          submissionId: 'sub-123',
-          uploadUrl: 'https://storage.bunnycdn.com/zone/path',
-          accessKey: 'key-123',
-          contentType: 'image/jpeg',
-        },
-        error: null,
-      })
-
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-      await act(async () => {
-        await result.current.startUpload(file)
+      act(() => {
+        result.current.startUpload(file)
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -230,20 +305,38 @@ describe('usePhotoUpload', () => {
         error: null,
       })
     })
+
+    it('handles abort event from XHR', async () => {
+      const { result } = renderHook(() => usePhotoUpload(defaultParams))
+      const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
+
+      act(() => {
+        result.current.startUpload(file)
+      })
+
+      const xhr = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        xhr.simulateAbort()
+      })
+
+      expect(result.current.uploadState.status).toBe('idle')
+    })
   })
 
   describe('retryUpload', () => {
     it('restarts upload with previously selected file', async () => {
-      vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-        data: { success: false, error: 'UPLOAD_INIT_FAILED' },
-        error: null,
-      })
-
       const { result } = renderHook(() => usePhotoUpload(defaultParams))
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-      await act(async () => {
-        await result.current.startUpload(file)
+      act(() => {
+        result.current.startUpload(file)
+      })
+
+      const xhr1 = MockXMLHttpRequest.getLastInstance()
+
+      act(() => {
+        xhr1.simulateLoad(200, { success: false, error: 'STORAGE_UPLOAD_FAILED' })
       })
 
       // Should be in error state
@@ -251,23 +344,13 @@ describe('usePhotoUpload', () => {
         expect(result.current.uploadState.status).toBe('error')
       })
 
-      // Mock successful response for retry
-      vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-        data: {
-          success: true,
-          submissionId: 'sub-123',
-          uploadUrl: 'https://storage.bunnycdn.com/zone/path',
-          accessKey: 'key-123',
-          contentType: 'image/jpeg',
-        },
-        error: null,
-      })
-
+      // Retry
       act(() => {
         result.current.retryUpload()
       })
 
       expect(result.current.uploadState.status).toBe('uploading')
+      expect(MockXMLHttpRequest.instances.length).toBe(2)
     })
   })
 
@@ -293,23 +376,36 @@ describe('usePhotoUpload', () => {
         'BUNNY_CONFIG_MISSING',
         'Upload service configuration error. Please contact support.',
       ],
-      ['UPLOAD_INIT_FAILED', 'Failed to initialize upload. Please try again.'],
+      ['STORAGE_UPLOAD_FAILED', 'Failed to store file. Please try again.'],
+      [
+        'SUBMISSION_CREATE_FAILED',
+        'Failed to create submission. Please try again.',
+      ],
+      [
+        'SUBMISSION_UPDATE_FAILED',
+        'Failed to save submission. Please try again.',
+      ],
+      [
+        'MISSING_REQUIRED_FIELDS',
+        'Missing required information. Please try again.',
+      ],
       ['UNKNOWN_CODE', 'An unexpected error occurred. Please try again.'],
     ]
 
     it.each(errorCases)(
       'maps %s to user-friendly message',
       async (code, message) => {
-        vi.mocked(supabase.functions.invoke).mockResolvedValue({
-          data: { success: false, error: code },
-          error: null,
-        })
-
         const { result } = renderHook(() => usePhotoUpload(defaultParams))
         const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
-        await act(async () => {
-          await result.current.startUpload(file)
+        act(() => {
+          result.current.startUpload(file)
+        })
+
+        const xhr = MockXMLHttpRequest.getLastInstance()
+
+        act(() => {
+          xhr.simulateLoad(200, { success: false, error: code })
         })
 
         await waitFor(() => {
@@ -318,4 +414,7 @@ describe('usePhotoUpload', () => {
       }
     )
   })
+
+  // Note: Supabase configuration validation is tested implicitly through
+  // integration tests. Mocking import.meta.env is not reliable in Vitest.
 })
