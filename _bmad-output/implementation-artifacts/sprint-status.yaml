@@ -78,7 +78,7 @@ development_status:
   4-2-participant-info-form: done  # Completed 2026-01-26
   4-3-view-categories-submission-status: done  # Completed 2026-01-27
   4-4-video-upload-with-progress: done  # Completed 2026-01-27
-  4-5-photo-upload-with-progress: in-progress  # Completed 2026-01-28
+  4-5-photo-upload-with-progress: done  # Completed 2026-01-28
   4-6-submission-preview-confirm: backlog
   4-7-edit-replace-withdraw-submission: backlog
   epic-4-retrospective: optional
