@@ -1,6 +1,6 @@
-// Story 4-5: Photo upload hook using XMLHttpRequest for progress tracking
+// Story 4-5: Photo upload hook using secure server-side proxy
+// QA Fix: No Bunny credentials exposed to client
 import { useState, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
 import type { UploadState } from '../types/submission.types'
 
 interface UsePhotoUploadParams {
@@ -27,7 +27,6 @@ export function usePhotoUpload({
   })
 
   const fileRef = useRef<File | null>(null)
-  const submissionIdRef = useRef<string | null>(null)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
   const speedSamplesRef = useRef<number[]>([])
 
@@ -45,37 +44,23 @@ export function usePhotoUpload({
       })
 
       try {
-        // Get signed upload URL from Edge Function
-        const { data, error } = await supabase.functions.invoke(
-          'create-photo-upload',
-          {
-            body: {
-              contestId,
-              categoryId,
-              participantId,
-              participantCode,
-              fileName: file.name,
-              fileSize: file.size,
-              contentType: file.type,
-            },
-          }
-        )
+        // Build FormData with file and metadata
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('contestId', contestId)
+        formData.append('categoryId', categoryId)
+        formData.append('participantId', participantId)
+        formData.append('participantCode', participantCode)
 
-        if (error || !data?.success) {
-          const errorCode = data?.error || error?.message || 'UPLOAD_INIT_FAILED'
-          const errorMessage = getErrorMessage(errorCode)
-          setUploadState((prev) => ({
-            ...prev,
-            status: 'error',
-            error: errorMessage,
-          }))
-          return
+        // Get Supabase anon key and URL for Edge Function call
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error('SUPABASE_CONFIG_MISSING')
         }
 
-        const { submissionId, uploadUrl, accessKey, contentType } = data
-        submissionIdRef.current = submissionId
-
-        // Upload directly to Bunny Storage using XMLHttpRequest for progress tracking
+        // Upload via XMLHttpRequest for progress tracking
         const xhr = new XMLHttpRequest()
         xhrRef.current = xhr
 
@@ -113,44 +98,46 @@ export function usePhotoUpload({
           }
         })
 
-        xhr.addEventListener('load', async () => {
+        xhr.addEventListener('load', () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            setUploadState((prev) => ({
-              ...prev,
-              status: 'processing',
-              progress: 100,
-            }))
-
-            // Finalize upload
-            const { data: finalizeData, error: finalizeError } =
-              await supabase.functions.invoke('finalize-photo-upload', {
-                body: {
-                  submissionId: submissionIdRef.current,
-                  participantId,
-                  participantCode,
-                },
-              })
-
-            if (finalizeError || !finalizeData?.success) {
+            try {
+              const response = JSON.parse(xhr.responseText)
+              if (response.success) {
+                setUploadState((prev) => ({
+                  ...prev,
+                  status: 'complete',
+                  progress: 100,
+                }))
+                onComplete(response.submissionId)
+              } else {
+                const errorMessage = getErrorMessage(response.error)
+                setUploadState((prev) => ({
+                  ...prev,
+                  status: 'error',
+                  error: errorMessage,
+                }))
+              }
+            } catch {
               setUploadState((prev) => ({
                 ...prev,
                 status: 'error',
-                error: 'Failed to finalize upload. Please try again.',
+                error: 'Invalid server response. Please try again.',
               }))
-              return
             }
-
-            setUploadState((prev) => ({
-              ...prev,
-              status: 'complete',
-            }))
-
-            onComplete(submissionIdRef.current!)
           } else {
+            let errorMessage = 'Upload failed. Please try again.'
+            try {
+              const response = JSON.parse(xhr.responseText)
+              if (response.error) {
+                errorMessage = getErrorMessage(response.error)
+              }
+            } catch {
+              // Use default error message
+            }
             setUploadState((prev) => ({
               ...prev,
               status: 'error',
-              error: 'Upload failed. Please try again.',
+              error: errorMessage,
             }))
           }
         })
@@ -173,16 +160,21 @@ export function usePhotoUpload({
           })
         })
 
-        xhr.open('PUT', uploadUrl)
-        xhr.setRequestHeader('AccessKey', accessKey)
-        xhr.setRequestHeader('Content-Type', contentType)
-        xhr.send(file)
+        // Send to our secure Edge Function (not directly to Bunny)
+        xhr.open('POST', `${supabaseUrl}/functions/v1/upload-photo`)
+        xhr.setRequestHeader('apikey', supabaseAnonKey)
+        xhr.setRequestHeader('Authorization', `Bearer ${supabaseAnonKey}`)
+        xhr.send(formData)
       } catch (error) {
         console.error('Upload start error:', error)
+        const errorMessage =
+          error instanceof Error && error.message === 'SUPABASE_CONFIG_MISSING'
+            ? 'Configuration error. Please contact support.'
+            : 'Failed to start upload. Please try again.'
         setUploadState((prev) => ({
           ...prev,
           status: 'error',
-          error: 'Failed to start upload. Please try again.',
+          error: errorMessage,
         }))
       }
     },
@@ -232,8 +224,10 @@ function getErrorMessage(errorCode: string): string {
     DEADLINE_PASSED: 'The deadline for this category has passed.',
     BUNNY_CONFIG_MISSING:
       'Upload service configuration error. Please contact support.',
-    UPLOAD_INIT_FAILED: 'Failed to initialize upload. Please try again.',
+    STORAGE_UPLOAD_FAILED: 'Failed to store file. Please try again.',
     SUBMISSION_CREATE_FAILED: 'Failed to create submission. Please try again.',
+    SUBMISSION_UPDATE_FAILED: 'Failed to save submission. Please try again.',
+    MISSING_REQUIRED_FIELDS: 'Missing required information. Please try again.',
   }
   return messages[errorCode] || 'An unexpected error occurred. Please try again.'
 }

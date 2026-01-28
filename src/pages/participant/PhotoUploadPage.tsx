@@ -31,7 +31,12 @@ export function PhotoUploadPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            aria-label="Go back to categories"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>

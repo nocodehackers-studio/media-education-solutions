@@ -1,6 +1,6 @@
-// Story 4-5: Edge Function to create photo upload session
-// CRITICAL: Never expose Bunny credentials to client
-// Validates participant, creates submission, returns signed upload URL
+// Story 4-5 QA Fix: Secure photo upload via server-side proxy
+// SECURITY: Bunny credentials never leave the server
+// Client sends file to this function, we upload to Bunny server-side
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -8,16 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type',
-}
-
-interface UploadRequest {
-  contestId: string
-  categoryId: string
-  participantId: string
-  participantCode: string
-  fileName: string
-  fileSize: number
-  contentType: string
 }
 
 Deno.serve(async (req) => {
@@ -36,24 +26,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const {
-      contestId,
-      categoryId,
-      participantId,
-      participantCode,
-      fileName,
-      fileSize,
-      contentType,
-    }: UploadRequest = await req.json()
+    // Parse multipart form data
+    const formData = await req.formData()
+    const file = formData.get('file') as File | null
+    const contestId = formData.get('contestId') as string | null
+    const categoryId = formData.get('categoryId') as string | null
+    const participantId = formData.get('participantId') as string | null
+    const participantCode = formData.get('participantCode') as string | null
 
     // Validate required fields
-    if (
-      !contestId ||
-      !categoryId ||
-      !participantId ||
-      !participantCode ||
-      !fileName
-    ) {
+    if (!file || !contestId || !categoryId || !participantId || !participantCode) {
       return new Response(
         JSON.stringify({ success: false, error: 'MISSING_REQUIRED_FIELDS' }),
         {
@@ -65,7 +47,7 @@ Deno.serve(async (req) => {
 
     // Validate file size (10MB max for photos)
     const MAX_SIZE = 10 * 1024 * 1024
-    if (fileSize > MAX_SIZE) {
+    if (file.size > MAX_SIZE) {
       return new Response(
         JSON.stringify({ success: false, error: 'FILE_TOO_LARGE' }),
         {
@@ -77,7 +59,7 @@ Deno.serve(async (req) => {
 
     // Validate content type
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!validTypes.includes(contentType)) {
+    if (!validTypes.includes(file.type)) {
       return new Response(
         JSON.stringify({ success: false, error: 'INVALID_FILE_TYPE' }),
         {
@@ -215,7 +197,7 @@ Deno.serve(async (req) => {
       submissionId = newSubmission.id
     }
 
-    // Get Bunny Storage configuration
+    // Get Bunny Storage configuration (server-side only)
     const BUNNY_STORAGE_API_KEY = Deno.env.get('BUNNY_STORAGE_API_KEY')
     const BUNNY_STORAGE_ZONE = Deno.env.get('BUNNY_STORAGE_ZONE')
     const BUNNY_STORAGE_HOSTNAME =
@@ -234,7 +216,7 @@ Deno.serve(async (req) => {
 
     // Generate unique filename to prevent collisions
     const timestamp = Date.now()
-    const safeFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
     const storagePath = `${contestId}/${categoryId}/${participantCode}/${timestamp}_${safeFileName}`
 
     // Bunny Storage upload URL
@@ -243,31 +225,65 @@ Deno.serve(async (req) => {
     // CDN URL for retrieval
     const cdnUrl = `https://${BUNNY_STORAGE_ZONE}.b-cdn.net/${storagePath}`
 
-    // Update submission with expected media_url
-    await supabaseAdmin
+    // Upload file to Bunny Storage (server-side)
+    const fileBuffer = await file.arrayBuffer()
+    const bunnyResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        AccessKey: BUNNY_STORAGE_API_KEY,
+        'Content-Type': file.type,
+      },
+      body: fileBuffer,
+    })
+
+    if (!bunnyResponse.ok) {
+      const errorText = await bunnyResponse.text()
+      console.error('Bunny Storage upload failed:', errorText)
+      return new Response(
+        JSON.stringify({ success: false, error: 'STORAGE_UPLOAD_FAILED' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Update submission with media_url and mark as submitted
+    const { error: updateError } = await supabaseAdmin
       .from('submissions')
-      .update({ media_url: cdnUrl })
+      .update({
+        status: 'submitted',
+        media_url: cdnUrl,
+        thumbnail_url: cdnUrl, // For photos, thumbnail = full image
+      })
       .eq('id', submissionId)
 
+    if (updateError) {
+      console.error('Submission update failed:', updateError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'SUBMISSION_UPDATE_FAILED' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     console.log(
-      `Photo upload session created: submission=${submissionId}, path=${storagePath}`
+      `Photo uploaded successfully: submission=${submissionId}, path=${storagePath}`
     )
 
     return new Response(
       JSON.stringify({
         success: true,
         submissionId,
-        uploadUrl,
-        cdnUrl,
-        storagePath,
-        accessKey: BUNNY_STORAGE_API_KEY,
-        contentType,
+        mediaUrl: cdnUrl,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
-    console.error('create-photo-upload error:', error)
+    console.error('upload-photo error:', error)
     return new Response(
       JSON.stringify({ success: false, error: message }),
       {

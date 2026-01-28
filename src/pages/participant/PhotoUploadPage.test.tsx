@@ -90,7 +90,9 @@ describe('PhotoUploadPage', () => {
     renderWithRouter()
 
     const user = userEvent.setup()
-    const backButton = screen.getByRole('button', { name: '' }) // Icon button
+    const backButton = screen.getByRole('button', {
+      name: 'Go back to categories',
+    })
     await user.click(backButton)
 
     expect(mockNavigate).toHaveBeenCalledWith('/participant/categories')
