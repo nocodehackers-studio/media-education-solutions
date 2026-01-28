@@ -2,10 +2,10 @@
 // Submissions feature - Video/photo upload, preview, management
 
 // === Components ===
-export { UploadProgress, VideoUploadForm } from './components'
+export { UploadProgress, VideoUploadForm, PhotoUploadForm } from './components'
 
 // === Hooks ===
-export { useVideoUpload } from './hooks'
+export { useVideoUpload, usePhotoUpload } from './hooks'
 
 // === Types ===
 export type {
@@ -20,4 +20,8 @@ export {
   VIDEO_MIME_TYPES,
   MAX_VIDEO_SIZE,
   VIDEO_ACCEPT,
+  PHOTO_FORMATS,
+  PHOTO_MIME_TYPES,
+  MAX_PHOTO_SIZE,
+  PHOTO_ACCEPT,
 } from './types/submission.types'

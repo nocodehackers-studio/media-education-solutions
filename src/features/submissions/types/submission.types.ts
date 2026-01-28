@@ -52,3 +52,17 @@ export const VIDEO_MIME_TYPES = [
 export const MAX_VIDEO_SIZE = 500 * 1024 * 1024 // 500MB
 
 export const VIDEO_ACCEPT = VIDEO_FORMATS.join(',')
+
+// Story 4-5: Photo upload constants
+export const PHOTO_FORMATS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'] as const
+
+export const PHOTO_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+] as const
+
+export const MAX_PHOTO_SIZE = 10 * 1024 * 1024 // 10MB
+
+export const PHOTO_ACCEPT = PHOTO_FORMATS.join(',')
