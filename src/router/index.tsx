@@ -56,9 +56,9 @@ const ParticipantCategoriesPage = lazy(() =>
     default: m.ParticipantCategoriesPage,
   }))
 )
-const VideoUploadPage = lazy(() =>
-  import('@/pages/participant/VideoUploadPage').then((m) => ({
-    default: m.VideoUploadPage,
+const SubmitPage = lazy(() =>
+  import('@/pages/participant/SubmitPage').then((m) => ({
+    default: m.SubmitPage,
   }))
 )
 
@@ -213,7 +213,7 @@ const router = createBrowserRouter([
     element: (
       <ParticipantRoute>
         <LazyRoute>
-          <VideoUploadPage />
+          <SubmitPage />
         </LazyRoute>
       </ParticipantRoute>
     ),
