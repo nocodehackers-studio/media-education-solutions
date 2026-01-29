@@ -231,6 +231,80 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-27
   - **Files:** `_bmad-output/implementation-artifacts/4-4-video-upload-with-progress.md`
 
+- **[Story 4-6]** Bunny library ID exposed to client in get-submission response
+  - **Why:** `get-submission` Edge Function returns `BUNNY_STREAM_LIBRARY_ID` to the client for iframe embed URL construction. This is a public embed library ID (not a secret — it's visible in any Bunny Stream embed URL), but could be moved to a client-side env var or injected config for cleaner separation.
+  - **Priority:** Low
+  - **Suggested Epic:** Pre-production hardening
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/functions/get-submission/index.ts:132-134`
+
+- **[Story 4-6]** Internal feature imports use relative paths instead of barrel
+  - **Why:** `SubmissionPreview.tsx` imports from `../hooks/useSubmissionPreview` (relative) rather than `@/features/submissions` (barrel). This is consistent with all other feature-internal imports in the project (barrel exports are for cross-feature consumers), so this is by convention, not a defect.
+  - **Priority:** Low
+  - **Suggested Epic:** Code consistency review
+  - **Discovered:** 2026-01-29
+  - **Files:** `src/features/submissions/components/SubmissionPreview.tsx:6`
+
+- **[Story 4-6]** Wildcard CORS on Edge Functions
+  - **Why:** All Edge Functions use `Access-Control-Allow-Origin: '*'`. This is the established pattern across every Edge Function in the project. Should be tightened to the app's actual origin(s) before production deployment.
+  - **Priority:** Medium
+  - **Suggested Epic:** Pre-production hardening
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/functions/get-submission/index.ts:8`, `supabase/functions/confirm-submission/index.ts:8`, and all other Edge Functions
+
+- **[Story 4-6]** Add rollback script for uploaded status migration
+  - **Why:** Migration `20260129194757_add_uploaded_status_to_submissions.sql` adds 'uploaded' to the status CHECK constraint but has no down/rollback migration. All migrations in this project follow the same pattern (no rollbacks). Should be addressed project-wide before production.
+  - **Priority:** Low
+  - **Suggested Epic:** DevOps & Maintenance
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/migrations/20260129194757_add_uploaded_status_to_submissions.sql`
+
+- **[Story 4-6]** Clarify `submitted_at` semantics for deadline enforcement
+  - **Why:** Code review questioned whether `submitted_at` should reflect upload time or confirmation time for deadline fairness. Currently set to confirmation time (semantically correct — "submitted" = "confirmed"). Upload initiation time is preserved in `created_at`. When deadline enforcement is implemented, the business must decide which timestamp governs eligibility.
+  - **Priority:** Low
+  - **Suggested Epic:** Business logic / Deadline enforcement
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/functions/confirm-submission/index.ts:96`, `supabase/migrations/20260127170234_create_submissions.sql:14`
+  - **Notes:** `created_at` = upload initiated, `submitted_at` = participant confirmed, `updated_at` = last modification. All three timestamps are available for deadline logic.
+
+- **[Story 4-6]** Add explicit UI state for `uploading` status on preview page
+  - **Why:** If a user navigates to the preview page while status is `uploading` (e.g., manual URL entry during active upload), neither Confirm nor Replace buttons render — the page works but shows no guidance. Adding an "Upload in progress" message would improve UX for this edge case.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-01-29
+  - **Files:** `src/pages/participant/SubmissionPreviewPage.tsx:87-89`
+  - **Notes:** Very unlikely scenario — upload flow navigates to preview only after completion (status = 'uploaded'). Page still functions, just lacks explicit messaging.
+
+- **[Story 4-6]** Populate Dev Agent Record file list in story file
+  - **Why:** Story file's Dev Agent Record section (File List, Completion Notes) was not filled in after implementation. Should be generated from `git diff` for story auditability.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation cleanup
+  - **Discovered:** 2026-01-29
+  - **Files:** `_bmad-output/implementation-artifacts/4-6-submission-preview-confirm.md:399-410`
+
+- **[Story 4-6]** Use HTTP 409 Conflict for already-confirmed submissions
+  - **Why:** `confirm-submission` returns HTTP 400 with error string `ALREADY_CONFIRMED`. The client matches this string in `useConfirmSubmission.ts:44`. HTTP 409 Conflict is more semantically correct. However, string-based error code matching is the established pattern across all edge functions in this project.
+  - **Priority:** Low
+  - **Suggested Epic:** API consistency / Tech debt
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/functions/confirm-submission/index.ts:143-155`, `src/features/submissions/hooks/useConfirmSubmission.ts:44`
+  - **Notes:** Would require updating error handling convention project-wide for consistency.
+
+- **[Story 4-6]** Align nullable types between Edge Function response and TypeScript interface
+  - **Why:** `get-submission` returns `category?.name ?? null` and `category?.type ?? null`, but `SubmissionPreviewData` types `categoryName` as `string` and `categoryType` as `'video' | 'photo'` (not nullable). Technically a type mismatch, but impossible to trigger at runtime due to `category_id NOT NULL REFERENCES categories(id) ON DELETE CASCADE` — a submission always has a valid category.
+  - **Priority:** Low
+  - **Suggested Epic:** Type safety / Tech debt
+  - **Discovered:** 2026-01-29
+  - **Files:** `supabase/functions/get-submission/index.ts:152-153`, `src/features/submissions/hooks/useSubmissionPreview.ts:6-17`
+
+- **[Story 4-6]** Add focus trap to PhotoLightbox for WCAG compliance
+  - **Why:** The lightbox has Escape close, backdrop click, close button, `role="dialog"`, and `aria-modal="true"`, but Tab key can still move focus to elements behind the modal. A focus trap is needed for full WCAG 2.1 modal dialog compliance.
+  - **Priority:** Low
+  - **Suggested Epic:** Accessibility
+  - **Discovered:** 2026-01-29
+  - **Files:** `src/features/submissions/components/PhotoLightbox.tsx:44-69`
+  - **Notes:** Consider using a lightweight focus-trap library or implementing manual focus management (save previous focus, restore on close, constrain Tab to modal elements).
+
 ---
 
 ### Epic 5: Judging & Evaluation Workflow

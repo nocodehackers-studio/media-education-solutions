@@ -1,3 +1,5 @@
-// Story 4-4/4-5: Submissions hooks exports
+// Story 4-4/4-5/4-6: Submissions hooks exports
 export { useVideoUpload } from './useVideoUpload'
 export { usePhotoUpload } from './usePhotoUpload'
+export { useSubmissionPreview } from './useSubmissionPreview'
+export { useConfirmSubmission } from './useConfirmSubmission'

@@ -2,7 +2,7 @@
 // Handles published/closed states and submission status
 
 import { useNavigate } from 'react-router-dom';
-import { Video, Image, CheckCircle } from 'lucide-react';
+import { Video, Image, CheckCircle, Clock } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -33,7 +33,9 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
   };
 
   const handleViewEdit = () => {
-    navigate(`/participant/submission/${category.id}`);
+    if (category.submissionId) {
+      navigate(`/participant/preview/${category.submissionId}`);
+    }
   };
 
   return (
@@ -54,11 +56,17 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
             <Badge variant="outline">
               {category.type === 'video' ? 'Video' : 'Photo'}
             </Badge>
-            {/* Submitted badge (AC5) */}
-            {category.hasSubmitted && (
+            {/* Submission status badges */}
+            {category.submissionStatus === 'submitted' && (
               <Badge variant="default" className="bg-green-600">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Submitted
+              </Badge>
+            )}
+            {category.submissionStatus === 'uploaded' && (
+              <Badge variant="default" className="bg-amber-500">
+                <Clock className="h-3 w-3 mr-1" />
+                Pending
               </Badge>
             )}
           </div>
@@ -75,17 +83,14 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
 
           {/* Action button */}
           {category.hasSubmitted ? (
-            // AC5: Already submitted - can view even if closed (but not edit)
             <Button variant="outline" onClick={handleViewEdit}>
               {isClosed ? 'View' : 'View/Edit'}
             </Button>
           ) : isClosed ? (
-            // AC4: Closed category, no submission
             <Button variant="outline" disabled>
               Closed
             </Button>
           ) : (
-            // AC2: Published, not submitted
             <Button onClick={handleSubmit}>Submit</Button>
           )}
         </div>

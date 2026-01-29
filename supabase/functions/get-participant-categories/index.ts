@@ -24,6 +24,8 @@ interface CategoryResponse {
   status: 'published' | 'closed'
   description: string | null
   hasSubmitted: boolean
+  submissionStatus: 'uploaded' | 'submitted' | null
+  submissionId: string | null
 }
 
 interface GetCategoriesResponse {
@@ -163,20 +165,20 @@ Deno.serve(async (req) => {
     }
 
     // Check submissions for this participant (table may not exist yet)
-    const submissionMap: Record<string, boolean> = {}
+    const submissionMap: Record<string, { status: string; id: string }> = {}
     let submissionsAvailable = true
     try {
       const categoryIds = categories?.map((c) => c.id) || []
       if (categoryIds.length > 0) {
         const { data: submissions } = await supabaseAdmin
           .from('submissions')
-          .select('category_id')
+          .select('id, category_id, status')
           .eq('participant_id', participantId)
           .in('category_id', categoryIds)
 
         if (submissions) {
           submissions.forEach((s) => {
-            submissionMap[s.category_id] = true
+            submissionMap[s.category_id] = { status: s.status, id: s.id }
           })
         }
       }
@@ -188,15 +190,21 @@ Deno.serve(async (req) => {
 
     // Transform to response format
     const result: CategoryResponse[] =
-      categories?.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        type: cat.type as 'video' | 'photo',
-        deadline: cat.deadline,
-        status: cat.status as 'published' | 'closed',
-        description: cat.description,
-        hasSubmitted: submissionMap[cat.id] || false,
-      })) || []
+      categories?.map((cat) => {
+        const sub = submissionMap[cat.id]
+        const subStatus = sub?.status as 'uploaded' | 'submitted' | undefined
+        return {
+          id: cat.id,
+          name: cat.name,
+          type: cat.type as 'video' | 'photo',
+          deadline: cat.deadline,
+          status: cat.status as 'published' | 'closed',
+          description: cat.description,
+          hasSubmitted: !!sub,
+          submissionStatus: subStatus ?? null,
+          submissionId: sub?.id ?? null,
+        }
+      }) || []
 
     console.log(
       `Fetched ${result.length} categories for participant ${participantId}`

@@ -153,6 +153,8 @@ describe('ParticipantCategoriesPage', () => {
         status: 'published',
         description: 'Submit your best video',
         hasSubmitted: false,
+        submissionStatus: null,
+        submissionId: null,
       },
       {
         id: 'cat-2',
@@ -162,6 +164,8 @@ describe('ParticipantCategoriesPage', () => {
         status: 'closed',
         description: null,
         hasSubmitted: true,
+        submissionStatus: 'submitted',
+        submissionId: 'sub-001',
       },
     ]
 

@@ -2,10 +2,22 @@
 // Submissions feature - Video/photo upload, preview, management
 
 // === Components ===
-export { UploadProgress, VideoUploadForm, PhotoUploadForm } from './components'
+export {
+  UploadProgress,
+  VideoUploadForm,
+  PhotoUploadForm,
+  SubmissionPreview,
+  SubmissionPreviewSkeleton,
+  PhotoLightbox,
+} from './components'
 
 // === Hooks ===
-export { useVideoUpload, usePhotoUpload } from './hooks'
+export {
+  useVideoUpload,
+  usePhotoUpload,
+  useSubmissionPreview,
+  useConfirmSubmission,
+} from './hooks'
 
 // === Types ===
 export type {
@@ -14,6 +26,8 @@ export type {
   MediaType,
   UploadState,
 } from './types/submission.types'
+
+export type { SubmissionPreviewData } from './hooks/useSubmissionPreview'
 
 export {
   VIDEO_FORMATS,

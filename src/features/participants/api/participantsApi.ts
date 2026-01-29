@@ -17,6 +17,8 @@ export interface ParticipantCategory {
   status: 'published' | 'closed'
   description: string | null
   hasSubmitted: boolean
+  submissionStatus: 'uploaded' | 'submitted' | null
+  submissionId: string | null
 }
 
 interface GetParticipantParams {

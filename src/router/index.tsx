@@ -61,6 +61,11 @@ const SubmitPage = lazy(() =>
     default: m.SubmitPage,
   }))
 )
+const SubmissionPreviewPage = lazy(() =>
+  import('@/pages/participant/SubmissionPreviewPage').then((m) => ({
+    default: m.SubmissionPreviewPage,
+  }))
+)
 
 /**
  * Loading fallback for lazy-loaded routes.
@@ -219,16 +224,12 @@ const router = createBrowserRouter([
     ),
   },
   {
-    // Story 4.6 placeholder - Video preview page
+    // Story 4.6: Submission preview and confirm page
     path: '/participant/preview/:submissionId',
     element: (
       <ParticipantRoute>
         <LazyRoute>
-          <div className="min-h-screen flex items-center justify-center">
-            <p className="text-muted-foreground">
-              Preview page coming in Story 4.6
-            </p>
-          </div>
+          <SubmissionPreviewPage />
         </LazyRoute>
       </ParticipantRoute>
     ),

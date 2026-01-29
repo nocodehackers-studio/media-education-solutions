@@ -26,6 +26,8 @@ const baseCategory: ParticipantCategory = {
   status: 'published',
   description: 'Submit your best documentary',
   hasSubmitted: false,
+  submissionStatus: null,
+  submissionId: null,
 }
 
 function renderCard(category: ParticipantCategory) {
@@ -113,6 +115,8 @@ describe('ParticipantCategoryCard', () => {
     const submittedCategory: ParticipantCategory = {
       ...baseCategory,
       hasSubmitted: true,
+      submissionStatus: 'submitted',
+      submissionId: 'sub-456',
     }
 
     it('shows Submitted badge', () => {
@@ -126,13 +130,36 @@ describe('ParticipantCategoryCard', () => {
       expect(screen.getByRole('button', { name: /view\/edit/i })).toBeInTheDocument()
     })
 
-    it('navigates to submission page on View/Edit click', async () => {
+    it('navigates to preview page on View/Edit click', async () => {
       const user = userEvent.setup()
       renderCard(submittedCategory)
 
       await user.click(screen.getByRole('button', { name: /view\/edit/i }))
 
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/submission/cat-123')
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-456')
+    })
+  })
+
+  describe('uploaded (pending) category', () => {
+    const uploadedCategory: ParticipantCategory = {
+      ...baseCategory,
+      hasSubmitted: true,
+      submissionStatus: 'uploaded',
+      submissionId: 'sub-789',
+    }
+
+    it('shows Pending badge', () => {
+      renderCard(uploadedCategory)
+      expect(screen.getByText(/pending/i)).toBeInTheDocument()
+    })
+
+    it('navigates to preview page on View/Edit click', async () => {
+      const user = userEvent.setup()
+      renderCard(uploadedCategory)
+
+      await user.click(screen.getByRole('button', { name: /view\/edit/i }))
+
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-789')
     })
   })
 
@@ -141,6 +168,8 @@ describe('ParticipantCategoryCard', () => {
       ...baseCategory,
       status: 'closed',
       hasSubmitted: true,
+      submissionStatus: 'submitted',
+      submissionId: 'sub-456',
     }
 
     it('shows View button (not View/Edit) when closed but has submission', () => {
@@ -154,13 +183,13 @@ describe('ParticipantCategoryCard', () => {
       expect(screen.getByText(/submitted/i)).toBeInTheDocument()
     })
 
-    it('navigates to submission page on View click', async () => {
+    it('navigates to preview page on View click', async () => {
       const user = userEvent.setup()
       renderCard(closedSubmittedCategory)
 
       await user.click(screen.getByRole('button', { name: /^view$/i }))
 
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/submission/cat-123')
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-456')
     })
   })
 
