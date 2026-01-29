@@ -1,6 +1,6 @@
 // Story 4-4: Submission types for video/photo uploads
 
-export type SubmissionStatus = 'uploading' | 'submitted' | 'disqualified'
+export type SubmissionStatus = 'uploading' | 'uploaded' | 'submitted' | 'disqualified'
 export type MediaType = 'video' | 'photo'
 
 export interface Submission {

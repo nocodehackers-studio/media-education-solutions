@@ -248,11 +248,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Update submission with media_url and mark as submitted
+    // Update submission with media_url and mark as uploaded (awaiting confirmation)
     const { error: updateError } = await supabaseAdmin
       .from('submissions')
       .update({
-        status: 'submitted',
+        status: 'uploaded',
         media_url: cdnUrl,
         thumbnail_url: cdnUrl, // For photos, thumbnail = full image
       })
