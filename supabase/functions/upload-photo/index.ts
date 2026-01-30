@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
 
       // Allow re-upload (replacement)
       submissionId = existingSubmission.id
-      await supabaseAdmin
+      const { error: resetError } = await supabaseAdmin
         .from('submissions')
         .update({
           status: 'uploading',
@@ -210,6 +210,17 @@ Deno.serve(async (req) => {
           thumbnail_url: null,
         })
         .eq('id', submissionId)
+
+      if (resetError) {
+        console.error('Submission reset failed:', resetError)
+        return new Response(
+          JSON.stringify({ success: false, error: 'SUBMISSION_RESET_FAILED' }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
     } else {
       // Create new submission record
       const { data: newSubmission, error: insertError } = await supabaseAdmin

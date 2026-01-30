@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     const category = submission.categories as unknown as {
       status: string
-      deadline: string
+      deadline: string | null
     }
 
     // Check category is not closed
@@ -213,10 +213,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR'
     console.error('withdraw-submission error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: message }),
+      JSON.stringify({ success: false, error: 'SERVER_ERROR' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -40,14 +40,15 @@ export function useWithdrawSubmission() {
       navigate('/participant/categories')
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Failed to withdraw submission'
-      if (message === 'DEADLINE_PASSED') {
-        toast.error('Deadline has passed — submission is locked')
-      } else if (message === 'CATEGORY_CLOSED') {
-        toast.error('This category is no longer accepting changes')
-      } else {
-        toast.error(message)
+      const code = error instanceof Error ? error.message : ''
+      const errorMessages: Record<string, string> = {
+        DEADLINE_PASSED: 'Deadline has passed — submission is locked',
+        CATEGORY_CLOSED: 'This category is no longer accepting changes',
+        INVALID_PARTICIPANT: 'Session expired. Please log in again.',
+        SUBMISSION_NOT_FOUND: 'Submission not found. It may have already been removed.',
+        UNAUTHORIZED: 'You do not have permission to withdraw this submission.',
       }
+      toast.error(errorMessages[code] || 'Failed to withdraw submission')
     },
   })
 }

@@ -1,7 +1,7 @@
 # Future Work & Deferred Items
 
 **Project:** media-education-solutions
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-30
 
 ---
 
@@ -304,6 +304,62 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-29
   - **Files:** `src/features/submissions/components/PhotoLightbox.tsx:44-69`
   - **Notes:** Consider using a lightweight focus-trap library or implementing manual focus management (save previous focus, restore on close, constrain Tab to modal elements).
+
+- **[Story 4-7]** TOCTOU race condition in withdraw-submission Edge Function
+  - **Why:** Withdraw reads submission + category, validates deadline/status, then separately deletes. Between read and delete, another request could modify state (e.g., deadline passes, category closes). The `confirm-submission` function uses an RPC/stored procedure for atomicity, but `withdraw-submission` does not.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-01-30
+  - **Files:** `supabase/functions/withdraw-submission/index.ts:90-207`
+  - **Notes:** Requires an RPC or database function wrapping the read+validate+delete in a single transaction for true atomicity. Low practical risk in current usage patterns (single participant, low concurrency).
+
+- **[Story 4-7]** No path traversal validation on Bunny Storage path derivation
+  - **Why:** Photo deletion constructs the storage path via `media_url.replace(cdnPrefix, '')`. If `media_url` were manipulated to contain `../` sequences, the DELETE could target unintended storage paths. Both `upload-photo` and `withdraw-submission` use this pattern.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-01-30
+  - **Files:** `supabase/functions/withdraw-submission/index.ts:176`, `supabase/functions/upload-photo/index.ts:187`
+  - **Notes:** Risk is low since `media_url` is written by server-side code only (not user-controlled). Add path validation (reject `..` sequences) as defense-in-depth.
+
+- **[Story 4-7]** Withdraw does not validate submission status before deletion
+  - **Why:** An `uploading` status submission (active upload in progress) can be withdrawn. This could orphan an in-progress TUS upload or leave a partially-uploaded file in Bunny Storage/Stream.
+  - **Priority:** Low
+  - **Suggested Epic:** Edge case hardening
+  - **Discovered:** 2026-01-30
+  - **Files:** `supabase/functions/withdraw-submission/index.ts:90-109`
+  - **Notes:** Consider rejecting withdrawal for `uploading` status or adding a status guard (`uploaded` or `submitted` only).
+
+- **[Story 4-7]** Withdrawing during active TUS upload may delete in-progress video
+  - **Why:** If a participant has an active TUS upload (status `uploading`) and withdraws on another tab, the Bunny Stream DELETE fires for `bunny_video_id` while TUS is still writing to it. Bunny may reject, partially delete, or leave orphaned data.
+  - **Priority:** Low
+  - **Suggested Epic:** Edge case hardening
+  - **Discovered:** 2026-01-30
+  - **Files:** `supabase/functions/withdraw-submission/index.ts:151-167`
+  - **Notes:** Linked to the status validation issue above. Multi-tab scenarios are unlikely in the target user base (educators/students).
+
+- **[Story 4-7]** Lock reason determined client-side from raw category fields
+  - **Why:** `get-submission` returns raw `categoryDeadline` and `categoryStatus` to the client, which derives `isLocked` and the lock reason message. This logic could be computed server-side and returned as an enum (e.g., `lockReason: 'deadline_passed' | 'category_closed' | null`) for single-source-of-truth enforcement.
+  - **Priority:** Low
+  - **Suggested Epic:** API design / Tech debt
+  - **Discovered:** 2026-01-30
+  - **Files:** `supabase/functions/get-submission/index.ts:135-155`, `src/features/submissions/hooks/useSubmissionPreview.ts:57-60`
+  - **Notes:** Current approach works correctly. Server-side lock reason would be cleaner but adds coupling between API contract and UI messaging.
+
+- **[Story 4-7]** No Zod/runtime validation on Edge Function response shapes
+  - **Why:** Client hooks (`useWithdrawSubmission`, `useSubmissionPreview`, `useConfirmSubmission`) trust that Edge Function responses match TypeScript interfaces. A malformed response would cause runtime errors. This is the established pattern across all hooks in the project.
+  - **Priority:** Low
+  - **Suggested Epic:** Type safety / Pre-production hardening
+  - **Discovered:** 2026-01-30
+  - **Files:** `src/features/submissions/hooks/useWithdrawSubmission.ts:25-28`, `src/features/submissions/hooks/useSubmissionPreview.ts:35-55`
+  - **Notes:** Project-wide concern, not specific to story 4-7. Consider adding Zod schemas for all Edge Function responses as a cross-cutting improvement.
+
+- **[Story 4-7]** Test mock shapes are incomplete (cast-based mocking)
+  - **Why:** Tests use `as unknown as ReturnType<>` casts to create partial mock objects. If new fields are added to response types, tests won't fail even if the code starts using those fields. This is the standard pattern in the project's test suite.
+  - **Priority:** Low
+  - **Suggested Epic:** Test infrastructure / Tech debt
+  - **Discovered:** 2026-01-30
+  - **Files:** `src/pages/participant/SubmissionPreviewPage.test.tsx`, `src/features/submissions/hooks/useWithdrawSubmission.test.ts`
+  - **Notes:** Consider using `satisfies` or factory functions for test data to catch type drift. Project-wide concern.
 
 ---
 

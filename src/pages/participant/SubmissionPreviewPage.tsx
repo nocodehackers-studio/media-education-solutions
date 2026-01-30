@@ -59,7 +59,7 @@ export function SubmissionPreviewPage() {
   }
 
   const handleWithdraw = () => {
-    if (!submissionId || !session) return
+    if (!submissionId || !session || withdrawMutation.isPending) return
     withdrawMutation.mutate({
       submissionId,
       participantId: session.participantId,

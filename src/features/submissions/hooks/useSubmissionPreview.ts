@@ -15,7 +15,7 @@ export interface SubmissionPreviewData {
   categoryName: string
   categoryType: 'video' | 'photo'
   categoryDeadline: string | null
-  categoryStatus: string | null
+  categoryStatus: 'draft' | 'published' | 'closed' | null
   isLocked: boolean
 }
 
