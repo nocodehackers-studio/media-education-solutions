@@ -1,15 +1,31 @@
-// Story 4-6: Submission preview and confirm page
-// Shows uploaded media, allows confirm or replace
-// F6: ParticipantRoute handles session guard — no redundant navigate here
+// Story 4-6/4-7: Submission preview page
+// Shows uploaded media, allows confirm, replace, or withdraw
+// Story 4-7: Added Replace/Withdraw for submitted status, deadline lock state
 
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { ArrowLeft, CheckCircle, Lock } from 'lucide-react'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui'
 import {
   SubmissionPreview,
   SubmissionPreviewSkeleton,
   useSubmissionPreview,
   useConfirmSubmission,
+  useWithdrawSubmission,
 } from '@/features/submissions'
 import { useParticipantSession } from '@/contexts'
 
@@ -25,6 +41,7 @@ export function SubmissionPreviewPage() {
   })
 
   const confirmMutation = useConfirmSubmission()
+  const withdrawMutation = useWithdrawSubmission()
 
   const handleConfirm = () => {
     if (!submissionId || !session) return
@@ -39,6 +56,15 @@ export function SubmissionPreviewPage() {
     if (data?.submission.categoryId) {
       navigate(`/participant/submit/${data.submission.categoryId}`)
     }
+  }
+
+  const handleWithdraw = () => {
+    if (!submissionId || !session || withdrawMutation.isPending) return
+    withdrawMutation.mutate({
+      submissionId,
+      participantId: session.participantId,
+      participantCode: session.code,
+    })
   }
 
   const handleBack = () => {
@@ -87,6 +113,7 @@ export function SubmissionPreviewPage() {
   const { submission, libraryId } = data
   const isConfirmed = submission.status === 'submitted'
   const canConfirm = submission.status === 'uploaded'
+  const isLocked = submission.isLocked
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -114,29 +141,74 @@ export function SubmissionPreviewPage() {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          {isConfirmed ? (
-            <div className="flex items-center gap-2 text-green-600 font-medium">
-              <CheckCircle className="h-5 w-5" />
-              Submitted!
-            </div>
-          ) : canConfirm ? (
-            <Button
-              onClick={handleConfirm}
-              disabled={confirmMutation.isPending}
-            >
-              {confirmMutation.isPending ? 'Confirming...' : 'Confirm Submission'}
-            </Button>
-          ) : null}
+        {/* Lock State Message */}
+        {isLocked && (
+          <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
+            <Lock className="h-5 w-5 flex-shrink-0" />
+            <p>
+              {submission.categoryStatus === 'closed'
+                ? 'This category is no longer accepting changes'
+                : 'Deadline passed \u2014 submission locked'}
+            </p>
+          </div>
+        )}
 
-          {/* F10: Only show Replace when submission can still be replaced (not already confirmed) */}
-          {canConfirm && (
-            <Button variant="outline" onClick={handleReplace}>
-              Replace
-            </Button>
-          )}
-        </div>
+        {/* Action Buttons */}
+        {!isLocked && (
+          <div className="flex flex-wrap gap-3">
+            {/* Confirm button (only for uploaded/unconfirmed) */}
+            {canConfirm && (
+              <Button
+                onClick={handleConfirm}
+                disabled={confirmMutation.isPending}
+              >
+                {confirmMutation.isPending ? 'Confirming...' : 'Confirm Submission'}
+              </Button>
+            )}
+
+            {/* Submitted badge */}
+            {isConfirmed && (
+              <div className="flex items-center gap-2 text-green-600 font-medium">
+                <CheckCircle className="h-5 w-5" />
+                Submitted
+              </div>
+            )}
+
+            {/* Replace button (uploaded or submitted, not locked) */}
+            {(canConfirm || isConfirmed) && (
+              <Button variant="outline" onClick={handleReplace}>
+                Replace
+              </Button>
+            )}
+
+            {/* Withdraw button with confirmation dialog */}
+            {(canConfirm || isConfirmed) && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">Withdraw</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Withdraw submission?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will remove your submission. You can submit again before the deadline.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleWithdraw}
+                      disabled={withdrawMutation.isPending}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {withdrawMutation.isPending ? 'Withdrawing...' : 'Withdraw'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

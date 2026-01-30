@@ -88,12 +88,13 @@ Deno.serve(async (req) => {
     }
 
     // F3: Single query — fetch submission with ownership check + category join
+    // Story 4-7: Include deadline and status for lock detection
     const { data: submission, error: submissionError } = await supabaseAdmin
       .from('submissions')
       .select(`
         id, media_type, media_url, bunny_video_id, thumbnail_url,
         status, submitted_at, category_id,
-        categories ( name, type )
+        categories ( name, type, deadline, status )
       `)
       .eq('id', submissionId)
       .eq('participant_id', participantId)
@@ -133,7 +134,17 @@ Deno.serve(async (req) => {
       ? Deno.env.get('BUNNY_STREAM_LIBRARY_ID') ?? null
       : null
 
-    const category = submission.categories as unknown as { name: string; type: string }
+    const category = submission.categories as unknown as {
+      name: string
+      type: string
+      deadline: string
+      status: string
+    }
+
+    // Story 4-7: Compute lock state — deadline passed OR category closed
+    const isLocked =
+      category?.status === 'closed' ||
+      (category?.deadline ? new Date(category.deadline) < new Date() : false)
 
     console.log(`Fetched submission: ${submissionId} for participant ${participantId}`)
 
@@ -151,6 +162,9 @@ Deno.serve(async (req) => {
           categoryId: submission.category_id,
           categoryName: category?.name ?? null,
           categoryType: category?.type ?? null,
+          categoryDeadline: category?.deadline ?? null,
+          categoryStatus: category?.status ?? null,
+          isLocked,
         },
         libraryId: BUNNY_STREAM_LIBRARY_ID,
       }),

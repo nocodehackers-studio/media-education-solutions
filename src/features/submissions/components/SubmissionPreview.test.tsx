@@ -25,6 +25,9 @@ describe('SubmissionPreview', () => {
     categoryId: 'cat-789',
     categoryName: 'Best Documentary',
     categoryType: 'video',
+    categoryDeadline: '2026-12-31T23:59:59Z',
+    categoryStatus: 'published',
+    isLocked: false,
   }
 
   const photoSubmission: SubmissionPreviewData = {

@@ -152,10 +152,27 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Load Bunny Storage config early (needed for both old media cleanup and new upload)
+    const BUNNY_STORAGE_API_KEY = Deno.env.get('BUNNY_STORAGE_API_KEY')
+    const BUNNY_STORAGE_ZONE = Deno.env.get('BUNNY_STORAGE_ZONE')
+    const BUNNY_STORAGE_HOSTNAME =
+      Deno.env.get('BUNNY_STORAGE_HOSTNAME') || 'storage.bunnycdn.com'
+
+    if (!BUNNY_STORAGE_API_KEY || !BUNNY_STORAGE_ZONE) {
+      console.error('Bunny Storage config missing')
+      return new Response(
+        JSON.stringify({ success: false, error: 'BUNNY_CONFIG_MISSING' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Check if participant already has a submission for this category
     const { data: existingSubmission } = await supabaseAdmin
       .from('submissions')
-      .select('id, status')
+      .select('id, status, media_url')
       .eq('participant_id', participantId)
       .eq('category_id', categoryId)
       .single()
@@ -163,12 +180,47 @@ Deno.serve(async (req) => {
     let submissionId: string
 
     if (existingSubmission) {
+      // Story 4-7: Delete old photo from Bunny Storage before replacing
+      if (existingSubmission.media_url) {
+        try {
+          const cdnPrefix = `https://${BUNNY_STORAGE_ZONE}.b-cdn.net/`
+          const oldStoragePath = existingSubmission.media_url.replace(cdnPrefix, '')
+          const deleteResp = await fetch(
+            `https://${BUNNY_STORAGE_HOSTNAME}/${BUNNY_STORAGE_ZONE}/${oldStoragePath}`,
+            {
+              method: 'DELETE',
+              headers: { AccessKey: BUNNY_STORAGE_API_KEY },
+            }
+          )
+          console.log(`Deleted old Bunny photo: path=${oldStoragePath}, status=${deleteResp.status}`)
+        } catch (e) {
+          console.error('Failed to delete old Bunny photo:', e)
+          // Continue — don't block the new upload
+        }
+      }
+
       // Allow re-upload (replacement)
       submissionId = existingSubmission.id
-      await supabaseAdmin
+      const { error: resetError } = await supabaseAdmin
         .from('submissions')
-        .update({ status: 'uploading', submitted_at: new Date().toISOString() })
+        .update({
+          status: 'uploading',
+          submitted_at: new Date().toISOString(),
+          media_url: null,
+          thumbnail_url: null,
+        })
         .eq('id', submissionId)
+
+      if (resetError) {
+        console.error('Submission reset failed:', resetError)
+        return new Response(
+          JSON.stringify({ success: false, error: 'SUBMISSION_RESET_FAILED' }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
     } else {
       // Create new submission record
       const { data: newSubmission, error: insertError } = await supabaseAdmin
@@ -195,23 +247,6 @@ Deno.serve(async (req) => {
       }
 
       submissionId = newSubmission.id
-    }
-
-    // Get Bunny Storage configuration (server-side only)
-    const BUNNY_STORAGE_API_KEY = Deno.env.get('BUNNY_STORAGE_API_KEY')
-    const BUNNY_STORAGE_ZONE = Deno.env.get('BUNNY_STORAGE_ZONE')
-    const BUNNY_STORAGE_HOSTNAME =
-      Deno.env.get('BUNNY_STORAGE_HOSTNAME') || 'storage.bunnycdn.com'
-
-    if (!BUNNY_STORAGE_API_KEY || !BUNNY_STORAGE_ZONE) {
-      console.error('Bunny Storage config missing')
-      return new Response(
-        JSON.stringify({ success: false, error: 'BUNNY_CONFIG_MISSING' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
     }
 
     // Generate unique filename to prevent collisions

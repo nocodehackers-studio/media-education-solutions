@@ -80,7 +80,7 @@ development_status:
   4-4-video-upload-with-progress: done  # Completed 2026-01-27
   4-5-photo-upload-with-progress: done  # Completed 2026-01-28
   4-6-submission-preview-confirm: done  # Completed 2026-01-29
-  4-7-edit-replace-withdraw-submission: ready-for-dev
+  4-7-edit-replace-withdraw-submission: in-progress
   epic-4-retrospective: optional
 
   # Epic 5: Judging & Evaluation Workflow (6 stories)
