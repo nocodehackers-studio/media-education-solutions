@@ -1,6 +1,6 @@
 # Story 4.7: Edit, Replace & Withdraw Submission
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -104,6 +104,19 @@ So that **I can improve my entry or remove it entirely**.
   - [ ] 7.6 Manual smoke test: confirm submission → View/Edit → Replace → new upload → confirm
   - [ ] 7.7 Manual smoke test: confirm submission → View/Edit → Withdraw → confirm dialog → submission gone → Submit button shows
   - [ ] 7.8 Manual smoke test: category deadline passed → View/Edit → no Replace/Withdraw buttons, see "locked" message
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][High] Enforce lockout when category deadline is missing/null (treat as locked or reject for published categories) to avoid withdraw bypass. [supabase/functions/withdraw-submission/index.ts:139]
+- [ ] [AI-Review][High] Align replace flow `submitted_at` update with successful upload/confirm (not at reset) for video replacements. [supabase/functions/create-video-upload/index.ts:203]
+- [ ] [AI-Review][High] Align replace flow `submitted_at` update with successful upload/confirm (not at reset) for photo replacements. [supabase/functions/upload-photo/index.ts:208]
+- [ ] [AI-Review][High] Add telemetry/retry/queue for Bunny delete failures or update ACs to explicitly allow best-effort deletes. [supabase/functions/withdraw-submission/index.ts:150]
+- [ ] [AI-Review][Medium] Regenerate story File List from git to match actual changes per workflow rules. [_bmad-output/implementation-artifacts/4-7-edit-replace-withdraw-submission.md:489]
+- [ ] [AI-Review][Medium] Restrict withdraw to `uploaded`/`submitted` statuses to prevent deleting `uploading` submissions. [supabase/functions/withdraw-submission/index.ts:89]
+- [ ] [AI-Review][Medium] Use structured error codes from Edge Function responses instead of `error.message` as code in withdraw hook. [src/features/submissions/hooks/useWithdrawSubmission.ts:25]
+- [ ] [AI-Review][Low] Allow `submittedAt` to be nullable in preview data to match DB (uploading state). [src/features/submissions/hooks/useSubmissionPreview.ts:13]
+- [ ] [AI-Review][Low] Normalize deadline comparisons (timezone consistency / server time) to avoid edge-case lockouts. [supabase/functions/get-submission/index.ts:145]
+- [ ] [AI-Review][Low] Consider surfacing lock reason with timestamp for clarity in preview UI. [src/pages/participant/SubmissionPreviewPage.tsx:145]
 
 ## Dev Notes
 
@@ -479,10 +492,18 @@ None — clean implementation, all quality gates passed.
 - 1 pre-existing test failure in judge/DashboardPage.test.tsx (date formatting drift) — not related to this story
 - Edge Function deployments and manual smoke tests pending user execution
 
+### Adversarial Review Notes
+
+- **14 findings** raised during adversarial review
+- **7 fixed** (commit `2af4fac`): F2 (missing withdraw hook tests), F5 (categoryStatus union type), F6 (nullable deadline type), F7 (double-click guard), F8 (error code → user-friendly message mapping), F9 (submission reset error checks), F12 (error message leak)
+- **7 deferred** to `future-work.md`: F1 (TOCTOU race), F3 (path traversal validation), F4 (submission status guard), F10 (active upload edge case), F11 (server-side lock reason), F13 (Zod response validation), F14 (test mock completeness)
+- Resolution approach: Fix all findings with practical security/correctness impact now; defer architectural and cross-cutting concerns that require broader project-level decisions
+
 ### File List
 
 **New Files:**
 - `src/features/submissions/hooks/useWithdrawSubmission.ts`
+- `src/features/submissions/hooks/useWithdrawSubmission.test.ts`
 - `supabase/functions/withdraw-submission/index.ts`
 
 **Modified Files:**
@@ -495,3 +516,4 @@ None — clean implementation, all quality gates passed.
 - `supabase/functions/create-video-upload/index.ts`
 - `supabase/functions/get-submission/index.ts`
 - `supabase/functions/upload-photo/index.ts`
+- `_bmad-output/implementation-artifacts/future-work.md`

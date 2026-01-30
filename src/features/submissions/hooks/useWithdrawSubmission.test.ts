@@ -29,6 +29,21 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
+// Helper: simulate Supabase FunctionsHttpError for non-2xx Edge Function responses
+function mockHttpError(errorCode: string) {
+  return {
+    data: null,
+    error: {
+      name: 'FunctionsHttpError',
+      message: 'Edge Function returned a non-2xx status code',
+      context: new Response(
+        JSON.stringify({ success: false, error: errorCode }),
+        { headers: { 'Content-Type': 'application/json' } }
+      ),
+    },
+  }
+}
+
 const defaultParams = {
   submissionId: 'sub-123',
   participantId: 'participant-456',
@@ -91,11 +106,8 @@ describe('useWithdrawSubmission', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/participant/categories')
   })
 
-  it('on error: shows error toast, does not navigate', async () => {
-    mockInvoke.mockResolvedValueOnce({
-      data: { success: false, error: 'DEADLINE_PASSED' },
-      error: null,
-    })
+  it('extracts DEADLINE_PASSED error code from non-2xx response', async () => {
+    mockInvoke.mockResolvedValueOnce(mockHttpError('DEADLINE_PASSED'))
 
     const { result } = renderHook(() => useWithdrawSubmission(), { wrapper })
 
@@ -109,11 +121,8 @@ describe('useWithdrawSubmission', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('shows user-friendly message for CATEGORY_CLOSED error', async () => {
-    mockInvoke.mockResolvedValueOnce({
-      data: { success: false, error: 'CATEGORY_CLOSED' },
-      error: null,
-    })
+  it('extracts CATEGORY_CLOSED error code from non-2xx response', async () => {
+    mockInvoke.mockResolvedValueOnce(mockHttpError('CATEGORY_CLOSED'))
 
     const { result } = renderHook(() => useWithdrawSubmission(), { wrapper })
 
@@ -127,10 +136,7 @@ describe('useWithdrawSubmission', () => {
   })
 
   it('shows generic message for unknown error codes', async () => {
-    mockInvoke.mockResolvedValueOnce({
-      data: { success: false, error: 'SOME_UNKNOWN_ERROR' },
-      error: null,
-    })
+    mockInvoke.mockResolvedValueOnce(mockHttpError('SOME_UNKNOWN_ERROR'))
 
     const { result } = renderHook(() => useWithdrawSubmission(), { wrapper })
 
@@ -156,7 +162,9 @@ describe('useWithdrawSubmission', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
 
-    expect(mockToastError).toHaveBeenCalled()
+    expect(mockToastError).toHaveBeenCalledWith(
+      'Failed to withdraw submission'
+    )
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 })

@@ -27,8 +27,23 @@ export function useWithdrawSubmission() {
         { body: params }
       )
 
-      if (error || !data?.success) {
-        throw new Error(data?.error || error?.message || 'Failed to withdraw submission')
+      if (error) {
+        // Non-2xx: Supabase puts raw Response in error.context, not in data
+        let code = ''
+        try {
+          const ctx = (error as unknown as { context?: Response }).context
+          if (ctx instanceof Response) {
+            const body = await ctx.json()
+            code = body?.error ?? ''
+          }
+        } catch {
+          // Response parsing failed
+        }
+        throw new Error(code || 'Failed to withdraw submission')
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to withdraw submission')
       }
 
       return data
