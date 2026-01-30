@@ -154,10 +154,25 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Load Bunny Stream config early (needed for both old media cleanup and new upload)
+    const BUNNY_STREAM_API_KEY = Deno.env.get('BUNNY_STREAM_API_KEY')
+    const BUNNY_STREAM_LIBRARY_ID = Deno.env.get('BUNNY_STREAM_LIBRARY_ID')
+
+    if (!BUNNY_STREAM_API_KEY || !BUNNY_STREAM_LIBRARY_ID) {
+      console.error('Bunny config missing')
+      return new Response(
+        JSON.stringify({ success: false, error: 'BUNNY_CONFIG_MISSING' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Check if participant already has a submission for this category
     const { data: existingSubmission } = await supabaseAdmin
       .from('submissions')
-      .select('id, status')
+      .select('id, status, bunny_video_id')
       .eq('participant_id', participantId)
       .eq('category_id', categoryId)
       .single()
@@ -165,11 +180,31 @@ Deno.serve(async (req) => {
     let submissionId: string
 
     if (existingSubmission) {
-      // Allow re-upload if previous upload failed or is being replaced
+      // Story 4-7: Delete old video from Bunny Stream before replacing
+      if (existingSubmission.bunny_video_id) {
+        try {
+          const oldVideoResp = await fetch(
+            `https://video.bunnycdn.com/library/${BUNNY_STREAM_LIBRARY_ID}/videos/${existingSubmission.bunny_video_id}`,
+            { method: 'DELETE', headers: { AccessKey: BUNNY_STREAM_API_KEY } }
+          )
+          console.log(`Deleted old Bunny video: ${existingSubmission.bunny_video_id}, status=${oldVideoResp.status}`)
+        } catch (e) {
+          console.error('Failed to delete old Bunny video:', e)
+          // Continue — don't block the new upload
+        }
+      }
+
+      // Allow re-upload (replacement)
       submissionId = existingSubmission.id
       await supabaseAdmin
         .from('submissions')
-        .update({ status: 'uploading', submitted_at: new Date().toISOString() })
+        .update({
+          status: 'uploading',
+          submitted_at: new Date().toISOString(),
+          bunny_video_id: null,
+          media_url: null,
+          thumbnail_url: null,
+        })
         .eq('id', submissionId)
     } else {
       // Create new submission record
@@ -197,21 +232,6 @@ Deno.serve(async (req) => {
       }
 
       submissionId = newSubmission.id
-    }
-
-    // Generate Bunny Stream TUS upload URL
-    const BUNNY_STREAM_API_KEY = Deno.env.get('BUNNY_STREAM_API_KEY')
-    const BUNNY_STREAM_LIBRARY_ID = Deno.env.get('BUNNY_STREAM_LIBRARY_ID')
-
-    if (!BUNNY_STREAM_API_KEY || !BUNNY_STREAM_LIBRARY_ID) {
-      console.error('Bunny config missing')
-      return new Response(
-        JSON.stringify({ success: false, error: 'BUNNY_CONFIG_MISSING' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
     }
 
     // Create video in Bunny Stream

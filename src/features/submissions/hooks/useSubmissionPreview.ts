@@ -14,6 +14,9 @@ export interface SubmissionPreviewData {
   categoryId: string
   categoryName: string
   categoryType: 'video' | 'photo'
+  categoryDeadline: string | null
+  categoryStatus: string | null
+  isLocked: boolean
 }
 
 interface GetSubmissionResponse {

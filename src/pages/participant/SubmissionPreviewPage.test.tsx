@@ -1,4 +1,4 @@
-// Story 4-6: Tests for SubmissionPreviewPage
+// Story 4-6/4-7: Tests for SubmissionPreviewPage
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -31,7 +31,8 @@ vi.mock('@/contexts', () => ({
   })),
 }))
 
-const mockMutate = vi.fn()
+const mockConfirmMutate = vi.fn()
+const mockWithdrawMutate = vi.fn()
 
 vi.mock('@/features/submissions', () => ({
   SubmissionPreview: vi.fn(({ submission }) => (
@@ -53,6 +54,9 @@ vi.mock('@/features/submissions', () => ({
         categoryId: 'cat-789',
         categoryName: 'Best Short Film',
         categoryType: 'video',
+        categoryDeadline: '2026-12-31T23:59:59Z',
+        categoryStatus: 'published',
+        isLocked: false,
       },
       libraryId: 'lib-123',
     },
@@ -60,12 +64,20 @@ vi.mock('@/features/submissions', () => ({
     error: null,
   })),
   useConfirmSubmission: vi.fn(() => ({
-    mutate: mockMutate,
+    mutate: mockConfirmMutate,
+    isPending: false,
+  })),
+  useWithdrawSubmission: vi.fn(() => ({
+    mutate: mockWithdrawMutate,
     isPending: false,
   })),
 }))
 
-import { useSubmissionPreview, useConfirmSubmission } from '@/features/submissions'
+import {
+  useSubmissionPreview,
+  useConfirmSubmission,
+  useWithdrawSubmission,
+} from '@/features/submissions'
 
 const defaultSubmission = {
   id: 'sub-123',
@@ -78,21 +90,27 @@ const defaultSubmission = {
   categoryId: 'cat-789',
   categoryName: 'Best Short Film',
   categoryType: 'video' as const,
+  categoryDeadline: '2026-12-31T23:59:59Z',
+  categoryStatus: 'published',
+  isLocked: false,
 }
 
 describe('SubmissionPreviewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset mocks to default uploaded state (clearAllMocks doesn't reset mockReturnValue)
     vi.mocked(useSubmissionPreview).mockReturnValue({
       data: { submission: defaultSubmission, libraryId: 'lib-123' },
       isLoading: false,
       error: null,
     } as ReturnType<typeof useSubmissionPreview>)
     vi.mocked(useConfirmSubmission).mockReturnValue({
-      mutate: mockMutate,
+      mutate: mockConfirmMutate,
       isPending: false,
     } as unknown as ReturnType<typeof useConfirmSubmission>)
+    vi.mocked(useWithdrawSubmission).mockReturnValue({
+      mutate: mockWithdrawMutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof useWithdrawSubmission>)
   })
 
   const renderWithRouter = (submissionId = 'sub-123') => {
@@ -123,7 +141,7 @@ describe('SubmissionPreviewPage', () => {
       expect(screen.getByText('Preview: Best Short Film')).toBeInTheDocument()
     })
 
-    it('renders Confirm and Replace buttons for uploaded status', () => {
+    it('renders Confirm, Replace, and Withdraw buttons for uploaded status', () => {
       renderWithRouter()
 
       expect(
@@ -131,6 +149,9 @@ describe('SubmissionPreviewPage', () => {
       ).toBeInTheDocument()
       expect(
         screen.getByRole('button', { name: 'Replace' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Withdraw' })
       ).toBeInTheDocument()
     })
 
@@ -193,7 +214,7 @@ describe('SubmissionPreviewPage', () => {
       const user = userEvent.setup()
       await user.click(screen.getByRole('button', { name: 'Confirm Submission' }))
 
-      expect(mockMutate).toHaveBeenCalledWith({
+      expect(mockConfirmMutate).toHaveBeenCalledWith({
         submissionId: 'sub-123',
         participantId: 'participant-123',
         participantCode: 'ABC123',
@@ -202,7 +223,7 @@ describe('SubmissionPreviewPage', () => {
 
     it('shows pending text while confirming', () => {
       vi.mocked(useConfirmSubmission).mockReturnValue({
-        mutate: mockMutate,
+        mutate: mockConfirmMutate,
         isPending: true,
       } as unknown as ReturnType<typeof useConfirmSubmission>)
 
@@ -213,7 +234,7 @@ describe('SubmissionPreviewPage', () => {
 
     it('disables confirm button while pending', () => {
       vi.mocked(useConfirmSubmission).mockReturnValue({
-        mutate: mockMutate,
+        mutate: mockConfirmMutate,
         isPending: true,
       } as unknown as ReturnType<typeof useConfirmSubmission>)
 
@@ -227,18 +248,7 @@ describe('SubmissionPreviewPage', () => {
     beforeEach(() => {
       vi.mocked(useSubmissionPreview).mockReturnValue({
         data: {
-          submission: {
-            id: 'sub-123',
-            mediaType: 'video',
-            mediaUrl: null,
-            bunnyVideoId: 'vid-456',
-            thumbnailUrl: null,
-            status: 'submitted',
-            submittedAt: '2026-01-29T00:00:00Z',
-            categoryId: 'cat-789',
-            categoryName: 'Best Short Film',
-            categoryType: 'video',
-          },
+          submission: { ...defaultSubmission, status: 'submitted' },
           libraryId: 'lib-123',
         },
         isLoading: false,
@@ -249,7 +259,7 @@ describe('SubmissionPreviewPage', () => {
     it('shows Submitted text', () => {
       renderWithRouter()
 
-      expect(screen.getByText('Submitted!')).toBeInTheDocument()
+      expect(screen.getByText('Submitted')).toBeInTheDocument()
     })
 
     it('does not show Confirm button', () => {
@@ -260,11 +270,154 @@ describe('SubmissionPreviewPage', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('does not show Replace button', () => {
+    it('shows Replace button for submitted status', () => {
+      renderWithRouter()
+
+      expect(
+        screen.getByRole('button', { name: 'Replace' })
+      ).toBeInTheDocument()
+    })
+
+    it('shows Withdraw button for submitted status', () => {
+      renderWithRouter()
+
+      expect(
+        screen.getByRole('button', { name: 'Withdraw' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  describe('Withdraw submission', () => {
+    it('opens confirmation dialog when Withdraw clicked', async () => {
+      renderWithRouter()
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
+
+      expect(screen.getByText('Withdraw submission?')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'This will remove your submission. You can submit again before the deadline.'
+        )
+      ).toBeInTheDocument()
+    })
+
+    it('calls withdraw mutation when confirmed', async () => {
+      renderWithRouter()
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
+      // Click the confirm action in the dialog
+      const dialogButtons = screen.getAllByRole('button', { name: 'Withdraw' })
+      // The dialog action button is the second "Withdraw" button
+      await user.click(dialogButtons[dialogButtons.length - 1])
+
+      expect(mockWithdrawMutate).toHaveBeenCalledWith({
+        submissionId: 'sub-123',
+        participantId: 'participant-123',
+        participantCode: 'ABC123',
+      })
+    })
+
+    it('closes dialog when Cancel clicked', async () => {
+      renderWithRouter()
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
+      expect(screen.getByText('Withdraw submission?')).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+      expect(screen.queryByText('Withdraw submission?')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Locked state', () => {
+    it('shows deadline locked message when isLocked is true', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            isLocked: true,
+            categoryStatus: 'published',
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(
+        screen.getByText(/Deadline passed/)
+      ).toBeInTheDocument()
+    })
+
+    it('shows category closed message when category is closed', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            isLocked: true,
+            categoryStatus: 'closed',
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(
+        screen.getByText('This category is no longer accepting changes')
+      ).toBeInTheDocument()
+    })
+
+    it('hides Replace and Withdraw buttons when locked', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            isLocked: true,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
       renderWithRouter()
 
       expect(
         screen.queryByRole('button', { name: 'Replace' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Withdraw' })
+      ).not.toBeInTheDocument()
+    })
+
+    it('hides Confirm button when locked', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'uploaded',
+            isLocked: true,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(
+        screen.queryByRole('button', { name: 'Confirm Submission' })
       ).not.toBeInTheDocument()
     })
   })
@@ -274,7 +427,6 @@ describe('SubmissionPreviewPage', () => {
       renderWithRouter()
 
       const user = userEvent.setup()
-      // Back button is the first icon-only button
       const buttons = screen.getAllByRole('button')
       await user.click(buttons[0])
 
