@@ -366,7 +366,26 @@ This document tracks valuable features, improvements, and technical debt discove
 ### Epic 5: Judging & Evaluation Workflow
 *Items discovered during Epic 5 implementation*
 
-*No items currently tracked*
+- **[Story 5-1]** Add explicit role check in get_submissions_for_review RPC as defense-in-depth
+  - **Why:** The SECURITY DEFINER RPC verifies `assigned_judge_id = auth.uid()` and has REVOKE/GRANT, but doesn't explicitly check `profiles.role = 'judge'`. Not a vulnerability (only assigned judges pass the category check), but an extra role guard adds defense-in-depth.
+  - **Priority:** Low
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-01-31
+  - **Files:** `supabase/migrations/20260131020611_create_get_submissions_for_review_rpc.sql`
+
+- **[Story 5-1]** Add aria-label to SubmissionCard button role for screen readers
+  - **Why:** SubmissionCard has `role="button"` and keyboard handling but no explicit `aria-label`. Screen readers read card text content but an explicit label like `"Review submission by {participantCode}"` is best practice for WCAG compliance.
+  - **Priority:** Low
+  - **Suggested Epic:** Accessibility
+  - **Discovered:** 2026-01-31
+  - **Files:** `src/features/reviews/components/SubmissionCard.tsx:30-33`
+
+- **[Story 5-1]** Update PROJECT_INDEX.md reviews exports to reflect current API
+  - **Why:** The reviews feature barrel exports (types, hooks, components, API) should be documented in PROJECT_INDEX.md for discoverability.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation cleanup
+  - **Discovered:** 2026-01-31
+  - **Files:** `PROJECT_INDEX.md`, `src/features/reviews/index.ts`
 
 ---
 

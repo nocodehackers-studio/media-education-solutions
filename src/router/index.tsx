@@ -41,6 +41,9 @@ const ContestDetailPage = lazy(() =>
 const JudgeDashboardPage = lazy(() =>
   import('@/pages/judge/DashboardPage').then((m) => ({ default: m.JudgeDashboardPage }))
 )
+const CategoryReviewPage = lazy(() =>
+  import('@/pages/judge/CategoryReviewPage').then((m) => ({ default: m.CategoryReviewPage }))
+)
 
 // Lazy load participant pages
 const CodeEntryPage = lazy(() =>
@@ -178,7 +181,17 @@ const router = createBrowserRouter([
       </JudgeRoute>
     ),
   },
-  // More judge routes will be added in Epic 3
+  // Story 5-1: Category review page
+  {
+    path: '/judge/categories/:categoryId',
+    element: (
+      <JudgeRoute>
+        <LazyRoute>
+          <CategoryReviewPage />
+        </LazyRoute>
+      </JudgeRoute>
+    ),
+  },
 
   // Participant routes (public entry, protected dashboard)
   {
