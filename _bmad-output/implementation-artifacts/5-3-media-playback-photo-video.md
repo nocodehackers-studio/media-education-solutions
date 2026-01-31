@@ -1,6 +1,6 @@
 # Story 5.3: Media Playback (Photo & Video)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -110,6 +110,16 @@ So that **I can properly evaluate the quality of submissions**.
   - [x] 8.4 `npm run test` passes (all existing + new tests)
   - [x] 8.5 Manual smoke test: review page → photo submission → see expand button → click → fullscreen → zoom scroll → pinch mobile → close Esc
   - [x] 8.6 Manual smoke test: review page → video submission → video loads < 2s → controls work → fullscreen → Esc exits → error retry
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] Add `onExpand` callback prop and `isExpandable` prop to `MediaViewer` — DISMISSED: YAGNI, no consumer needs these props, expand is self-contained
+- [x] [AI-Review][HIGH] Add iframe `onError` handling — FIXED: Added `handleIframeError` + `onError` prop on iframe
+- [x] [AI-Review][MEDIUM] Expand button hidden on touch devices — FIXED: `opacity-100 md:opacity-0 md:group-hover:opacity-100`
+- [x] [AI-Review][MEDIUM] Clear `videoError` on successful `onLoad` — FIXED: Added `setVideoError(false)` to `handleIframeLoad`
+- [x] [AI-Review][MEDIUM] Replace React namespace event types — FIXED: Explicit `import { type WheelEvent, ... } from 'react'`
+- [x] [AI-Review][LOW] Clear `zoomTimerRef` on unmount — DISMISSED: React 18+ treats setState on unmounted as no-op
+- [x] [AI-Review][MEDIUM] sprint-status.yaml not in File List — DISMISSED: Pre-existing unrelated change, not part of story
 
 ## Dev Notes
 
