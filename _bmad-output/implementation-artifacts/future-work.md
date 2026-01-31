@@ -415,6 +415,7 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-31
   - **Files:** `src/features/reviews/components/RatingDisplay.tsx`
 
+
 ---
 
 ### Epic 6: Admin Oversight & Results Publication
