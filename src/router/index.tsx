@@ -47,6 +47,9 @@ const CategoryReviewPage = lazy(() =>
 const SubmissionReviewPage = lazy(() =>
   import('@/pages/judge/SubmissionReviewPage').then((m) => ({ default: m.SubmissionReviewPage }))
 )
+const RankingPage = lazy(() =>
+  import('@/pages/judge/RankingPage').then((m) => ({ default: m.RankingPage }))
+)
 
 // Lazy load participant pages
 const CodeEntryPage = lazy(() =>
@@ -191,6 +194,17 @@ const router = createBrowserRouter([
       <JudgeRoute>
         <LazyRoute>
           <CategoryReviewPage />
+        </LazyRoute>
+      </JudgeRoute>
+    ),
+  },
+  // Story 5-5: Ranking page (top 3 drag & drop)
+  {
+    path: '/judge/categories/:categoryId/ranking',
+    element: (
+      <JudgeRoute>
+        <LazyRoute>
+          <RankingPage />
         </LazyRoute>
       </JudgeRoute>
     ),

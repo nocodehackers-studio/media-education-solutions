@@ -277,4 +277,43 @@ describe('CategoryReviewPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/judge/dashboard');
   });
+
+  // Story 5.5: "Proceed to Ranking" button tests
+  it('shows disabled "Proceed to Ranking" button when submissions are pending', () => {
+    mockUseSubmissionsForReview.mockReturnValue({
+      data: mockSubmissions,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      progress: { total: 2, reviewed: 1, pending: 1, percentage: 50 },
+    });
+
+    render(<CategoryReviewPage />, { wrapper: createWrapper() });
+    const rankingBtn = screen.getByRole('button', { name: /Proceed to Ranking/i });
+    expect(rankingBtn).toBeDisabled();
+  });
+
+  it('shows enabled "Proceed to Ranking" button when all submissions reviewed', async () => {
+    const user = userEvent.setup();
+    const allReviewed = mockSubmissions.map((s) => ({
+      ...s,
+      reviewId: `rev-${s.id}`,
+      rating: 7,
+    }));
+
+    mockUseSubmissionsForReview.mockReturnValue({
+      data: allReviewed,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+    });
+
+    render(<CategoryReviewPage />, { wrapper: createWrapper() });
+    const rankingBtn = screen.getByRole('button', { name: /Proceed to Ranking/i });
+    expect(rankingBtn).not.toBeDisabled();
+
+    await user.click(rankingBtn);
+    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/ranking');
+  });
 });

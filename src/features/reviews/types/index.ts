@@ -5,9 +5,15 @@ export type {
   ReviewProgress,
   RatingTier,
   SubmissionFilter,
+  Ranking,
+  RankingRow,
+  RankingPosition,
+  RankedSubmission,
 } from './review.types';
 export {
   RATING_TIERS,
   getRatingTier,
   transformSubmissionForReview,
+  transformRanking,
+  validateRankingOrder,
 } from './review.types';
