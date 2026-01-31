@@ -7,6 +7,7 @@ export { SubmissionCard } from './components/SubmissionCard';
 export { ReviewProgress } from './components/ReviewProgress';
 export { SubmissionFilter } from './components/SubmissionFilter';
 export { MediaViewer } from './components/MediaViewer';
+export { PhotoZoomViewer } from './components/PhotoZoomViewer';
 export { RatingDisplay } from './components/RatingDisplay';
 
 // === Hooks ===
