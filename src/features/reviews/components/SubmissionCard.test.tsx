@@ -37,14 +37,16 @@ const baseSubmission: SubmissionForReview = {
   feedback: null,
 };
 
+const testCategoryId = 'cat-1';
+
 describe('SubmissionCard', () => {
   it('renders participant code prominently', () => {
-    render(<SubmissionCard submission={baseSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={baseSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     expect(screen.getByText('ABC123')).toBeInTheDocument();
   });
 
   it('shows thumbnail for photo submission', () => {
-    render(<SubmissionCard submission={baseSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={baseSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     const img = screen.getByRole('img');
     expect(img).toHaveAttribute('src', 'https://cdn.example.com/photo.jpg');
   });
@@ -57,7 +59,7 @@ describe('SubmissionCard', () => {
       thumbnailUrl: 'https://cdn.example.com/thumb.jpg',
       bunnyVideoId: 'vid-123',
     };
-    render(<SubmissionCard submission={videoSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={videoSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     const img = screen.getByRole('img');
     expect(img).toHaveAttribute('src', 'https://cdn.example.com/thumb.jpg');
   });
@@ -70,12 +72,12 @@ describe('SubmissionCard', () => {
       thumbnailUrl: null,
       bunnyVideoId: 'vid-123',
     };
-    render(<SubmissionCard submission={videoSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={videoSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('shows "Pending" badge when no review', () => {
-    render(<SubmissionCard submission={baseSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={baseSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     expect(screen.getByText('Pending')).toBeInTheDocument();
   });
 
@@ -86,18 +88,18 @@ describe('SubmissionCard', () => {
       rating: 8,
       feedback: 'Great work',
     };
-    render(<SubmissionCard submission={reviewedSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={reviewedSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
     expect(screen.getByText('Reviewed')).toBeInTheDocument();
     expect(screen.getByText(/Advanced Producer/)).toBeInTheDocument();
   });
 
-  it('navigates to review route on click', async () => {
+  it('navigates to category review route on click', async () => {
     const user = userEvent.setup();
-    render(<SubmissionCard submission={baseSubmission} />, { wrapper: Wrapper });
+    render(<SubmissionCard submission={baseSubmission} categoryId={testCategoryId} />, { wrapper: Wrapper });
 
     const card = screen.getByRole('button');
     await user.click(card);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/judge/review/sub-1');
+    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-1');
   });
 });

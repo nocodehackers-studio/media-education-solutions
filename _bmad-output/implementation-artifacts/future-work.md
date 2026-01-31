@@ -387,6 +387,34 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-31
   - **Files:** `PROJECT_INDEX.md`, `src/features/reviews/index.ts`
 
+- **[Story 5-2]** Add error state for submissions fetch in SubmissionReviewPage
+  - **Why:** If `useSubmissionsForReview` returns an error (network failure, RPC error), `submissions` is undefined and the page redirects to the category page as if the submission wasn't found. Should show an error state with retry button instead, matching the pattern in `CategoryReviewPage`.
+  - **Priority:** High
+  - **Suggested Epic:** Bug fix / UX robustness
+  - **Discovered:** 2026-01-31
+  - **Files:** `src/pages/judge/SubmissionReviewPage.tsx:101-109`
+
+- **[Story 5-2]** Add Bunny Stream embed fallback when mediaUrl is null but bunnyVideoId exists
+  - **Why:** If `mediaUrl` is null but `bunnyVideoId` is present, the MediaViewer shows a placeholder instead of attempting to construct the embed URL from a `VITE_BUNNY_STREAM_LIBRARY_ID` env var. In practice this edge case doesn't occur because `finalize-upload` always sets `mediaUrl` to the full embed URL for submitted videos. Only triggers if the upload finalization flow has a bug.
+  - **Priority:** Low
+  - **Suggested Epic:** Defensive hardening
+  - **Discovered:** 2026-01-31
+  - **Files:** `src/features/reviews/components/MediaViewer.tsx`
+
+- **[Story 5-2]** Disable keyboard navigation while save mutation is pending
+  - **Why:** The Previous/Next buttons already disable during `isSaving`, but the keyboard handler (ArrowLeft/ArrowRight) doesn't check `isPending`. Rapid arrow key presses could trigger overlapping save mutations. No data corruption risk since the upsert uses `onConflict` (idempotent), but it's wasteful and could feel sluggish.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-01-31
+  - **Files:** `src/pages/judge/SubmissionReviewPage.tsx:82-98`
+
+- **[Story 5-2]** Add aria-pressed or radiogroup semantics to RatingDisplay tier buttons
+  - **Why:** Rating tiers function as exclusive selection (like radio buttons) but are rendered as plain `<button>` elements. Adding `role="radiogroup"` on the container + `role="radio"` + `aria-checked` on each tier button would improve screen reader accessibility per WCAG.
+  - **Priority:** Low
+  - **Suggested Epic:** Accessibility
+  - **Discovered:** 2026-01-31
+  - **Files:** `src/features/reviews/components/RatingDisplay.tsx`
+
 ---
 
 ### Epic 6: Admin Oversight & Results Publication
