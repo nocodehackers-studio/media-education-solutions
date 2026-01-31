@@ -44,6 +44,9 @@ const JudgeDashboardPage = lazy(() =>
 const CategoryReviewPage = lazy(() =>
   import('@/pages/judge/CategoryReviewPage').then((m) => ({ default: m.CategoryReviewPage }))
 )
+const SubmissionReviewPage = lazy(() =>
+  import('@/pages/judge/SubmissionReviewPage').then((m) => ({ default: m.SubmissionReviewPage }))
+)
 
 // Lazy load participant pages
 const CodeEntryPage = lazy(() =>
@@ -188,6 +191,17 @@ const router = createBrowserRouter([
       <JudgeRoute>
         <LazyRoute>
           <CategoryReviewPage />
+        </LazyRoute>
+      </JudgeRoute>
+    ),
+  },
+  // Story 5-2: Submission review page (anonymous judging)
+  {
+    path: '/judge/categories/:categoryId/review/:submissionId',
+    element: (
+      <JudgeRoute>
+        <LazyRoute>
+          <SubmissionReviewPage />
         </LazyRoute>
       </JudgeRoute>
     ),

@@ -10,14 +10,15 @@ import type { SubmissionForReview } from '../types/review.types';
 
 interface SubmissionCardProps {
   submission: SubmissionForReview;
+  categoryId: string;
 }
 
-export function SubmissionCard({ submission }: SubmissionCardProps) {
+export function SubmissionCard({ submission, categoryId }: SubmissionCardProps) {
   const navigate = useNavigate();
   const isReviewed = submission.reviewId !== null;
 
   const handleClick = () => {
-    navigate(`/judge/review/${submission.id}`);
+    navigate(`/judge/categories/${categoryId}/review/${submission.id}`);
   };
 
   const thumbnailSrc =

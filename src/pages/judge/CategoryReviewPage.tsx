@@ -137,7 +137,7 @@ export function CategoryReviewPage() {
         ) : (
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {filteredSubmissions.map((submission) => (
-              <SubmissionCard key={submission.id} submission={submission} />
+              <SubmissionCard key={submission.id} submission={submission} categoryId={categoryId!} />
             ))}
           </div>
         )}

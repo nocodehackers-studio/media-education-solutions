@@ -6,9 +6,12 @@
 export { SubmissionCard } from './components/SubmissionCard';
 export { ReviewProgress } from './components/ReviewProgress';
 export { SubmissionFilter } from './components/SubmissionFilter';
+export { MediaViewer } from './components/MediaViewer';
+export { RatingDisplay } from './components/RatingDisplay';
 
 // === Hooks ===
 export { useSubmissionsForReview } from './hooks/useSubmissionsForReview';
+export { useUpsertReview } from './hooks/useUpsertReview';
 
 // === API ===
 export { reviewsApi } from './api/reviewsApi';
