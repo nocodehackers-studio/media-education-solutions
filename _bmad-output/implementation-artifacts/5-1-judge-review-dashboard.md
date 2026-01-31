@@ -1,6 +1,6 @@
 # Story 5.1: Judge Review Dashboard
 
-Status: completed
+Status: in-progress
 
 ## Story
 
@@ -152,6 +152,14 @@ So that **I know how many submissions I've reviewed and how many remain**.
   - [x] 11.4 `npm run test` passes (target: all passing including fixed DashboardPage test)
   - [x] 11.5 Deploy migration: `npx supabase db push`
   - [x] 11.6 Manual smoke test: login as judge → dashboard → click "Start Reviewing" → category review page → see submissions with progress
+
+### Review Follow-ups (AI)
+- [ ] [AI-Review][HIGH] Add WITH CHECK admin policy on reviews to enforce admin-only writes (supabase/migrations/20260131020610_create_reviews_table.sql:43)
+- [ ] [AI-Review][HIGH] Harden SECURITY DEFINER RPC auth checks for judge access (supabase/migrations/20260131020611_create_get_submissions_for_review_rpc.sql:1)
+- [ ] [AI-Review][MEDIUM] Document untracked file in Dev Agent Record File List (_bmad-output/implementation-artifacts/epic-4-retrospective.md)
+- [ ] [AI-Review][MEDIUM] Add aria-label to SubmissionCard button role for screen readers (src/features/reviews/components/SubmissionCard.tsx:29)
+- [ ] [AI-Review][MEDIUM] Avoid double getRatingTier call for reviewed cards (src/features/reviews/components/SubmissionCard.tsx:85)
+- [ ] [AI-Review][LOW] Update PROJECT_INDEX.md reviews exports to reflect current API (PROJECT_INDEX.md:15)
 
 ## Dev Notes
 
