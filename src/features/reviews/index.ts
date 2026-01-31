@@ -1,20 +1,28 @@
 // features/reviews/index.ts
-// Reviews feature - Judge rating, feedback, anonymous submission view
-// Status: Placeholder (Epic 5)
+// Reviews feature - Judge review dashboard, rating, feedback
+// Story 5.1: Judge Review Dashboard
 
 // === Components ===
-// export { RatingForm } from './components/RatingForm';
-// export { FeedbackInput } from './components/FeedbackInput';
-// export { AnonymousSubmissionView } from './components/AnonymousSubmissionView';
+export { SubmissionCard } from './components/SubmissionCard';
+export { ReviewProgress } from './components/ReviewProgress';
+export { SubmissionFilter } from './components/SubmissionFilter';
 
 // === Hooks ===
-// export { useReviews } from './hooks/useReviews';
-// export { useRating } from './hooks/useRating';
+export { useSubmissionsForReview } from './hooks/useSubmissionsForReview';
 
 // === API ===
-// export { reviewsApi } from './api/reviewsApi';
+export { reviewsApi } from './api/reviewsApi';
 
 // === Types ===
-// export type { Review, Rating } from './types/review.types';
-
-export {}
+export type {
+  SubmissionForReview,
+  SubmissionForReviewRow,
+  ReviewProgress as ReviewProgressType,
+  RatingTier,
+  SubmissionFilter as SubmissionFilterType,
+} from './types/review.types';
+export {
+  RATING_TIERS,
+  getRatingTier,
+  transformSubmissionForReview,
+} from './types/review.types';

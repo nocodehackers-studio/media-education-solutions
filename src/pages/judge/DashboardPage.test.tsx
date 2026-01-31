@@ -295,7 +295,7 @@ describe('JudgeDashboardPage', () => {
       expect(screen.getByText('Ready for review')).toBeInTheDocument();
     });
 
-    it('shows coming soon toast when clicking Start Reviewing', async () => {
+    it('navigates to category review page when clicking Start Reviewing', async () => {
       const user = userEvent.setup();
 
       mockUseCategoriesByJudge.mockReturnValue({
@@ -310,8 +310,7 @@ describe('JudgeDashboardPage', () => {
       const startButton = screen.getByRole('button', { name: /Start Reviewing/i });
       await user.click(startButton);
 
-      // TODO: Update to expect navigation when review page is implemented
-      expect(toast.info).toHaveBeenCalledWith('Review page coming soon!');
+      expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1');
     });
   });
 
@@ -354,8 +353,8 @@ describe('JudgeDashboardPage', () => {
 
       render(<JudgeDashboardPage />, { wrapper: createWrapper() });
 
-      // More specific: looking for the text that includes relative time
-      expect(screen.getByText(/Awaiting deadline: in about/i)).toBeInTheDocument();
+      // Relative time text changes over time, so match the prefix only
+      expect(screen.getByText(/Awaiting deadline:/i)).toBeInTheDocument();
     });
   });
 

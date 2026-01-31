@@ -81,11 +81,11 @@ development_status:
   4-5-photo-upload-with-progress: done  # Completed 2026-01-28
   4-6-submission-preview-confirm: done  # Completed 2026-01-29
   4-7-edit-replace-withdraw-submission: done  # Completed 2026-01-30
-  epic-4-retrospective: optional
+  epic-4-retrospective: done  # 2026-01-31: Velocity gains documented, deferred items to post-epic hardening phase
 
   # Epic 5: Judging & Evaluation Workflow (6 stories)
-  epic-5: backlog
-  5-1-judge-review-dashboard: backlog
+  epic-5: in-progress
+  5-1-judge-review-dashboard: ready-for-dev
   5-2-anonymous-submission-view: backlog
   5-3-media-playback-photo-video: backlog
   5-4-rating-feedback-form: backlog
