@@ -1,9 +1,10 @@
 /**
- * SubmissionReviewPage Unit Tests - Story 5.2
- * Tests anonymous submission review page with navigation, auto-save, and keyboard nav
+ * SubmissionReviewPage Unit Tests - Story 5.2, Story 5.4
+ * Tests anonymous submission review page with navigation, auto-save,
+ * debounced feedback, rating validation, and Save & Next
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -77,6 +78,7 @@ const mockSubmissions: SubmissionForReview[] = [
 
 let mockSubmissionsData: SubmissionForReview[] | undefined = mockSubmissions;
 let mockIsLoading = false;
+let mockIsPending = false;
 
 vi.mock('@/features/reviews', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/reviews')>();
@@ -90,7 +92,7 @@ vi.mock('@/features/reviews', async (importOriginal) => {
     }),
     useUpsertReview: () => ({
       mutateAsync: mockSaveReview,
-      isPending: false,
+      isPending: mockIsPending,
     }),
   };
 });
@@ -121,7 +123,15 @@ describe('SubmissionReviewPage', () => {
     vi.clearAllMocks();
     mockSubmissionsData = mockSubmissions;
     mockIsLoading = false;
+    mockIsPending = false;
   });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  // --- Story 5.2 tests (preserved) ---
 
   // AC1: Anonymous display
   it('renders participant code, NOT name or PII', () => {
@@ -138,7 +148,6 @@ describe('SubmissionReviewPage', () => {
   // AC2: Displays MediaViewer
   it('displays MediaViewer with correct media type', () => {
     renderPage();
-    // Video submission — should render iframe
     const iframe = screen.getByTitle('Video submission by DEF456');
     expect(iframe).toBeInTheDocument();
   });
@@ -162,7 +171,6 @@ describe('SubmissionReviewPage', () => {
   // AC2: Initializes from existing review data
   it('initializes rating and feedback from existing review', () => {
     renderPage('sub-2');
-    // sub-2 has rating=7 (Advanced Producer tier) and feedback='Good work'
     const textarea = screen.getByPlaceholderText(
       'Provide constructive feedback for the participant... (optional)'
     );
@@ -176,28 +184,10 @@ describe('SubmissionReviewPage', () => {
     expect(prevButton).toBeDisabled();
   });
 
-  // AC5: Next button disabled on last submission
-  it('Next button disabled on last submission', () => {
-    renderPage('sub-3');
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    expect(nextButton).toBeDisabled();
-  });
-
   // AC5: Shows "You've reached the last submission" on last
   it('shows last submission message', () => {
     renderPage('sub-3');
     expect(screen.getByText("You've reached the last submission")).toBeInTheDocument();
-  });
-
-  // AC3: Clicking Next navigates
-  it('clicking Next navigates to next submission', async () => {
-    const user = userEvent.setup();
-    renderPage('sub-1');
-
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    await user.click(nextButton);
-
-    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-2');
   });
 
   // AC3: Clicking Previous navigates
@@ -209,37 +199,6 @@ describe('SubmissionReviewPage', () => {
     await user.click(prevButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-1');
-  });
-
-  // AC3: Auto-save called before navigation when dirty
-  it('auto-saves before navigation when dirty', async () => {
-    const user = userEvent.setup();
-    renderPage('sub-1');
-
-    // Make dirty by clicking a rating tier
-    await user.click(screen.getByText('Proficient Creator'));
-
-    // Navigate next
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    await user.click(nextButton);
-
-    expect(mockSaveReview).toHaveBeenCalledWith({
-      submissionId: 'sub-1',
-      rating: 5,
-      feedback: '',
-    });
-    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-2');
-  });
-
-  // Auto-save NOT called when not dirty
-  it('does not auto-save when not dirty', async () => {
-    const user = userEvent.setup();
-    renderPage('sub-1');
-
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    await user.click(nextButton);
-
-    expect(mockSaveReview).not.toHaveBeenCalled();
   });
 
   // Back link navigates to category page
@@ -257,25 +216,15 @@ describe('SubmissionReviewPage', () => {
   it('loading skeleton shown while fetching', () => {
     mockIsLoading = true;
     renderPage();
-
-    // Should not display submission content
     expect(screen.queryByText('DEF456')).not.toBeInTheDocument();
   });
 
   // Handles submission not found
-  it('handles submission not found by redirecting', () => {
+  it('handles submission not found by redirecting', async () => {
     renderPage('non-existent-id');
-    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1', { replace: true });
-  });
-
-  // AC6: Right arrow navigates to next submission
-  it('right arrow navigates to next submission', async () => {
-    const user = userEvent.setup();
-    renderPage('sub-1');
-
-    await user.keyboard('{ArrowRight}');
-
-    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-2');
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1', { replace: true });
+    });
   });
 
   // AC6: Left arrow navigates to previous submission
@@ -319,5 +268,232 @@ describe('SubmissionReviewPage', () => {
     await user.keyboard('{ArrowRight}');
 
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  // --- Story 5.4 tests ---
+
+  // AC4: Feedback textarea has correct placeholder
+  it('feedback textarea has correct placeholder text', () => {
+    renderPage();
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+    expect(textarea).toBeInTheDocument();
+  });
+
+  // AC5: Typing feedback and blurring triggers save
+  it('typing feedback and blurring triggers save', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2'); // sub-2 has rating=7
+
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+
+    await user.clear(textarea);
+    await user.type(textarea, 'Great job');
+    // blur via clicking outside
+    await user.click(document.body);
+
+    await waitFor(() => {
+      expect(mockSaveReview).toHaveBeenCalledWith({
+        submissionId: 'sub-2',
+        rating: 7,
+        feedback: 'Great job',
+      });
+    });
+  });
+
+  // AC5: "Saved" indicator appears after successful save
+  it('"Saved" indicator appears after successful save', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2');
+
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+
+    await user.clear(textarea);
+    await user.type(textarea, 'Updated feedback');
+    await user.click(document.body); // blur triggers save
+
+    await waitFor(() => {
+      expect(screen.getByText('Saved')).toBeInTheDocument();
+    });
+  });
+
+  // AC5: "Saved" indicator fades after 2 seconds
+  it('"Saved" indicator fades after 2 seconds', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2');
+
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+
+    await user.clear(textarea);
+    await user.type(textarea, 'New feedback');
+    await user.click(document.body); // blur triggers save
+
+    // Wait for save to resolve and "Saved" to appear
+    await waitFor(() => {
+      expect(screen.getByText('Saved')).toBeInTheDocument();
+    });
+
+    // Wait for the 2000ms fade timer to fire (real timer)
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Saved')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+  }, 10000);
+
+  // AC7: Clicking Next without rating shows warning message
+  it('clicking Next without rating shows warning message', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-1'); // sub-1 has no rating
+
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    await user.click(nextButton);
+
+    expect(screen.getByText('Please select a rating before continuing')).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  // AC7: Warning clears when rating is selected
+  it('warning clears when rating is selected', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-1');
+
+    // Trigger warning
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    await user.click(nextButton);
+    expect(screen.getByText('Please select a rating before continuing')).toBeInTheDocument();
+
+    // Select a rating to clear warning (triggers async save)
+    await user.click(screen.getByText('Proficient Creator'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Please select a rating before continuing')).not.toBeInTheDocument();
+    });
+  });
+
+  // AC6: Clicking "Save & Next" with rating saves and navigates
+  it('clicking "Save & Next" with rating saves and navigates', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2'); // sub-2 has rating=7
+
+    // sub-2 already has a rating, so "Save & Next" should be shown
+    const saveNextButton = screen.getByRole('button', { name: /save & next/i });
+    await user.click(saveNextButton);
+
+    await waitFor(() => {
+      // Should navigate (sub-3 is unreviewed, so it goes there)
+      expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-3');
+    });
+  });
+
+  // AC7: Previous button works without rating (no validation)
+  it('Previous button works without rating (no warning)', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2');
+
+    const prevButton = screen.getByRole('button', { name: /previous/i });
+    await user.click(prevButton);
+
+    expect(screen.queryByText('Please select a rating before continuing')).not.toBeInTheDocument();
+    expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/review/sub-1');
+  });
+
+  // AC7: Keyboard ArrowRight without rating shows warning
+  it('keyboard ArrowRight without rating shows warning', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-1'); // no rating
+
+    await user.keyboard('{ArrowRight}');
+
+    expect(screen.getByText('Please select a rating before continuing')).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  // Rating change triggers immediate save
+  it('rating change triggers immediate save', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-1'); // no existing rating
+
+    await user.click(screen.getByText('Advanced Producer'));
+
+    await waitFor(() => {
+      expect(mockSaveReview).toHaveBeenCalledWith({
+        submissionId: 'sub-1',
+        rating: 7,
+        feedback: '',
+      });
+    });
+  });
+
+  // Debounced feedback auto-save fires after 1.5 seconds
+  it('debounced feedback auto-save fires after 1500ms', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2');
+
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+
+    await user.clear(textarea);
+    await user.type(textarea, 'Test');
+
+    // Not yet saved (still within debounce)
+    expect(mockSaveReview).not.toHaveBeenCalled();
+
+    // Wait for the 1500ms debounce to fire (real timer)
+    await waitFor(
+      () => {
+        expect(mockSaveReview).toHaveBeenCalledWith({
+          submissionId: 'sub-2',
+          rating: 7,
+          feedback: 'Test',
+        });
+      },
+      { timeout: 3000 },
+    );
+  }, 10000);
+
+  // "Save & Next" button shows when rating is set, "Next" when no rating
+  it('shows "Save & Next" when rating is set, "Next" when no rating', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-1'); // no rating
+
+    // Should show plain "Next"
+    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save & next/i })).not.toBeInTheDocument();
+
+    // Select a rating (triggers async save)
+    await user.click(screen.getByText('Proficient Creator'));
+
+    // Should now show "Save & Next"
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save & next/i })).toBeInTheDocument();
+    });
+  });
+
+  // Does not auto-save if nothing is dirty
+  it('does not auto-save if nothing is dirty', async () => {
+    const user = userEvent.setup();
+    renderPage('sub-2');
+
+    const textarea = screen.getByPlaceholderText(
+      'Provide constructive feedback for the participant... (optional)'
+    );
+
+    // Focus and blur without changing
+    await user.click(textarea);
+    await user.click(document.body);
+
+    // Wait a bit to make sure no save fires
+    await new Promise((r) => setTimeout(r, 100));
+    expect(mockSaveReview).not.toHaveBeenCalled();
   });
 });

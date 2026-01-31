@@ -57,3 +57,27 @@
 - **QA-6 [MEDIUM] ParticipantSessionProvider tests**: Add unit tests for session provider covering persistence, expiry, and edge cases. (src/contexts/ParticipantSessionProvider.test.tsx)
 - **QA-7 [MEDIUM] Story status update**: Update story status and Dev Agent Record/File List to reflect actual implementation work. (_bmad-output/implementation-artifacts/4-1-participant-code-entry-session.md)
 - **QA-8 [LOW] Error message punctuation**: Align error message punctuation with AC text (e.g., periods vs no periods). (src/lib/errorCodes.ts)
+
+## Story 5-4 Deferred Review Findings
+
+### Test Quality
+
+- **F7 [MEDIUM] Fake timers in auto-save tests**: Timer-based tests ("Saved fades after 2s", "debounce fires after 1500ms") use real timers, making the suite slow and flaky. Switch to `vi.useFakeTimers()` + `vi.advanceTimersByTime()`. (src/pages/judge/SubmissionReviewPage.test.tsx)
+- **F8 [MEDIUM] Restore deleted test coverage**: 5 Story 5.2 tests were removed without full replacement — missing: "Next/Save & Next disabled on last submission", "auto-save before backward navigation when dirty", "does not auto-save during navigation when not dirty". (src/pages/judge/SubmissionReviewPage.test.tsx)
+- **F11 [MEDIUM] Brittle keyboard tab-order test**: RatingDisplay keyboard test hard-codes 5 tab presses to reach score buttons — breaks if DOM structure changes. (src/features/reviews/components/RatingDisplay.test.tsx)
+- **F13 [LOW] Duplicate placeholder test**: "feedback textarea has correct placeholder text" (Story 5.4) duplicates "shows feedback textarea" (Story 5.2). Remove one. (src/pages/judge/SubmissionReviewPage.test.tsx)
+
+### Code Quality
+
+- **CR-1 [LOW] Debounce fires without dirty check**: `handleFeedbackChange` debounce fires even if typed text reverts to original saved value — one redundant upsert. Add `isDirty` guard inside debounce callback. (src/pages/judge/SubmissionReviewPage.tsx:146)
+- **CR-2 [MEDIUM] Navigation save can overlap in-flight performSave**: If a rating auto-save is still in-flight when user clicks "Save & Next", both writes fire concurrently. Benign with upsert semantics but wasteful. Route nav saves through `performSave` or guard on `savingRef`. (src/pages/judge/SubmissionReviewPage.tsx:164)
+- **CR-3 [LOW] Render-phase state sync could use useEffect**: Submission sync block sets state during render body. Works correctly per React docs but could be moved to `useEffect` for clarity. (src/pages/judge/SubmissionReviewPage.tsx:74)
+- **CR-4 [LOW] Regenerate story File List from git**: File List in story file should be regenerated to include all actually modified files (future-work.md, sprint-status.yaml, story file itself). (_bmad-output/implementation-artifacts/5-4-rating-feedback-form.md)
+- **F9 [MEDIUM] Misleading variable name**: `nextUnreviewed` can return a reviewed submission as fallback. Rename to `nextNavigationTarget` or split into separate variables. (src/pages/judge/SubmissionReviewPage.tsx:48-54)
+- **F14 [LOW] Non-null assertion**: `submissions!.length` suppresses compiler safety. Replace with `submissions?.length ?? 0` or similar safe access. (src/pages/judge/SubmissionReviewPage.tsx:231)
+- **F15 [LOW] Dead CSS class**: `transition-opacity` on "Saved" span does nothing — element is unmounted, not faded. Remove class or implement actual fade-out animation. (src/pages/judge/SubmissionReviewPage.tsx:279)
+
+### Accessibility
+
+- **F10 [MEDIUM] Feedback textarea maxLength**: No `maxLength` attribute on feedback textarea — no guard against excessively long input. Add a reasonable limit (e.g., 2000 chars). (src/pages/judge/SubmissionReviewPage.tsx:269)
+- **F12 [MEDIUM] Radiogroup keyboard pattern**: Tier and score radio buttons use Tab between items instead of Arrow keys per WAI-ARIA Authoring Practices. Implement proper radiogroup keyboard interaction where Tab enters/exits the group and Arrow keys navigate within. (src/features/reviews/components/RatingDisplay.tsx)
