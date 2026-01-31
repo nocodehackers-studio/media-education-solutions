@@ -40,6 +40,13 @@ export function MediaViewer({ mediaType, mediaUrl, participantCode }: MediaViewe
   const handleIframeLoad = useCallback(() => {
     clearTimeout(timeoutRef.current);
     setVideoLoading(false);
+    setVideoError(false);
+  }, []);
+
+  const handleIframeError = useCallback(() => {
+    clearTimeout(timeoutRef.current);
+    setVideoLoading(false);
+    setVideoError(true);
   }, []);
 
   const handleRetry = useCallback(() => {
@@ -86,6 +93,7 @@ export function MediaViewer({ mediaType, mediaUrl, participantCode }: MediaViewe
           allowFullScreen
           title={`Video submission by ${participantCode}`}
           onLoad={handleIframeLoad}
+          onError={handleIframeError}
         />
         {!videoError && !videoLoading && (
           <p className="px-3 py-2 text-xs text-muted-foreground">
@@ -107,7 +115,7 @@ export function MediaViewer({ mediaType, mediaUrl, participantCode }: MediaViewe
       <Button
         variant="secondary"
         size="icon"
-        className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute bottom-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         onClick={() => setLightboxOpen(true)}
         aria-label="Expand photo"
       >

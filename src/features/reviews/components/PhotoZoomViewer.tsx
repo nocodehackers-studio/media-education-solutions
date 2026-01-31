@@ -2,7 +2,15 @@
 // Fullscreen photo viewer with zoom (scroll/pinch) and pan (drag)
 // Uses portal overlay pattern from PhotoLightbox (Story 4-6)
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type WheelEvent,
+  type MouseEvent,
+  type TouchEvent,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -46,7 +54,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   }, []);
 
   const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
+    (e: WheelEvent<HTMLImageElement>) => {
       e.preventDefault();
       setZoom((prev) => {
         const delta = e.deltaY > 0 ? -0.25 : 0.25;
@@ -60,7 +68,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   );
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       if (zoom <= 1) return;
       e.preventDefault();
       setIsDragging(true);
@@ -70,7 +78,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       if (!isDragging) return;
       setPan({
         x: e.clientX - dragStart.current.x,
@@ -84,7 +92,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
     setIsDragging(false);
   }, []);
 
-  const getTouchDistance = (touches: React.TouchList) => {
+  const getTouchDistance = (touches: TouchEvent<HTMLImageElement>['touches']) => {
     if (touches.length < 2) return 0;
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -92,7 +100,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   };
 
   const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
+    (e: TouchEvent<HTMLImageElement>) => {
       if (e.touches.length === 2) {
         lastTouchDistance.current = getTouchDistance(e.touches);
       } else if (e.touches.length === 1 && zoom > 1) {
@@ -107,7 +115,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   );
 
   const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
+    (e: TouchEvent<HTMLImageElement>) => {
       if (e.touches.length === 2) {
         e.preventDefault();
         const distance = getTouchDistance(e.touches);
@@ -135,7 +143,7 @@ export function PhotoZoomViewer({ src, alt, isOpen, onClose }: PhotoZoomViewerPr
   }, []);
 
   const handleBackdropClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       if (e.target === e.currentTarget) onClose();
     },
     [onClose],
