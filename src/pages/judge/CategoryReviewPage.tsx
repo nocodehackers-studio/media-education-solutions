@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Trophy } from 'lucide-react';
 import { useAuth } from '@/contexts';
 import { useCategoriesByJudge } from '@/features/categories';
 import {
@@ -139,6 +139,23 @@ export function CategoryReviewPage() {
             {filteredSubmissions.map((submission) => (
               <SubmissionCard key={submission.id} submission={submission} categoryId={categoryId!} />
             ))}
+          </div>
+        )}
+
+        {/* Proceed to Ranking - Story 5.5 (AC1) */}
+        {submissions && submissions.length > 0 && (
+          <div className="flex justify-center pt-2">
+            <Button
+              onClick={() => navigate(`/judge/categories/${categoryId}/ranking`)}
+              disabled={progress.pending > 0}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Trophy className="h-4 w-4" />
+              Proceed to Ranking
+            </Button>
+            {progress.pending > 0 && (
+              <p className="sr-only">Review all submissions before ranking</p>
+            )}
           </div>
         )}
       </div>

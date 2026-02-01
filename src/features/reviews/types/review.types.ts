@@ -81,3 +81,61 @@ export function transformSubmissionForReview(
     feedback: row.feedback,
   };
 }
+
+// === Ranking Types (Story 5.5) ===
+
+export type RankingPosition = 1 | 2 | 3;
+
+export interface Ranking {
+  id: string;
+  categoryId: string;
+  judgeId: string;
+  rank: RankingPosition;
+  submissionId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RankingRow {
+  id: string;
+  category_id: string;
+  judge_id: string;
+  rank: number;
+  submission_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RankedSubmission {
+  position: RankingPosition;
+  submission: SubmissionForReview;
+}
+
+export function transformRanking(row: RankingRow): Ranking {
+  return {
+    id: row.id,
+    categoryId: row.category_id,
+    judgeId: row.judge_id,
+    rank: row.rank as RankingPosition,
+    submissionId: row.submission_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function validateRankingOrder(
+  rankings: (SubmissionForReview | null)[]
+): boolean {
+  const filled = rankings.filter(
+    (r): r is SubmissionForReview => r !== null
+  );
+
+  for (let i = 0; i < filled.length - 1; i++) {
+    const current = filled[i];
+    const next = filled[i + 1];
+    if (current.rating !== null && next.rating !== null) {
+      if (current.rating < next.rating) return false;
+    }
+  }
+  return true;
+}

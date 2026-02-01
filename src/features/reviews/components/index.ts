@@ -5,3 +5,5 @@ export { SubmissionFilter } from './SubmissionFilter';
 export { MediaViewer } from './MediaViewer';
 export { PhotoZoomViewer } from './PhotoZoomViewer';
 export { RatingDisplay } from './RatingDisplay';
+export { RankingSlot } from './RankingSlot';
+export { DraggableSubmissionCard } from './DraggableSubmissionCard';
