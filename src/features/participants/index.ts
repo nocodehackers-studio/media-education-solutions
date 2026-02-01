@@ -8,6 +8,7 @@ export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
 export { ParticipantInfoForm } from './components/ParticipantInfoForm'
 export { DeadlineCountdown } from './components/DeadlineCountdown'
 export { ParticipantCategoryCard } from './components/ParticipantCategoryCard'
+export { ParticipantFeedbackSection } from './components/ParticipantFeedbackSection'
 export type { ParticipantCategory } from './api/participantsApi'
 
 // === Hooks ===
@@ -16,7 +17,7 @@ export { useParticipant } from './hooks/useParticipant'
 export { useParticipantCategories } from './hooks/useParticipantCategories'
 
 // === API ===
-export { participantsApi, type ParticipantData } from './api/participantsApi'
+export { participantsApi, type ParticipantData, type ParticipantCategoriesResult } from './api/participantsApi'
 
 // === Types ===
 export {
@@ -24,5 +25,5 @@ export {
   type CodeEntryFormData,
   participantInfoSchema,
   type ParticipantInfoFormData,
+  type ParticipantFeedback,
 } from './types/participant.schemas'
-// export type { Participant, ParticipantSession } from './types/participant.types';

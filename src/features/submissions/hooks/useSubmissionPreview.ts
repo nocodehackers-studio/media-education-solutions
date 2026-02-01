@@ -1,7 +1,9 @@
 // Story 4-6: Hook to fetch submission data for preview page
+// Story 6-7: Extended with review feedback and contestStatus
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { type ParticipantFeedback } from '@/features/participants'
 
 export interface SubmissionPreviewData {
   id: string
@@ -17,6 +19,8 @@ export interface SubmissionPreviewData {
   categoryDeadline: string | null
   categoryStatus: 'draft' | 'published' | 'closed' | null
   isLocked: boolean
+  contestStatus: string | null
+  review: ParticipantFeedback | null
 }
 
 interface GetSubmissionResponse {

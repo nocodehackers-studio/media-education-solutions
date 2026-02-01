@@ -1,6 +1,7 @@
 // Story 4-3: Participant categories page with submission status
+// Story 6-7: Added finished contest behavior with feedback banner and disabled categories
 import { useNavigate } from 'react-router-dom';
-import { LogOut, RefreshCw } from 'lucide-react';
+import { LogOut, RefreshCw, Info } from 'lucide-react';
 import {
   Button,
   Card,
@@ -23,7 +24,7 @@ export function ParticipantCategoriesPage() {
   const { session, showWarning, endSession, extendSession } = useParticipantSession();
 
   const {
-    data: categories,
+    data,
     isLoading,
     error,
     refetch,
@@ -32,6 +33,9 @@ export function ParticipantCategoriesPage() {
     participantId: session?.participantId || '',
     participantCode: session?.code || '',
   });
+
+  const categories = data?.categories;
+  const contestFinished = data?.contestStatus === 'finished';
 
   const handleLogout = () => {
     endSession();
@@ -97,21 +101,37 @@ export function ParticipantCategoriesPage() {
           </Button>
         </div>
 
+        {/* Story 6-7: Finished contest banner */}
+        {contestFinished && (
+          <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
+            <Info className="h-5 w-5 flex-shrink-0" />
+            <p>This contest has ended. View your feedback below.</p>
+          </div>
+        )}
+
         {/* Categories List */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Available Categories</h2>
+          <h2 className="text-lg font-semibold">
+            {contestFinished ? 'Your Submissions' : 'Available Categories'}
+          </h2>
 
           {categories?.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
-                  No categories are currently accepting submissions.
+                  {contestFinished
+                    ? 'No categories available.'
+                    : 'No categories are currently accepting submissions.'}
                 </p>
               </CardContent>
             </Card>
           ) : (
             categories?.map((category) => (
-              <ParticipantCategoryCard key={category.id} category={category} />
+              <ParticipantCategoryCard
+                key={category.id}
+                category={category}
+                contestFinished={contestFinished}
+              />
             ))
           )}
         </div>

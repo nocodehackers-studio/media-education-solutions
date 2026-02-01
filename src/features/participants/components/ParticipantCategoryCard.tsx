@@ -21,11 +21,13 @@ export type { ParticipantCategory } from '../api/participantsApi';
 
 interface ParticipantCategoryCardProps {
   category: ParticipantCategory;
+  contestFinished?: boolean;
 }
 
-export function ParticipantCategoryCard({ category }: ParticipantCategoryCardProps) {
+export function ParticipantCategoryCard({ category, contestFinished }: ParticipantCategoryCardProps) {
   const navigate = useNavigate();
   const isClosed = category.status === 'closed';
+  const isDisabled = contestFinished && category.noSubmission;
   const TypeIcon = category.type === 'video' ? Video : Image;
 
   const handleSubmit = () => {
@@ -39,7 +41,10 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
   };
 
   return (
-    <Card className={cn(isClosed && 'opacity-60')}>
+    <Card className={cn(
+      isClosed && !contestFinished && 'opacity-60',
+      isDisabled && 'opacity-50 cursor-not-allowed',
+    )}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -57,32 +62,49 @@ export function ParticipantCategoryCard({ category }: ParticipantCategoryCardPro
               {category.type === 'video' ? 'Video' : 'Photo'}
             </Badge>
             {/* Submission status badges */}
-            {category.submissionStatus === 'submitted' && (
+            {!isDisabled && category.submissionStatus === 'submitted' && (
               <Badge variant="default" className="bg-green-600">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Submitted
               </Badge>
             )}
-            {category.submissionStatus === 'uploaded' && (
+            {!isDisabled && category.submissionStatus === 'uploaded' && (
               <Badge variant="default" className="bg-amber-500">
                 <Clock className="h-3 w-3 mr-1" />
                 Pending
               </Badge>
+            )}
+            {isDisabled && (
+              <Badge variant="secondary">No submission</Badge>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
-          {/* Deadline countdown */}
-          {!isClosed ? (
+          {/* Deadline countdown or status text */}
+          {contestFinished ? (
+            <span className="text-muted-foreground text-sm">Contest ended</span>
+          ) : !isClosed ? (
             <DeadlineCountdown deadline={category.deadline} />
           ) : (
             <span className="text-muted-foreground text-sm">Submissions closed</span>
           )}
 
           {/* Action button */}
-          {category.hasSubmitted ? (
+          {isDisabled ? (
+            <Button variant="outline" disabled>
+              No submission
+            </Button>
+          ) : contestFinished && category.hasSubmitted ? (
+            <Button variant="outline" onClick={handleViewEdit}>
+              View Feedback
+            </Button>
+          ) : contestFinished ? (
+            <Button variant="outline" disabled>
+              No submission
+            </Button>
+          ) : category.hasSubmitted ? (
             <Button variant="outline" onClick={handleViewEdit}>
               {isClosed ? 'View' : 'View/Edit'}
             </Button>

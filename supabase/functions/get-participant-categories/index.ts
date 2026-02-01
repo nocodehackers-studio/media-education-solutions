@@ -1,6 +1,7 @@
 // Story 4-3: Edge Function to fetch categories with submission status for participants
 // Uses service role to bypass RLS
 // Returns only published/closed categories (draft hidden per AC3)
+// Story 6-7: Added contestStatus and noSubmission flag for finished contests
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -26,11 +27,13 @@ interface CategoryResponse {
   hasSubmitted: boolean
   submissionStatus: 'uploaded' | 'submitted' | null
   submissionId: string | null
+  noSubmission?: boolean
 }
 
 interface GetCategoriesResponse {
   success: boolean
   categories?: CategoryResponse[]
+  contestStatus?: string
   submissionsAvailable?: boolean  // F5: Flag if submissions table was accessible
   error?: string
 }
@@ -129,6 +132,19 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Story 6-7: Fetch contest status
+    const { data: contest, error: contestStatusError } = await supabaseAdmin
+      .from('contests')
+      .select('status')
+      .eq('id', contestId)
+      .single()
+
+    if (contestStatusError) {
+      console.warn(`Failed to fetch contest status for ${contestId}:`, contestStatusError.message)
+    }
+
+    const contestStatus = contest?.status as string | undefined
+
     // Fetch divisions for this contest
     const { data: divisions, error: divisionsError } = await supabaseAdmin
       .from('divisions')
@@ -147,6 +163,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: true,
           categories: [],
+          contestStatus: contestStatus ?? null,
         } satisfies GetCategoriesResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -203,6 +220,8 @@ Deno.serve(async (req) => {
           hasSubmitted: !!sub,
           submissionStatus: subStatus ?? null,
           submissionId: sub?.id ?? null,
+          // Story 6-7: Flag categories with no submission when contest is finished
+          ...(contestStatus === 'finished' && !sub ? { noSubmission: true } : {}),
         }
       }) || []
 
@@ -214,6 +233,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         categories: result,
+        contestStatus: contestStatus ?? null,
         submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
       } satisfies GetCategoriesResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

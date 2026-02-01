@@ -44,3 +44,10 @@ export const participantInfoSchema = z.object({
 })
 
 export type ParticipantInfoFormData = z.infer<typeof participantInfoSchema>
+
+/** Story 6-7: Participant feedback view type */
+export interface ParticipantFeedback {
+  rating: number
+  ratingTierLabel: string
+  feedback: string
+}
