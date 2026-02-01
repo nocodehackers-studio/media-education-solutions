@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from '@/components/ui'
 import { PhotoLightbox } from './PhotoLightbox'
+import { AdminReviewSection } from './AdminReviewSection'
 import type { AdminSubmission } from '../types/adminSubmission.types'
 import { SUBMISSION_STATUS_VARIANT, formatSubmissionDate } from '../types/adminSubmission.types'
 
@@ -86,6 +87,13 @@ export function AdminSubmissionDetail({
                 </dd>
               </dl>
             </section>
+
+            {/* Judge Review */}
+            <AdminReviewSection
+              review={submission.review}
+              assignedJudgeName={submission.assignedJudgeName}
+              rankingPosition={submission.rankingPosition}
+            />
 
             {/* Media Preview */}
             <section className="space-y-3">
