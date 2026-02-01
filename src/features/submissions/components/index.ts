@@ -4,3 +4,8 @@ export { VideoUploadForm } from './VideoUploadForm'
 export { PhotoUploadForm } from './PhotoUploadForm'
 export { SubmissionPreview, SubmissionPreviewSkeleton } from './SubmissionPreview'
 export { PhotoLightbox } from './PhotoLightbox'
+
+// Story 6-1: Admin submission components
+export { AdminSubmissionFilters } from './AdminSubmissionFilters'
+export { AdminSubmissionsTable } from './AdminSubmissionsTable'
+export { AdminSubmissionDetail } from './AdminSubmissionDetail'

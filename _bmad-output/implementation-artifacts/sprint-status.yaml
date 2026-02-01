@@ -91,11 +91,11 @@ development_status:
   5-4-rating-feedback-form: done  # Completed 2026-01-31
   5-5-top-3-ranking-drag-drop: done  # Completed 2026-02-01
   5-6-mark-category-complete-notify-admin: done  # Completed 2026-02-01
-  epic-5-retrospective: optional
+  epic-5-retrospective: done  # 2026-02-01: Quality gate fix (scoped tests), 6 action items, 3 critical path items for Epic 6
 
   # Epic 6: Admin Oversight & Results Publication (7 stories)
-  epic-6: backlog
-  6-1-admin-view-all-submissions: backlog
+  epic-6: in-progress  # Started 2026-02-01
+  6-1-admin-view-all-submissions: done  # Completed 2026-02-01
   6-2-view-judge-ratings-feedback: backlog
   6-3-override-feedback-rankings: backlog
   6-4-disqualify-submissions: backlog

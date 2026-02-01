@@ -11,7 +11,7 @@
 | contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
 | categories | Category management within contests | CategoryCard, useCategories (Planned) |
 | participants | Participant codes, session, info | ParticipantCodeEntry, useParticipantSession (Planned) |
-| submissions | File uploads, submission management | UploadProgress, useFileUpload, MediaViewer (Planned) |
+| submissions | File uploads, submission management, admin view | UploadProgress, useFileUpload, AdminSubmissionsTable, AdminSubmissionDetail, AdminSubmissionFilters, useAdminSubmissions |
 | reviews | Rating, feedback for submissions | RatingScale, useReviews, ReviewForm (Planned) |
 | rankings | Drag-drop ranking, tier ordering | RankingDropzone, useRankings (Planned) |
 | notifications | Email triggers via Brevo | useNotifications (Planned) |
@@ -62,7 +62,7 @@
 |-------------|-------|
 | public/ | NotFoundPage |
 | auth/ | LoginPage, ForgotPasswordPage, ResetPasswordPage |
-| admin/ | DashboardPage, ContestsPage |
+| admin/ | DashboardPage, ContestsPage, ContestDetailPage, AdminSubmissionsPage |
 | judge/ | JudgeDashboardPage (placeholder) |
 
 ## Router (src/router/)
