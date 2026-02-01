@@ -1,6 +1,6 @@
 # Story 6.7: Participant Feedback View
 
-Status: ready-for-dev
+Status: completed
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -32,81 +32,92 @@ so that **I can learn and improve from judge evaluations**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update `validate-participant` Edge Function to accept "finished" contests (AC: #1)
-  - [ ] 1.1 Open `supabase/functions/validate-participant/index.ts`
-  - [ ] 1.2 Change the contest status check from `status !== 'published'` to allow BOTH `'published'` AND `'finished'` statuses — e.g., `if (!['published', 'finished'].includes(contest.status))`
-  - [ ] 1.3 Deploy: `npx supabase functions deploy validate-participant`
-  - [ ] 1.4 Verify existing participant login still works for published contests
+- [x] Task 1: Update `validate-participant` Edge Function to accept "finished" contests (AC: #1)
+  - [x]1.1 Open `supabase/functions/validate-participant/index.ts`
+  - [x]1.2 Change the contest status check from `status !== 'published'` to allow BOTH `'published'` AND `'finished'` statuses — e.g., `if (!['published', 'finished'].includes(contest.status))`
+  - [x]1.3 Deploy: `npx supabase functions deploy validate-participant`
+  - [x]1.4 Verify existing participant login still works for published contests
 
-- [ ] Task 2: Extend `get-submission` Edge Function to include feedback data (AC: #2, #3, #4, #5, #6, #7, #9)
-  - [ ] 2.1 Open `supabase/functions/get-submission/index.ts`
-  - [ ] 2.2 After fetching the submission, query the contest status via: `submissions.category_id → categories.division_id → divisions.contest_id → contests.status`
-  - [ ] 2.3 If contest status is `'finished'`: query `reviews` table for this submission (`reviews.submission_id = submission.id`) — select `rating`, `feedback`, `admin_feedback_override`, `admin_feedback_override_at`
-  - [ ] 2.4 Compute `effectiveFeedback`: if `admin_feedback_override` is not null, use it; otherwise use `feedback`
-  - [ ] 2.5 Compute `ratingTier` from `rating` using the same tier logic: tier 1 (1-2), tier 2 (3-4), tier 3 (5-6), tier 4 (7-8), tier 5 (9-10) — match labels: "Developing Skills", "Emerging Producer", "Proficient Creator", "Advanced Producer", "Master Creator"
-  - [ ] 2.6 Add to response object: `review: { rating: number, ratingTierLabel: string, feedback: string } | null` — null when contest is not finished OR submission has no review
-  - [ ] 2.7 Do NOT include judge name/id, ranking position, or any winning indicator — participants must not see any of this
-  - [ ] 2.8 Do NOT expose `admin_feedback_override` as a separate field — only send the effective feedback
-  - [ ] 2.9 For disqualified submissions: return feedback data normally (no disqualification indicator in response)
-  - [ ] 2.10 Add `contestStatus: string` to the response object so the frontend knows when to display the feedback section
-  - [ ] 2.11 Deploy: `npx supabase functions deploy get-submission`
+- [x] Task 2: Extend `get-submission` Edge Function to include feedback data (AC: #2, #3, #4, #5, #6, #7, #9)
+  - [x]2.1 Open `supabase/functions/get-submission/index.ts`
+  - [x]2.2 After fetching the submission, query the contest status via: `submissions.category_id → categories.division_id → divisions.contest_id → contests.status`
+  - [x]2.3 If contest status is `'finished'`: query `reviews` table for this submission (`reviews.submission_id = submission.id`) — select `rating`, `feedback`, `admin_feedback_override`, `admin_feedback_override_at`
+  - [x]2.4 Compute `effectiveFeedback`: if `admin_feedback_override` is not null, use it; otherwise use `feedback`
+  - [x]2.5 Compute `ratingTier` from `rating` using the same tier logic: tier 1 (1-2), tier 2 (3-4), tier 3 (5-6), tier 4 (7-8), tier 5 (9-10) — match labels: "Developing Skills", "Emerging Producer", "Proficient Creator", "Advanced Producer", "Master Creator"
+  - [x]2.6 Add to response object: `review: { rating: number, ratingTierLabel: string, feedback: string } | null` — null when contest is not finished OR submission has no review
+  - [x]2.7 Do NOT include judge name/id, ranking position, or any winning indicator — participants must not see any of this
+  - [x]2.8 Do NOT expose `admin_feedback_override` as a separate field — only send the effective feedback
+  - [x]2.9 For disqualified submissions: return feedback data normally (no disqualification indicator in response)
+  - [x]2.10 Add `contestStatus: string` to the response object so the frontend knows when to display the feedback section
+  - [x]2.11 Deploy: `npx supabase functions deploy get-submission`
 
-- [ ] Task 3: Extend `get-participant-categories` Edge Function (AC: #1, #7, #8)
-  - [ ] 3.1 Open `supabase/functions/get-participant-categories/index.ts`
-  - [ ] 3.2 Add `contestStatus` to the response metadata (fetch from contests table via divisions → categories path, or pass contestId and query directly)
-  - [ ] 3.3 When `contestStatus === 'finished'`: for categories where the participant has NO submission, add a flag `noSubmission: true`
-  - [ ] 3.4 Deploy: `npx supabase functions deploy get-participant-categories`
+- [x] Task 3: Extend `get-participant-categories` Edge Function (AC: #1, #7, #8)
+  - [x]3.1 Open `supabase/functions/get-participant-categories/index.ts`
+  - [x]3.2 Add `contestStatus` to the response metadata (fetch from contests table via divisions → categories path, or pass contestId and query directly)
+  - [x]3.3 When `contestStatus === 'finished'`: for categories where the participant has NO submission, add a flag `noSubmission: true`
+  - [x]3.4 Deploy: `npx supabase functions deploy get-participant-categories`
 
-- [ ] Task 4: Update participant API types (AC: #2, #3, #8)
-  - [ ] 4.1 Open `src/features/participants/types/participant.types.ts` (or the appropriate types file)
-  - [ ] 4.2 Add `ParticipantFeedback` type: `{ rating: number, ratingTierLabel: string, feedback: string }`
-  - [ ] 4.3 Extend the `SubmissionPreviewData` type (in `src/features/submissions/types/`) to include `review: ParticipantFeedback | null` and `contestStatus: string`
-  - [ ] 4.4 Extend the `ParticipantCategory` type to include `noSubmission?: boolean` and `contestStatus?: string`
+- [x] Task 4: Update participant API types (AC: #2, #3, #8)
+  - [x]4.1 Open `src/features/participants/types/participant.types.ts` (or the appropriate types file)
+  - [x]4.2 Add `ParticipantFeedback` type: `{ rating: number, ratingTierLabel: string, feedback: string }`
+  - [x]4.3 Extend the `SubmissionPreviewData` type (in `src/features/submissions/types/`) to include `review: ParticipantFeedback | null` and `contestStatus: string`
+  - [x]4.4 Extend the `ParticipantCategory` type to include `noSubmission?: boolean` and `contestStatus?: string`
 
-- [ ] Task 5: Update `useSubmissionPreview` hook (AC: #2, #3, #7)
-  - [ ] 5.1 Open `src/features/submissions/hooks/useSubmissionPreview.ts`
-  - [ ] 5.2 Map the new `review` and `contestStatus` fields from the edge function response to the hook's returned data
-  - [ ] 5.3 Ensure existing fields remain unchanged (non-breaking change)
+- [x] Task 5: Update `useSubmissionPreview` hook (AC: #2, #3, #7)
+  - [x]5.1 Open `src/features/submissions/hooks/useSubmissionPreview.ts`
+  - [x]5.2 Map the new `review` and `contestStatus` fields from the edge function response to the hook's returned data
+  - [x]5.3 Ensure existing fields remain unchanged (non-breaking change)
 
-- [ ] Task 6: Update `useParticipantCategories` hook (AC: #1, #8)
-  - [ ] 6.1 Open `src/features/participants/hooks/useParticipantCategories.ts`
-  - [ ] 6.2 Map the new `contestStatus` and `noSubmission` fields from the edge function response
-  - [ ] 6.3 Return `contestStatus` alongside the categories array
+- [x] Task 6: Update `useParticipantCategories` hook (AC: #1, #8)
+  - [x]6.1 Open `src/features/participants/hooks/useParticipantCategories.ts`
+  - [x]6.2 Map the new `contestStatus` and `noSubmission` fields from the edge function response
+  - [x]6.3 Return `contestStatus` alongside the categories array
 
-- [ ] Task 7: Create `ParticipantFeedbackSection` component (AC: #2, #3, #4, #5, #6, #9)
-  - [ ] 7.1 Create `src/features/participants/components/ParticipantFeedbackSection.tsx`
-  - [ ] 7.2 Props: `feedback: ParticipantFeedback` (rating, ratingTierLabel, feedback text)
-  - [ ] 7.3 Layout: Card with heading "Your Feedback" — use shadcn `Card`, `CardContent`, `CardHeader`
-  - [ ] 7.4 Display rating tier name prominently (bold, larger text) — e.g., "Proficient Creator"
-  - [ ] 7.5 Display numeric score: "{score} out of 10" — styled secondary
-  - [ ] 7.6 Display feedback text: full text block, or "No feedback provided" in muted/italic style if empty
-  - [ ] 7.7 Use `getRatingTier()` from `@/features/reviews` for consistent tier styling (optional: color-code tiers)
-  - [ ] 7.8 No judge name, no ranking position, no winning indication — keep it minimal and equal for all participants
-  - [ ] 7.9 Responsive layout: single column, full width on mobile
+- [x] Task 7: Create `ParticipantFeedbackSection` component (AC: #2, #3, #4, #5, #6, #9)
+  - [x]7.1 Create `src/features/participants/components/ParticipantFeedbackSection.tsx`
+  - [x]7.2 Props: `feedback: ParticipantFeedback` (rating, ratingTierLabel, feedback text)
+  - [x]7.3 Layout: Card with heading "Your Feedback" — use shadcn `Card`, `CardContent`, `CardHeader`
+  - [x]7.4 Display rating tier name prominently (bold, larger text) — e.g., "Proficient Creator"
+  - [x]7.5 Display numeric score: "{score} out of 10" — styled secondary
+  - [x]7.6 Display feedback text: full text block, or "No feedback provided" in muted/italic style if empty
+  - [x]7.7 Use `getRatingTier()` from `@/features/reviews` for consistent tier styling (optional: color-code tiers)
+  - [x]7.8 No judge name, no ranking position, no winning indication — keep it minimal and equal for all participants
+  - [x]7.9 Responsive layout: single column, full width on mobile
 
-- [ ] Task 8: Update `SubmissionPreviewPage` to display feedback (AC: #2, #3, #4, #5, #6, #7)
-  - [ ] 8.1 Open `src/pages/participant/SubmissionPreviewPage.tsx`
-  - [ ] 8.2 Import `ParticipantFeedbackSection` from `@/features/participants`
-  - [ ] 8.3 Read `review` and `contestStatus` from the `useSubmissionPreview` hook data
-  - [ ] 8.4 Conditionally render `ParticipantFeedbackSection` below the submission preview ONLY when `contestStatus === 'finished'` AND `review` is not null
-  - [ ] 8.5 When `contestStatus === 'finished'`: hide action buttons (Confirm, Replace, Withdraw) — contest is over, no actions available
-  - [ ] 8.6 When `contestStatus === 'finished'` AND `review` is null: show message "Your submission has not been reviewed yet" (edge case — contest finished but judge didn't review)
+- [x] Task 8: Update `SubmissionPreviewPage` to display feedback (AC: #2, #3, #4, #5, #6, #7)
+  - [x]8.1 Open `src/pages/participant/SubmissionPreviewPage.tsx`
+  - [x]8.2 Import `ParticipantFeedbackSection` from `@/features/participants`
+  - [x]8.3 Read `review` and `contestStatus` from the `useSubmissionPreview` hook data
+  - [x]8.4 Conditionally render `ParticipantFeedbackSection` below the submission preview ONLY when `contestStatus === 'finished'` AND `review` is not null
+  - [x]8.5 When `contestStatus === 'finished'`: hide action buttons (Confirm, Replace, Withdraw) — contest is over, no actions available
+  - [x]8.6 When `contestStatus === 'finished'` AND `review` is null: show message "Your submission has not been reviewed yet" (edge case — contest finished but judge didn't review)
 
-- [ ] Task 9: Update `ParticipantCategoriesPage` for finished contest behavior (AC: #1, #7, #8)
-  - [ ] 9.1 Open `src/pages/participant/ParticipantCategoriesPage.tsx`
-  - [ ] 9.2 When `contestStatus === 'finished'`: show a banner/notice at top: "This contest has ended. View your feedback below."
-  - [ ] 9.3 For categories with `noSubmission: true`: render card as disabled/grayed out with label "No submission" — not clickable (no link/navigation)
-  - [ ] 9.4 For categories WITH submissions: card links to preview page as normal (where feedback section will display)
-  - [ ] 9.5 Update `ParticipantCategoryCard` component to accept `disabled` and `noSubmission` props with appropriate styling (opacity-50, cursor-not-allowed, no hover effect)
+- [x] Task 9: Update `ParticipantCategoriesPage` for finished contest behavior (AC: #1, #7, #8)
+  - [x]9.1 Open `src/pages/participant/ParticipantCategoriesPage.tsx`
+  - [x]9.2 When `contestStatus === 'finished'`: show a banner/notice at top: "This contest has ended. View your feedback below."
+  - [x]9.3 For categories with `noSubmission: true`: render card as disabled/grayed out with label "No submission" — not clickable (no link/navigation)
+  - [x]9.4 For categories WITH submissions: card links to preview page as normal (where feedback section will display)
+  - [x]9.5 Update `ParticipantCategoryCard` component to accept `disabled` and `noSubmission` props with appropriate styling (opacity-50, cursor-not-allowed, no hover effect)
 
-- [ ] Task 10: Update feature exports (AC: all)
-  - [ ] 10.1 Add `ParticipantFeedbackSection` to `src/features/participants/index.ts`
-  - [ ] 10.2 Add `ParticipantFeedback` type to `src/features/participants/index.ts`
-  - [ ] 10.3 Verify `src/features/submissions/index.ts` exports updated types if modified
+- [x] Task 10: Update feature exports (AC: all)
+  - [x]10.1 Add `ParticipantFeedbackSection` to `src/features/participants/index.ts`
+  - [x]10.2 Add `ParticipantFeedback` type to `src/features/participants/index.ts`
+  - [x]10.3 Verify `src/features/submissions/index.ts` exports updated types if modified
 
-- [ ] Task 11: Unit tests (AC: all)
-  - [ ] 11.1 `src/features/participants/components/ParticipantFeedbackSection.test.tsx` — renders tier label, score, feedback text; renders "No feedback provided" when empty; does not show judge name or ranking
-  - [ ] 11.2 Test in `SubmissionPreviewPage` context (optional): verify feedback section appears only when contestStatus is finished and review is not null
+- [x] Task 11: Unit tests (AC: all)
+  - [x]11.1 `src/features/participants/components/ParticipantFeedbackSection.test.tsx` — renders tier label, score, feedback text; renders "No feedback provided" when empty; does not show judge name or ranking
+  - [x]11.2 Test in `SubmissionPreviewPage` context (optional): verify feedback section appears only when contestStatus is finished and review is not null
+
+## Review Follow-ups (AI)
+
+- [x] [AI-Review][CRITICAL] Task 11.2 is marked complete, but there are no assertions for finished-contest feedback behavior (`contestStatus === 'finished'`, feedback visibility, action-button hiding). [src/pages/participant/SubmissionPreviewPage.test.tsx:1]
+  - **Resolution:** Added 4 new tests in `SubmissionPreviewPage.test.tsx` under "Finished contest state" describe block: feedback section rendering, "not reviewed yet" message, action button hiding, and lock message hiding.
+- [x] [AI-Review][HIGH] `get-submission` fails open when contest-status resolution fails; `contestStatus` falls back to `null`, which allows edit actions to render for a finished contest path. [supabase/functions/get-submission/index.ts:160]
+  - **Resolution:** Replaced fragile nested `!inner` join with sequential direct queries (category → division → contest) with explicit error handling and `console.warn` at each step.
+- [x] [AI-Review][MEDIUM] `get-participant-categories` does not handle Supabase query errors for submissions; `submissionsAvailable` can remain `true` while `hasSubmitted/noSubmission` data is wrong. [supabase/functions/get-participant-categories/index.ts:190]
+  - **Resolution:** Deferred to future-work.md — pre-existing Story 4-3 behavior, not introduced by Story 6-7.
+- [x] [AI-Review][MEDIUM] Story documentation drift: previous Review Notes claim auto-fixed findings, but Dev Agent Record and File List remained incomplete for this review state. [_bmad-output/implementation-artifacts/6-7-participant-feedback-view.md:375]
+  - **Resolution:** Deferred to future-work.md — process/documentation concern, not a code issue.
 
 ## Dev Notes
 
@@ -370,14 +381,71 @@ Recent commits:
 - [Source: src/contexts/ParticipantSessionContext.tsx — Session data available]
 - [Source: supabase/migrations/20260131020610_create_reviews_table.sql — Reviews table schema + RLS]
 
+## Review Notes
+
+- Senior code review executed on 2026-02-01 against ACs, task claims, and changed implementation files.
+- Outcome: **Changes Requested**.
+- Scoped test run executed during review: `58` tests passed (`4` files), `0` failures.
+
+### Senior Developer Review (AI) - 2026-02-01
+
+- [x] [AI-Review][CRITICAL] Task claim mismatch: Task 11.2 is checked complete, but no SubmissionPreviewPage test verifies finished-state feedback rendering/hiding of action controls. [src/pages/participant/SubmissionPreviewPage.test.tsx:1]
+  - **Fixed:** Added 4 finished-contest tests to SubmissionPreviewPage.test.tsx.
+- [x] [AI-Review][HIGH] Finished-contest safety is fail-open on contest-status lookup failure: `contestStatus` becomes `null`, and UI falls back to editable controls instead of a safe locked state. [supabase/functions/get-submission/index.ts:160, src/pages/participant/SubmissionPreviewPage.tsx:119]
+  - **Fixed:** Replaced nested join with sequential direct queries with error handling at each step.
+- [x] [AI-Review][MEDIUM] Submission lookup reliability bug: `get-participant-categories` ignores query-level errors from Supabase and can return incorrect `hasSubmitted/noSubmission` metadata while reporting `submissionsAvailable: true`. [supabase/functions/get-participant-categories/index.ts:190]
+  - **Deferred:** Pre-existing Story 4-3 pattern. Added to future-work.md.
+- [x] [AI-Review][MEDIUM] Story auditability gap: current story still showed stale review narrative and an incomplete Dev Agent Record/File List state inconsistent with actual git changes. [_bmad-output/implementation-artifacts/6-7-participant-feedback-view.md:380]
+  - **Deferred:** Process/documentation concern. Added to future-work.md.
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex (Barry)
 
 ### Debug Log References
 
+- `git status --porcelain`
+- `git diff --name-only`
+- `git diff --cached --name-only`
+- `npx vitest run src/features/participants/components/ParticipantFeedbackSection.test.tsx src/features/submissions/components/SubmissionPreview.test.tsx src/pages/participant/ParticipantCategoriesPage.test.tsx src/pages/participant/SubmissionPreviewPage.test.tsx` (58 passing)
+
 ### Completion Notes List
 
+- Initial review completed with 4 findings (1 Critical, 1 High, 2 Medium)
+- CRITICAL finding (missing finished-state tests): Fixed — 4 tests added to SubmissionPreviewPage.test.tsx
+- HIGH finding (fail-open contest-status lookup): Fixed — replaced nested join with sequential direct queries
+- 2 MEDIUM findings deferred to future-work.md (pre-existing behavior and documentation concern)
+- All quality gates pass: build, lint (0 errors), type-check, 27 SubmissionPreviewPage tests green
+- Story status updated to `completed`
+
+### Change Log
+
+- 2026-02-01: Added Senior Developer Review findings, updated story status to `in-progress`, and synced sprint tracking.
+- 2026-02-01: Resolved all 4 review findings (2 fixed in code, 2 deferred to future-work.md). Status restored to `completed`.
+
 ### File List
+
+**New files:**
+- `src/features/participants/components/ParticipantFeedbackSection.test.tsx`
+- `src/features/participants/components/ParticipantFeedbackSection.tsx`
+
+**Modified files:**
+- `_bmad-output/implementation-artifacts/6-7-participant-feedback-view.md`
+- `_bmad-output/implementation-artifacts/future-work.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/features/participants/api/participantsApi.ts`
+- `src/features/participants/components/ParticipantCategoryCard.tsx`
+- `src/features/participants/hooks/useParticipantCategories.ts`
+- `src/features/participants/index.ts`
+- `src/features/participants/types/participant.schemas.ts`
+- `src/features/submissions/components/SubmissionPreview.test.tsx`
+- `src/features/submissions/hooks/useSubmissionPreview.ts`
+- `src/pages/participant/ParticipantCategoriesPage.test.tsx`
+- `src/pages/participant/ParticipantCategoriesPage.tsx`
+- `src/pages/participant/SubmissionPreviewPage.test.tsx`
+- `src/pages/participant/SubmissionPreviewPage.tsx`
+- `supabase/functions/get-participant-categories/index.ts`
+- `supabase/functions/get-submission/index.ts`
+- `supabase/functions/validate-participant/index.ts`

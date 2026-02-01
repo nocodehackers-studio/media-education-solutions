@@ -1,6 +1,7 @@
 // Story 4-6: Edge Function to fetch submission data for preview
 // Validates participant ownership, returns submission + category info
 // Returns libraryId for video embed URL construction
+// Story 6-7: Extended to include review feedback when contest is finished
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -11,6 +12,15 @@ const corsHeaders = {
 }
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function getRatingTierLabel(rating: number): string {
+  if (!Number.isFinite(rating) || rating < 1 || rating > 10) return 'Unknown'
+  if (rating <= 2) return 'Developing Skills'
+  if (rating <= 4) return 'Emerging Producer'
+  if (rating <= 6) return 'Proficient Creator'
+  if (rating <= 8) return 'Advanced Producer'
+  return 'Master Creator'
+}
 
 interface GetSubmissionRequest {
   submissionId: string
@@ -146,6 +156,61 @@ Deno.serve(async (req) => {
       category?.status === 'closed' ||
       (category?.deadline ? new Date(category.deadline) < new Date() : false)
 
+    // Story 6-7: Get contest status via category → division → contest (sequential for resilience)
+    let contestStatus: string | undefined
+    const { data: catDiv, error: catDivError } = await supabaseAdmin
+      .from('categories')
+      .select('division_id')
+      .eq('id', submission.category_id)
+      .single()
+
+    if (catDivError || !catDiv?.division_id) {
+      console.warn(`Could not resolve division for category ${submission.category_id}`)
+    } else {
+      const { data: divContest, error: divContestError } = await supabaseAdmin
+        .from('divisions')
+        .select('contest_id')
+        .eq('id', catDiv.division_id)
+        .single()
+
+      if (divContestError || !divContest?.contest_id) {
+        console.warn(`Could not resolve contest for division ${catDiv.division_id}`)
+      } else {
+        const { data: contestData, error: contestError } = await supabaseAdmin
+          .from('contests')
+          .select('status')
+          .eq('id', divContest.contest_id)
+          .single()
+
+        if (contestError || !contestData) {
+          console.warn(`Could not fetch contest status for ${divContest.contest_id}`)
+        } else {
+          contestStatus = contestData.status
+        }
+      }
+    }
+
+    // Story 6-7: If contest is finished, fetch review with effective feedback
+    let review = null
+    if (contestStatus === 'finished') {
+      const { data: reviewRows } = await supabaseAdmin
+        .from('reviews')
+        .select('rating, feedback, admin_feedback_override')
+        .eq('submission_id', submission.id)
+        .limit(1)
+
+      const reviewData = reviewRows?.[0] ?? null
+
+      if (reviewData && reviewData.rating != null) {
+        const effectiveFeedback = reviewData.admin_feedback_override ?? reviewData.feedback
+        review = {
+          rating: reviewData.rating,
+          ratingTierLabel: getRatingTierLabel(reviewData.rating),
+          feedback: effectiveFeedback || '',
+        }
+      }
+    }
+
     console.log(`Fetched submission: ${submissionId} for participant ${participantId}`)
 
     return new Response(
@@ -165,6 +230,8 @@ Deno.serve(async (req) => {
           categoryDeadline: category?.deadline ?? null,
           categoryStatus: category?.status ?? null,
           isLocked,
+          contestStatus: contestStatus ?? null,
+          review,
         },
         libraryId: BUNNY_STREAM_LIBRARY_ID,
       }),

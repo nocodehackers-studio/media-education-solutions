@@ -522,6 +522,21 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-01
   - **Files:** `src/features/contests/components/WinnersSetupForm.tsx:313-316`
 
+- **[Story 6-7]** `get-participant-categories` does not handle query-level errors for submissions lookup
+  - **Why:** The submissions query (`submissionsAvailable`) does not check for Supabase query errors — if the query fails, `submissionsAvailable` remains `true` and the response may contain incorrect `hasSubmitted` / `submissionStatus` data. This is pre-existing behavior from Story 4-3 and not introduced by Story 6-7.
+  - **Priority:** Low
+  - **Suggested Epic:** Defensive hardening / Pre-production
+  - **Discovered:** 2026-02-01
+  - **Files:** `supabase/functions/get-participant-categories/index.ts`
+  - **Notes:** Pre-existing Story 4-3 pattern. Fix would add `if (submissionsError) console.warn(...)` and fall back to empty submissions map.
+
+- **[Story 6-7]** Story documentation drift — stale review narrative and incomplete Dev Agent Record
+  - **Why:** The story file's review narrative and Dev Agent Record (File List, Completion Notes) don't fully reflect the final implementation state after multiple rounds of review fixes. This is a process/documentation concern, not a code issue.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation cleanup
+  - **Discovered:** 2026-02-01
+  - **Files:** `_bmad-output/implementation-artifacts/6-7-participant-feedback-view.md`
+
 ---
 
 ### Epic 7: Email Notification System

@@ -28,6 +28,8 @@ describe('SubmissionPreview', () => {
     categoryDeadline: '2026-12-31T23:59:59Z',
     categoryStatus: 'published',
     isLocked: false,
+    contestStatus: null,
+    review: null,
   }
 
   const photoSubmission: SubmissionPreviewData = {

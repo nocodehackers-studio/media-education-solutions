@@ -57,6 +57,8 @@ vi.mock('@/features/submissions', () => ({
         categoryDeadline: '2026-12-31T23:59:59Z',
         categoryStatus: 'published',
         isLocked: false,
+        contestStatus: null,
+        review: null,
       },
       libraryId: 'lib-123',
     },
@@ -71,6 +73,14 @@ vi.mock('@/features/submissions', () => ({
     mutate: mockWithdrawMutate,
     isPending: false,
   })),
+}))
+
+vi.mock('@/features/participants', () => ({
+  ParticipantFeedbackSection: vi.fn(({ feedback }) => (
+    <div data-testid="participant-feedback-section">
+      {feedback.ratingTierLabel}: {feedback.rating} out of 10
+    </div>
+  )),
 }))
 
 import {
@@ -93,6 +103,8 @@ const defaultSubmission = {
   categoryDeadline: '2026-12-31T23:59:59Z',
   categoryStatus: 'published',
   isLocked: false,
+  contestStatus: null as string | null,
+  review: null as { rating: number; ratingTierLabel: string; feedback: string } | null,
 }
 
 describe('SubmissionPreviewPage', () => {
@@ -419,6 +431,102 @@ describe('SubmissionPreviewPage', () => {
       expect(
         screen.queryByRole('button', { name: 'Confirm Submission' })
       ).not.toBeInTheDocument()
+    })
+  })
+
+  // Story 6-7: Finished contest feedback behavior
+  describe('Finished contest state', () => {
+    const reviewData = {
+      rating: 7,
+      ratingTierLabel: 'Advanced Producer',
+      feedback: 'Great cinematography.',
+    }
+
+    it('shows feedback section when contest is finished and review exists', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            contestStatus: 'finished',
+            review: reviewData,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(screen.getByTestId('participant-feedback-section')).toBeInTheDocument()
+      expect(screen.getByText(/Advanced Producer/)).toBeInTheDocument()
+    })
+
+    it('shows "not reviewed yet" when contest is finished but no review', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            contestStatus: 'finished',
+            review: null,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(
+        screen.getByText('Your submission has not been reviewed yet.')
+      ).toBeInTheDocument()
+    })
+
+    it('hides action buttons when contest is finished', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            contestStatus: 'finished',
+            review: reviewData,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(screen.queryByRole('button', { name: 'Confirm Submission' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Replace' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Withdraw' })).not.toBeInTheDocument()
+    })
+
+    it('hides lock message when contest is finished', () => {
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: {
+            ...defaultSubmission,
+            status: 'submitted',
+            isLocked: true,
+            contestStatus: 'finished',
+            review: reviewData,
+          },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
+      renderWithRouter()
+
+      expect(screen.queryByText(/Deadline passed/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/no longer accepting/)).not.toBeInTheDocument()
     })
   })
 

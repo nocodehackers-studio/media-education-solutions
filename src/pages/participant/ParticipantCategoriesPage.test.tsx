@@ -47,7 +47,7 @@ vi.mock('@/contexts', () => ({
 // Mock useParticipantCategories
 const mockRefetch = vi.fn()
 let mockCategoriesData: {
-  data: ParticipantCategory[] | undefined
+  data: { categories: ParticipantCategory[]; contestStatus: string | null } | undefined
   isLoading: boolean
   error: Error | null
   refetch: () => void
@@ -128,7 +128,7 @@ describe('ParticipantCategoriesPage', () => {
   describe('empty state', () => {
     beforeEach(() => {
       mockCategoriesData = {
-        data: [],
+        data: { categories: [], contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -171,7 +171,7 @@ describe('ParticipantCategoriesPage', () => {
 
     beforeEach(() => {
       mockCategoriesData = {
-        data: categories,
+        data: { categories, contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -203,7 +203,7 @@ describe('ParticipantCategoriesPage', () => {
   describe('logout', () => {
     beforeEach(() => {
       mockCategoriesData = {
-        data: [],
+        data: { categories: [], contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -221,12 +221,75 @@ describe('ParticipantCategoriesPage', () => {
     })
   })
 
+  // Story 6-7: Finished contest behavior
+  describe('finished contest', () => {
+    const finishedCategories: ParticipantCategory[] = [
+      {
+        id: 'cat-1',
+        name: 'Best Video',
+        type: 'video',
+        deadline: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        status: 'closed',
+        description: null,
+        hasSubmitted: true,
+        submissionStatus: 'submitted',
+        submissionId: 'sub-001',
+      },
+      {
+        id: 'cat-2',
+        name: 'Best Photo',
+        type: 'photo',
+        deadline: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        status: 'closed',
+        description: null,
+        hasSubmitted: false,
+        submissionStatus: null,
+        submissionId: null,
+        noSubmission: true,
+      },
+    ]
+
+    beforeEach(() => {
+      mockCategoriesData = {
+        data: { categories: finishedCategories, contestStatus: 'finished' },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      }
+    })
+
+    it('shows finished contest banner', () => {
+      renderPage()
+      expect(
+        screen.getByText(/this contest has ended/i)
+      ).toBeInTheDocument()
+    })
+
+    it('shows "Your Submissions" heading instead of "Available Categories"', () => {
+      renderPage()
+      expect(screen.getByText('Your Submissions')).toBeInTheDocument()
+      expect(screen.queryByText('Available Categories')).not.toBeInTheDocument()
+    })
+
+    it('renders "View Feedback" button for submitted categories', () => {
+      renderPage()
+      expect(screen.getByText('View Feedback')).toBeInTheDocument()
+    })
+
+    it('renders disabled "No submission" for categories without submission', () => {
+      renderPage()
+      const noSubButtons = screen.getAllByRole('button', { name: /no submission/i })
+      expect(noSubButtons.length).toBeGreaterThan(0)
+      expect(noSubButtons[0]).toBeDisabled()
+    })
+  })
+
   // F11: Test null session handling
   describe('null session', () => {
     beforeEach(() => {
       currentMockSession = null
       mockCategoriesData = {
-        data: [],
+        data: { categories: [], contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,

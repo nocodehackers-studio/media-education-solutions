@@ -1,6 +1,7 @@
 // Story 4-6/4-7: Submission preview page
 // Shows uploaded media, allows confirm, replace, or withdraw
 // Story 4-7: Added Replace/Withdraw for submitted status, deadline lock state
+// Story 6-7: Added feedback section when contest is finished
 
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Lock } from 'lucide-react'
@@ -27,6 +28,7 @@ import {
   useConfirmSubmission,
   useWithdrawSubmission,
 } from '@/features/submissions'
+import { ParticipantFeedbackSection } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
 
 export function SubmissionPreviewPage() {
@@ -114,6 +116,7 @@ export function SubmissionPreviewPage() {
   const isConfirmed = submission.status === 'submitted'
   const canConfirm = submission.status === 'uploaded'
   const isLocked = submission.isLocked
+  const contestFinished = submission.contestStatus === 'finished'
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -141,8 +144,25 @@ export function SubmissionPreviewPage() {
           </CardContent>
         </Card>
 
+        {/* Story 6-7: Feedback section when contest is finished */}
+        {contestFinished && (
+          <>
+            {submission.review ? (
+              <ParticipantFeedbackSection feedback={submission.review} />
+            ) : (
+              <Card>
+                <CardContent className="py-6">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Your submission has not been reviewed yet.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+
         {/* Lock State Message */}
-        {isLocked && (
+        {!contestFinished && isLocked && (
           <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
             <Lock className="h-5 w-5 flex-shrink-0" />
             <p>
@@ -153,8 +173,8 @@ export function SubmissionPreviewPage() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        {!isLocked && (
+        {/* Action Buttons — hidden when contest is finished */}
+        {!contestFinished && !isLocked && (
           <div className="flex flex-wrap gap-3">
             {/* Confirm button (only for uploaded/unconfirmed) */}
             {canConfirm && (
