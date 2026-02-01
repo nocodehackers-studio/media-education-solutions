@@ -9,6 +9,9 @@ export {
   SubmissionPreview,
   SubmissionPreviewSkeleton,
   PhotoLightbox,
+  AdminSubmissionFilters,
+  AdminSubmissionsTable,
+  AdminSubmissionDetail,
 } from './components'
 
 // === Hooks ===
@@ -18,6 +21,7 @@ export {
   useSubmissionPreview,
   useConfirmSubmission,
   useWithdrawSubmission,
+  useAdminSubmissions,
 } from './hooks'
 
 // === Types ===
@@ -27,6 +31,18 @@ export type {
   MediaType,
   UploadState,
 } from './types/submission.types'
+
+export type {
+  AdminSubmission,
+  AdminSubmissionFilters as AdminSubmissionFiltersType,
+  AdminSubmissionRow,
+} from './types/adminSubmission.types'
+
+export {
+  transformAdminSubmission,
+  SUBMISSION_STATUS_VARIANT,
+  formatSubmissionDate,
+} from './types/adminSubmission.types'
 
 export type { SubmissionPreviewData } from './hooks/useSubmissionPreview'
 

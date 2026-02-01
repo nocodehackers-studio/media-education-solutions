@@ -36,6 +36,9 @@ const ContestsPage = lazy(() =>
 const ContestDetailPage = lazy(() =>
   import('@/pages/admin/ContestDetailPage').then((m) => ({ default: m.ContestDetailPage }))
 )
+const AdminSubmissionsPage = lazy(() =>
+  import('@/pages/admin/AdminSubmissionsPage').then((m) => ({ default: m.AdminSubmissionsPage }))
+)
 
 // Lazy load judge pages
 const JudgeDashboardPage = lazy(() =>
@@ -164,7 +167,14 @@ const router = createBrowserRouter([
           </LazyRoute>
         ),
       },
-      // Future routes: contests/:id/categories, etc.
+      {
+        path: 'contests/:contestId/submissions',
+        element: (
+          <LazyRoute>
+            <AdminSubmissionsPage />
+          </LazyRoute>
+        ),
+      },
     ],
   },
 

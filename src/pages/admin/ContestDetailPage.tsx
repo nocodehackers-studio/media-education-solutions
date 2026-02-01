@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -106,7 +106,15 @@ export function ContestDetailPage() {
           </div>
           <p className="text-muted-foreground font-mono">{contest.contestCode}</p>
         </div>
-        <DeleteContestButton contestId={contest.id} />
+        <div className="flex items-center gap-2">
+          <Link to={`/admin/contests/${contest.id}/submissions`}>
+            <Button variant="outline" size="sm">
+              <FileText className="h-4 w-4 mr-2" />
+              View Submissions
+            </Button>
+          </Link>
+          <DeleteContestButton contestId={contest.id} />
+        </div>
       </div>
 
       {/* Tabs */}

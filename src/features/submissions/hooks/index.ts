@@ -4,3 +4,6 @@ export { usePhotoUpload } from './usePhotoUpload'
 export { useSubmissionPreview } from './useSubmissionPreview'
 export { useConfirmSubmission } from './useConfirmSubmission'
 export { useWithdrawSubmission } from './useWithdrawSubmission'
+
+// Story 6-1: Admin submissions hook
+export { useAdminSubmissions } from './useAdminSubmissions'

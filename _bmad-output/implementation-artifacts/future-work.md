@@ -471,7 +471,19 @@ This document tracks valuable features, improvements, and technical debt discove
 ### Epic 6: Admin Oversight & Results Publication
 *Items discovered during Epic 6 implementation*
 
-*No items currently tracked*
+- **[Story 6-1]** AC #2 table row shows TLC name but not TLC email
+  - **Why:** AC #2 specifies both `tlc_name` and `tlc_email` visible in the table. Table shows name only — email is accessible in the detail panel (1 click). Adding both to a table column makes it cramped on mobile. UX tradeoff.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/features/submissions/components/AdminSubmissionsTable.tsx:61`
+
+- **[Story 6-1]** `src/pages/index.ts` missing export for `AdminSubmissionsPage`
+  - **Why:** Pages barrel file exists but is incomplete — also missing `ContestDetailPage` and all judge pages added in Epics 3-5. Router uses lazy imports directly, not this barrel. Consistency fix across all pages.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt cleanup
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/index.ts`
 
 ---
 
