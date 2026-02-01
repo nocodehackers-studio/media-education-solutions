@@ -100,8 +100,8 @@ development_status:
   6-3-override-feedback-rankings: done  # Completed 2026-02-01
   6-4-disqualify-submissions: done  # Completed 2026-02-01
   6-5-generate-winners-page: done  # Completed 2026-02-01
-  6-6-winners-page-display-download: backlog
-  6-7-participant-feedback-view: backlog
+  6-6-winners-page-display-download: done  # Completed 2026-02-01
+  6-7-participant-feedback-view: ready-for-dev
   epic-6-retrospective: optional
 
   # Epic 7: Email Notification System (5 stories)
