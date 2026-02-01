@@ -1,7 +1,19 @@
-// Story 6-1: Admin submission types
+// Story 6-1/6-2: Admin submission types
 // Full submission data with participant PII for admin view (NOT anonymous)
 
 import type { MediaType, SubmissionStatus } from './submission.types'
+import { getRatingTier } from '@/features/reviews'
+
+// Review data for admin display (Story 6-2)
+export interface AdminSubmissionReview {
+  reviewId: string
+  judgeId: string
+  judgeName: string
+  rating: number | null
+  ratingTier: string | null
+  feedback: string | null
+  reviewedAt: string
+}
 
 // Database row shape (snake_case) from Supabase join query
 export interface AdminSubmissionRow {
@@ -25,10 +37,21 @@ export interface AdminSubmissionRow {
     id: string
     name: string
     type: MediaType
+    assigned_judge_id: string | null
     divisions: {
       contest_id: string
     }
+    assigned_judge: { first_name: string | null; last_name: string | null } | null
   }
+  reviews: Array<{
+    id: string
+    judge_id: string
+    rating: number | null
+    feedback: string | null
+    updated_at: string
+    judge: { first_name: string | null; last_name: string | null } | null
+  }> | null
+  rankings: Array<{ rank: number }> | null
 }
 
 // Frontend shape (camelCase)
@@ -50,6 +73,9 @@ export interface AdminSubmission {
   categoryId: string
   categoryName: string
   categoryType: MediaType
+  review: AdminSubmissionReview | null
+  rankingPosition: number | null
+  assignedJudgeName: string | null
 }
 
 // Filter state for admin submissions list
@@ -78,8 +104,30 @@ export function formatSubmissionDate(dateStr: string, style: 'short' | 'long' = 
   })
 }
 
+// Ranking position display helper
+export function formatRankingPosition(rank: number): string {
+  switch (rank) {
+    case 1:
+      return '1st'
+    case 2:
+      return '2nd'
+    case 3:
+      return '3rd'
+    default:
+      return `${rank}th`
+  }
+}
+
+function buildJudgeName(profile: { first_name: string | null; last_name: string | null } | null): string | null {
+  if (!profile) return null
+  const parts = [profile.first_name, profile.last_name].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : 'Unknown Judge'
+}
+
 // Transform database row to frontend shape
 export function transformAdminSubmission(row: AdminSubmissionRow): AdminSubmission {
+  const reviewRow = row.reviews?.[0]
+
   return {
     id: row.id,
     mediaType: row.media_type,
@@ -98,5 +146,18 @@ export function transformAdminSubmission(row: AdminSubmissionRow): AdminSubmissi
     categoryId: row.categories.id,
     categoryName: row.categories.name,
     categoryType: row.categories.type,
+    review: reviewRow
+      ? {
+          reviewId: reviewRow.id,
+          judgeId: reviewRow.judge_id,
+          judgeName: buildJudgeName(reviewRow.judge) ?? 'Unknown Judge',
+          rating: reviewRow.rating,
+          ratingTier: reviewRow.rating ? (getRatingTier(reviewRow.rating)?.label ?? null) : null,
+          feedback: reviewRow.feedback,
+          reviewedAt: reviewRow.updated_at,
+        }
+      : null,
+    rankingPosition: row.rankings?.[0]?.rank ?? null,
+    assignedJudgeName: buildJudgeName(row.categories.assigned_judge),
   }
 }

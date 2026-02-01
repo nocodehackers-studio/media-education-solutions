@@ -45,6 +45,9 @@ const mockSubmission = {
   categoryId: 'cat-1',
   categoryName: 'Short Film',
   categoryType: 'video' as const,
+  review: null,
+  rankingPosition: null,
+  assignedJudgeName: 'Test Judge',
 }
 
 describe('useAdminSubmissions', () => {

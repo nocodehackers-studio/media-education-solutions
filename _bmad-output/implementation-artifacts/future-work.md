@@ -485,6 +485,14 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-01
   - **Files:** `src/pages/index.ts`
 
+- **[Story 6-2]** Side-by-side submission comparison view (AC #5 deferred)
+  - **Why:** Epic 6.2 AC #5 specifies multi-select side-by-side comparison of submissions with ratings. Deferred because it requires significant new UX (multi-select state, comparison layout, responsive design) that goes beyond the core "view ratings & feedback" goal. The table now shows rating/rank columns and the detail panel shows full review data — admin has visibility without side-by-side.
+  - **Priority:** Medium
+  - **Suggested Epic:** UX enhancement / Admin tools
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/admin/AdminSubmissionsPage.tsx`
+
+
 ---
 
 ### Epic 7: Email Notification System

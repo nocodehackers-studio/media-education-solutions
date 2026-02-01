@@ -25,6 +25,17 @@ const mockSubmissions: AdminSubmission[] = [
     categoryId: 'cat-1',
     categoryName: 'Short Film',
     categoryType: 'video',
+    review: {
+      reviewId: 'rev-1',
+      judgeId: 'judge-1',
+      judgeName: 'Jane Doe',
+      rating: 8,
+      ratingTier: 'Advanced Producer',
+      feedback: 'Excellent storytelling',
+      reviewedAt: '2026-01-31T10:00:00Z',
+    },
+    rankingPosition: 1,
+    assignedJudgeName: 'Jane Doe',
   },
   {
     id: 'sub-2',
@@ -44,6 +55,9 @@ const mockSubmissions: AdminSubmission[] = [
     categoryId: 'cat-2',
     categoryName: 'Photography',
     categoryType: 'photo',
+    review: null,
+    rankingPosition: null,
+    assignedJudgeName: 'John Smith',
   },
 ]
 
@@ -101,7 +115,7 @@ describe('AdminSubmissionsTable', () => {
     expect(screen.getByText(/no submissions found/i)).toBeInTheDocument()
   })
 
-  it('renders all column headers', () => {
+  it('renders all column headers including rating and rank', () => {
     render(
       <AdminSubmissionsTable
         submissions={mockSubmissions}
@@ -113,5 +127,54 @@ describe('AdminSubmissionsTable', () => {
     expect(screen.getByText('Name')).toBeInTheDocument()
     expect(screen.getByText('Category')).toBeInTheDocument()
     expect(screen.getByText('Status')).toBeInTheDocument()
+    expect(screen.getByText('Rating')).toBeInTheDocument()
+    expect(screen.getByText('Feedback')).toBeInTheDocument()
+    expect(screen.getByText('Rank')).toBeInTheDocument()
+  })
+
+  it('displays rating, feedback preview, and ranking data in table cells', () => {
+    render(
+      <AdminSubmissionsTable
+        submissions={mockSubmissions}
+        onSelectSubmission={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('8/10')).toBeInTheDocument()
+    expect(screen.getByText('Excellent storytelling')).toBeInTheDocument()
+    expect(screen.getByText('1st')).toBeInTheDocument()
+  })
+
+  it('displays dash for unreviewed submissions', () => {
+    render(
+      <AdminSubmissionsTable
+        submissions={mockSubmissions}
+        onSelectSubmission={vi.fn()}
+      />
+    )
+
+    // Bob Jones has no review/ranking - should show dashes
+    const dashes = screen.getAllByText('—')
+    expect(dashes.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('sorts by rating when rating header clicked', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <AdminSubmissionsTable
+        submissions={mockSubmissions}
+        onSelectSubmission={vi.fn()}
+      />
+    )
+
+    const ratingHeader = screen.getByText('Rating')
+    await user.click(ratingHeader)
+
+    // After sorting by rating desc, Alice (8/10) should be first
+    const rows = screen.getAllByRole('row')
+    // First row is header, second should be Alice (rated), third Bob (unrated)
+    expect(rows[1]).toHaveTextContent('ABC12345')
+    expect(rows[2]).toHaveTextContent('XYZ67890')
   })
 })

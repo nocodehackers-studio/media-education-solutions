@@ -17,7 +17,15 @@ export const adminSubmissionsApi = {
         id, media_type, media_url, bunny_video_id, thumbnail_url,
         status, submitted_at, created_at,
         participants!inner(id, code, name, organization_name, tlc_name, tlc_email),
-        categories!inner(id, name, type, divisions!inner(contest_id))
+        categories!inner(
+          id, name, type, assigned_judge_id,
+          divisions!inner(contest_id),
+          assigned_judge:profiles!assigned_judge_id(first_name, last_name)
+        ),
+        reviews(id, judge_id, rating, feedback, updated_at,
+          judge:profiles!judge_id(first_name, last_name)
+        ),
+        rankings(rank)
       `)
       .eq('categories.divisions.contest_id', contestId)
       .order('submitted_at', { ascending: false })

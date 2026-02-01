@@ -23,6 +23,17 @@ const mockSubmission: AdminSubmission = {
   categoryId: 'cat-1',
   categoryName: 'Photography',
   categoryType: 'photo',
+  review: {
+    reviewId: 'rev-1',
+    judgeId: 'judge-1',
+    judgeName: 'Jane Doe',
+    rating: 7,
+    ratingTier: 'Advanced Producer',
+    feedback: 'Great work!',
+    reviewedAt: '2026-01-31T10:00:00Z',
+  },
+  rankingPosition: 1,
+  assignedJudgeName: 'Jane Doe',
 }
 
 const mockVideoSubmission: AdminSubmission = {
@@ -116,5 +127,39 @@ describe('AdminSubmissionDetail', () => {
     )
 
     expect(screen.getByText('Submission Details')).toBeInTheDocument()
+  })
+
+  it('displays judge review section when reviewed', () => {
+    render(
+      <AdminSubmissionDetail
+        submission={mockSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Judge Review')).toBeInTheDocument()
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
+    expect(screen.getByText(/7\/10/)).toBeInTheDocument()
+    expect(screen.getByText('Great work!')).toBeInTheDocument()
+  })
+
+  it('displays pending review when no review exists', () => {
+    const pendingSubmission: AdminSubmission = {
+      ...mockSubmission,
+      review: null,
+      rankingPosition: null,
+    }
+
+    render(
+      <AdminSubmissionDetail
+        submission={pendingSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Pending Review')).toBeInTheDocument()
+    expect(screen.getByText(/Jane Doe/)).toBeInTheDocument()
   })
 })
