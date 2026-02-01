@@ -14,6 +14,8 @@ const mockContest: Contest = {
   coverImageUrl: null,
   status: 'draft',
   winnersPagePassword: null,
+  winnersPageEnabled: false,
+  winnersPageGeneratedAt: null,
   createdAt: '2026-01-10T12:00:00Z',
   updatedAt: '2026-01-10T12:00:00Z',
 };

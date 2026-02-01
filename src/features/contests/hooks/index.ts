@@ -12,3 +12,8 @@ export { useGenerateSingleCode } from './useGenerateSingleCode';
 export { useDashboardStats } from './useDashboardStats';
 export { useRecentContests } from './useRecentContests';
 export { useActiveContests } from './useActiveContests';
+export { useApproveCategory, useUnapproveCategory } from './useApproveCategory';
+export { useGenerateWinnersPage } from './useGenerateWinnersPage';
+export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPage } from './useWinnersManagement';
+export { useCategoryApprovalStatus } from './useCategoryApprovalStatus';
+export { useEffectiveWinners } from './useEffectiveWinners';

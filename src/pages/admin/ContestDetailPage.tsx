@@ -15,6 +15,7 @@ import {
   ContestDetailsTab,
   DeleteContestButton,
   CodesTab,
+  AdminWinnersTab,
   useContest,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
@@ -125,6 +126,9 @@ export function ContestDetailPage() {
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="codes">Codes</TabsTrigger>
           <TabsTrigger value="judges">Judges</TabsTrigger>
+          {(contest.status === 'reviewed' || contest.status === 'finished') && (
+            <TabsTrigger value="winners">Winners</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="details" className="mt-6">
@@ -146,6 +150,12 @@ export function ContestDetailPage() {
         <TabsContent value="judges" className="mt-6">
           <JudgesTab contestId={contest.id} />
         </TabsContent>
+
+        {(contest.status === 'reviewed' || contest.status === 'finished') && (
+          <TabsContent value="winners" className="mt-6">
+            <AdminWinnersTab contest={contest} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

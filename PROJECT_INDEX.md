@@ -8,7 +8,7 @@
 |---------|---------|-------------|
 | admin | Admin layout, navigation, breadcrumbs | AdminLayout, AdminSidebar, AdminHeader, AdminBreadcrumbs, useSidebar, useBreadcrumbs |
 | auth | Admin/Judge login, session management | LoginForm, ForgotPasswordForm, authApi, loginSchema, auth.types |
-| contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
+| contests | Contest CRUD, status management, winners page | ContestCard, useContests, contestsApi, AdminWinnersTab, CategoryApprovalList, WinnersSetupForm, WinnersPreviewDialog, useApproveCategory, useUnapproveCategory, useCategoryApprovalStatus, useEffectiveWinners, useGenerateWinnersPage, useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPage, winnersApi, CategoryApprovalStatus, EffectiveWinner, CategoryWinners |
 | categories | Category management within contests | CategoryCard, useCategories (Planned) |
 | participants | Participant codes, session, info | ParticipantCodeEntry, useParticipantSession (Planned) |
 | submissions | File uploads, submission management, admin view, admin overrides, disqualification | UploadProgress, useFileUpload, AdminSubmissionsTable, AdminSubmissionDetail, AdminReviewSection, AdminSubmissionFilters, useAdminSubmissions, OverrideFeedbackDialog, AdminCategoryRankings, useOverrideFeedback, useOverrideRankings, DisqualifyConfirmDialog, RestoreConfirmDialog, useDisqualifySubmission, useRestoreSubmission |

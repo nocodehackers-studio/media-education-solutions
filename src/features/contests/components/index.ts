@@ -9,3 +9,7 @@ export { CodeListTable } from './CodeListTable';
 export { GenerateCodesButton } from './GenerateCodesButton';
 export { ExportCodesButton } from './ExportCodesButton';
 export { AddCodeDialog } from './AddCodeDialog';
+export { CategoryApprovalList } from './CategoryApprovalList';
+export { WinnersSetupForm } from './WinnersSetupForm';
+export { WinnersPreviewDialog } from './WinnersPreviewDialog';
+export { AdminWinnersTab } from './AdminWinnersTab';

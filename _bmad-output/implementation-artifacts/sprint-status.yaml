@@ -99,7 +99,7 @@ development_status:
   6-2-view-judge-ratings-feedback: done  # Completed 2026-02-01
   6-3-override-feedback-rankings: done  # Completed 2026-02-01
   6-4-disqualify-submissions: done  # Completed 2026-02-01
-  6-5-generate-winners-page: in-progress
+  6-5-generate-winners-page: done  # Completed 2026-02-01
   6-6-winners-page-display-download: backlog
   6-7-participant-feedback-view: backlog
   epic-6-retrospective: optional

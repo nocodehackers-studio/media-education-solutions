@@ -36,6 +36,8 @@ const mockContest: Contest = {
   coverImageUrl: null,
   status: 'draft',
   winnersPagePassword: null,
+  winnersPageEnabled: false,
+  winnersPageGeneratedAt: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };

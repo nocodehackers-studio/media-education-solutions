@@ -14,6 +14,10 @@ export { CodeListTable } from './components/CodeListTable';
 export { GenerateCodesButton } from './components/GenerateCodesButton';
 export { ExportCodesButton } from './components/ExportCodesButton';
 export { AddCodeDialog } from './components/AddCodeDialog';
+export { CategoryApprovalList } from './components/CategoryApprovalList';
+export { WinnersSetupForm } from './components/WinnersSetupForm';
+export { WinnersPreviewDialog } from './components/WinnersPreviewDialog';
+export { AdminWinnersTab } from './components/AdminWinnersTab';
 
 // === Hooks ===
 export { useContests } from './hooks/useContests';
@@ -29,9 +33,15 @@ export { useGenerateSingleCode } from './hooks/useGenerateSingleCode';
 export { useDashboardStats } from './hooks/useDashboardStats';
 export { useRecentContests } from './hooks/useRecentContests';
 export { useActiveContests } from './hooks/useActiveContests';
+export { useApproveCategory, useUnapproveCategory } from './hooks/useApproveCategory';
+export { useGenerateWinnersPage } from './hooks/useGenerateWinnersPage';
+export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPage } from './hooks/useWinnersManagement';
+export { useCategoryApprovalStatus } from './hooks/useCategoryApprovalStatus';
+export { useEffectiveWinners } from './hooks/useEffectiveWinners';
 
 // === API ===
 export { contestsApi } from './api/contestsApi';
+export { winnersApi } from './api/winnersApi';
 
 // === Utils ===
 export {
@@ -54,3 +64,8 @@ export type {
 export { transformParticipant } from './types/contest.types';
 export { createContestSchema, updateContestSchema } from './types/contest.schemas';
 export type { CreateContestInput, UpdateContestInput } from './types/contest.schemas';
+export type {
+  CategoryApprovalStatus,
+  EffectiveWinner,
+  CategoryWinners,
+} from './types/winners.types';
