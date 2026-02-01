@@ -97,7 +97,7 @@ development_status:
   epic-6: in-progress  # Started 2026-02-01
   6-1-admin-view-all-submissions: done  # Completed 2026-02-01
   6-2-view-judge-ratings-feedback: done  # Completed 2026-02-01
-  6-3-override-feedback-rankings: backlog
+  6-3-override-feedback-rankings: done  # Completed 2026-02-01
   6-4-disqualify-submissions: backlog
   6-5-generate-winners-page: backlog
   6-6-winners-page-display-download: backlog

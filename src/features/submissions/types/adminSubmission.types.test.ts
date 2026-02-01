@@ -54,6 +54,8 @@ describe('transformAdminSubmission', () => {
         rating: 7,
         feedback: 'Great work',
         updated_at: '2026-01-31T10:00:00Z',
+        admin_feedback_override: null,
+        admin_feedback_override_at: null,
         judge: { first_name: 'Jane', last_name: 'Doe' },
       }],
     })
@@ -86,6 +88,8 @@ describe('transformAdminSubmission', () => {
         rating: null,
         feedback: 'Partial review',
         updated_at: '2026-01-31T10:00:00Z',
+        admin_feedback_override: null,
+        admin_feedback_override_at: null,
         judge: { first_name: 'Jane', last_name: 'Doe' },
       }],
     })
@@ -98,7 +102,7 @@ describe('transformAdminSubmission', () => {
   })
 
   it('maps ranking position when present', () => {
-    const row = makeBaseRow({ rankings: [{ rank: 2 }] })
+    const row = makeBaseRow({ rankings: [{ id: 'rank-1', rank: 2, submission_id: 'sub-1', admin_ranking_override: null, admin_ranking_override_at: null }] })
     const result = transformAdminSubmission(row)
     expect(result.rankingPosition).toBe(2)
   })
@@ -142,6 +146,8 @@ describe('transformAdminSubmission', () => {
         rating: 5,
         feedback: null,
         updated_at: '2026-01-31T10:00:00Z',
+        admin_feedback_override: null,
+        admin_feedback_override_at: null,
         judge: { first_name: null, last_name: null },
       }],
     })
@@ -158,6 +164,8 @@ describe('transformAdminSubmission', () => {
         rating: 5,
         feedback: null,
         updated_at: '2026-01-31T10:00:00Z',
+        admin_feedback_override: null,
+        admin_feedback_override_at: null,
         judge: null,
       }],
     })
@@ -175,6 +183,8 @@ describe('transformAdminSubmission', () => {
           rating: 8,
           feedback: 'First',
           updated_at: '2026-01-31T10:00:00Z',
+          admin_feedback_override: null,
+          admin_feedback_override_at: null,
           judge: { first_name: 'Jane', last_name: 'Doe' },
         },
         {
@@ -183,6 +193,8 @@ describe('transformAdminSubmission', () => {
           rating: 5,
           feedback: 'Second',
           updated_at: '2026-01-31T11:00:00Z',
+          admin_feedback_override: null,
+          admin_feedback_override_at: null,
           judge: { first_name: 'Bob', last_name: 'Smith' },
         },
       ],

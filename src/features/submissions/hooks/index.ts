@@ -7,3 +7,7 @@ export { useWithdrawSubmission } from './useWithdrawSubmission'
 
 // Story 6-1: Admin submissions hook
 export { useAdminSubmissions } from './useAdminSubmissions'
+
+// Story 6-3: Override hooks
+export { useOverrideFeedback } from './useOverrideFeedback'
+export { useOverrideRankings } from './useOverrideRankings'

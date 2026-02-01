@@ -4,7 +4,7 @@
 import type { MediaType, SubmissionStatus } from './submission.types'
 import { getRatingTier } from '@/features/reviews'
 
-// Review data for admin display (Story 6-2)
+// Review data for admin display (Story 6-2, 6-3: override fields)
 export interface AdminSubmissionReview {
   reviewId: string
   judgeId: string
@@ -13,6 +13,8 @@ export interface AdminSubmissionReview {
   ratingTier: string | null
   feedback: string | null
   reviewedAt: string
+  adminFeedbackOverride: string | null
+  adminFeedbackOverrideAt: string | null
 }
 
 // Database row shape (snake_case) from Supabase join query
@@ -49,9 +51,17 @@ export interface AdminSubmissionRow {
     rating: number | null
     feedback: string | null
     updated_at: string
+    admin_feedback_override: string | null
+    admin_feedback_override_at: string | null
     judge: { first_name: string | null; last_name: string | null } | null
   }> | null
-  rankings: Array<{ rank: number }> | null
+  rankings: Array<{
+    id: string
+    rank: number
+    submission_id: string
+    admin_ranking_override: string | null
+    admin_ranking_override_at: string | null
+  }> | null
 }
 
 // Frontend shape (camelCase)
@@ -75,6 +85,9 @@ export interface AdminSubmission {
   categoryType: MediaType
   review: AdminSubmissionReview | null
   rankingPosition: number | null
+  rankingId: string | null
+  adminRankingOverride: string | null
+  adminRankingOverrideAt: string | null
   assignedJudgeName: string | null
 }
 
@@ -155,9 +168,14 @@ export function transformAdminSubmission(row: AdminSubmissionRow): AdminSubmissi
           ratingTier: reviewRow.rating ? (getRatingTier(reviewRow.rating)?.label ?? null) : null,
           feedback: reviewRow.feedback,
           reviewedAt: reviewRow.updated_at,
+          adminFeedbackOverride: reviewRow.admin_feedback_override ?? null,
+          adminFeedbackOverrideAt: reviewRow.admin_feedback_override_at ?? null,
         }
       : null,
     rankingPosition: row.rankings?.[0]?.rank ?? null,
+    rankingId: row.rankings?.[0]?.id ?? null,
+    adminRankingOverride: row.rankings?.[0]?.admin_ranking_override ?? null,
+    adminRankingOverrideAt: row.rankings?.[0]?.admin_ranking_override_at ?? null,
     assignedJudgeName: buildJudgeName(row.categories.assigned_judge),
   }
 }
