@@ -3,17 +3,28 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ClipboardList, Flag, Trophy } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts';
-import { useCategoriesByJudge } from '@/features/categories';
+import { useCategoriesByJudge, useMarkCategoryComplete } from '@/features/categories';
 import {
   useSubmissionsForReview,
+  useRankings,
   SubmissionCard,
   ReviewProgress,
   SubmissionFilter,
   type SubmissionFilterType,
 } from '@/features/reviews';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Button,
   Card,
   CardContent,
@@ -38,6 +49,30 @@ export function CategoryReviewPage() {
   // Get category context from cached dashboard data
   const { data: categories } = useCategoriesByJudge(user?.id);
   const category = categories?.find((c) => c.id === categoryId);
+
+  // Rankings and completion state (Story 5-6)
+  const { data: rankings } = useRankings(categoryId);
+  const markComplete = useMarkCategoryComplete();
+
+  const allReviewed = progress.pending === 0;
+  const hasRankings = (rankings?.length ?? 0) >= 3;
+  const isCompleted = !!category?.judgingCompletedAt;
+  const canComplete = allReviewed && hasRankings && !isCompleted;
+
+  const handleMarkComplete = () => {
+    markComplete.mutate(categoryId!, {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success('Category marked as complete');
+        } else {
+          toast.error(result.error || 'Failed to mark category as complete');
+        }
+      },
+      onError: () => {
+        toast.error('Failed to mark category as complete');
+      },
+    });
+  };
 
   // Filter submissions
   const filteredSubmissions = useMemo(() => {
@@ -99,6 +134,14 @@ export function CategoryReviewPage() {
           Back to Dashboard
         </Button>
 
+        {/* Read-only banner (Story 5-6) */}
+        {isCompleted && (
+          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            Read-only: Category completed on{' '}
+            {new Date(category!.judgingCompletedAt!).toLocaleDateString()}
+          </div>
+        )}
+
         {/* Category header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -143,7 +186,7 @@ export function CategoryReviewPage() {
         )}
 
         {/* Proceed to Ranking - Story 5.5 (AC1) */}
-        {submissions && submissions.length > 0 && (
+        {submissions && submissions.length > 0 && !isCompleted && (
           <div className="flex justify-center pt-2">
             <Button
               onClick={() => navigate(`/judge/categories/${categoryId}/ranking`)}
@@ -158,6 +201,53 @@ export function CategoryReviewPage() {
             )}
           </div>
         )}
+
+        {/* Mark as Complete section - Story 5-6 */}
+        {isCompleted ? (
+          <div className="flex items-center justify-center gap-2 text-green-600 py-4">
+            <CheckCircle2 className="h-5 w-5" />
+            <span className="font-medium">
+              Completed on {new Date(category!.judgingCompletedAt!).toLocaleDateString()}
+            </span>
+          </div>
+        ) : submissions && submissions.length > 0 ? (
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  disabled={!canComplete || markComplete.isPending}
+                  variant="default"
+                  className="gap-2 w-full sm:w-auto"
+                >
+                  <Flag className="h-4 w-4" />
+                  {markComplete.isPending ? 'Marking...' : 'Mark as Complete'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Mark Category as Complete?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You reviewed {progress.total} submissions and ranked your top 3.
+                    Once marked as complete, you will no longer be able to edit your
+                    ratings, feedback, or rankings.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleMarkComplete}>
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            {!allReviewed && (
+              <p className="text-sm text-muted-foreground">Review all submissions before completing</p>
+            )}
+            {allReviewed && !hasRankings && (
+              <p className="text-sm text-muted-foreground">Rank your top 3 before completing</p>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

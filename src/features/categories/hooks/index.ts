@@ -14,3 +14,5 @@ export { useRemoveJudge } from './useRemoveJudge';
 // Story 3-5: Judge progress hook
 export { useJudgeProgress } from './useJudgeProgress';
 export type { JudgeProgress } from './useJudgeProgress';
+// Story 5-6: Mark category complete hook
+export { useMarkCategoryComplete } from './useMarkCategoryComplete';

@@ -66,6 +66,7 @@ const mockCategoryWithJudge: Category = {
   createdAt: new Date().toISOString(),
   assignedJudgeId: 'judge-1',
   invitedAt: null,
+  judgingCompletedAt: null,
   assignedJudge: {
     id: 'judge-1',
     email: 'judge@example.com',
@@ -86,6 +87,7 @@ const mockCategoryWithoutJudge: Category = {
   createdAt: new Date().toISOString(),
   assignedJudgeId: null,
   invitedAt: null,
+  judgingCompletedAt: null,
   assignedJudge: null,
 };
 

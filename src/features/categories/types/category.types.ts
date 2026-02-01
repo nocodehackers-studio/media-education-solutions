@@ -19,6 +19,7 @@ export interface CategoryRow {
   created_at: string;
   assigned_judge_id: string | null;
   invited_at: string | null;
+  judging_completed_at: string | null;
 }
 
 // Joined judge profile data (when fetched with join)
@@ -43,6 +44,7 @@ export interface Category {
   createdAt: string;
   assignedJudgeId: string | null;
   invitedAt: string | null;
+  judgingCompletedAt: string | null;
   // Joined field (optional, only when fetched with join)
   assignedJudge?: AssignedJudge | null;
 }
@@ -83,6 +85,7 @@ export function transformCategory(
     createdAt: row.created_at,
     assignedJudgeId: row.assigned_judge_id,
     invitedAt: row.invited_at,
+    judgingCompletedAt: row.judging_completed_at,
   };
 
   // Check if row has joined profiles data

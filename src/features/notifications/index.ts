@@ -16,4 +16,6 @@ export type {
   NotificationType,
   JudgeInvitationPayload,
   JudgeInvitationResponse,
+  CategoryCompletePayload,
+  CategoryCompleteResponse,
 } from './types/notification.types';

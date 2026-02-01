@@ -64,6 +64,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: null,
       invitedAt: null,
+      judgingCompletedAt: null,
     });
 
     const { result } = renderHook(
@@ -97,6 +98,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: 'judge-1',
       invitedAt: null,
+      judgingCompletedAt: null,
     });
     vi.mocked(categoriesApi.categoriesApi.sendJudgeInvitation).mockResolvedValue({
       success: true,
@@ -132,6 +134,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: null,
       invitedAt: null,
+      judgingCompletedAt: null,
     });
 
     const { result } = renderHook(
@@ -164,6 +167,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: null,
       invitedAt: null,
+      judgingCompletedAt: null,
     });
     vi.mocked(categoriesApi.categoriesApi.sendJudgeInvitation).mockResolvedValue({
       success: false,
@@ -203,6 +207,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: 'judge-1',
       invitedAt: '2026-01-01T00:00:00Z', // Already invited
+      judgingCompletedAt: null,
     });
     vi.mocked(categoriesApi.categoriesApi.sendJudgeInvitation).mockResolvedValue({
       success: false,
@@ -246,6 +251,7 @@ describe('useUpdateCategoryStatus', () => {
       createdAt: new Date().toISOString(),
       assignedJudgeId: 'judge-1',
       invitedAt: null,
+      judgingCompletedAt: null,
     });
     vi.mocked(categoriesApi.categoriesApi.sendJudgeInvitation).mockResolvedValue({
       success: false,

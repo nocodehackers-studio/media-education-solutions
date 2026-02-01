@@ -30,3 +30,19 @@ export interface JudgeInvitationResponse {
   message?: string;
   error?: string;
 }
+
+/**
+ * Story 5-6: Category complete notification payload
+ * Sent to Edge Function for Brevo delivery to admins
+ */
+export interface CategoryCompletePayload {
+  categoryId: string;
+}
+
+/**
+ * Story 5-6: Response from notify-admin-category-complete Edge Function
+ */
+export interface CategoryCompleteResponse {
+  success: boolean;
+  error?: string;
+}

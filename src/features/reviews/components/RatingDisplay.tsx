@@ -7,7 +7,7 @@ import { Button } from '@/components/ui';
 
 interface RatingDisplayProps {
   value: number | null;
-  onChange: (rating: number) => void;
+  onChange?: (rating: number) => void;
 }
 
 export function RatingDisplay({ value, onChange }: RatingDisplayProps) {
@@ -28,7 +28,8 @@ export function RatingDisplay({ value, onChange }: RatingDisplayProps) {
               type="button"
               role="radio"
               aria-checked={isSelected}
-              onClick={() => onChange(tier.minScore)}
+              onClick={() => onChange?.(tier.minScore)}
+              disabled={!onChange}
               className={cn(
                 'flex flex-col items-center rounded-lg border px-4 py-3 text-sm transition-colors',
                 'hover:border-primary/50 hover:bg-primary/5',
@@ -61,7 +62,8 @@ export function RatingDisplay({ value, onChange }: RatingDisplayProps) {
               type="button"
               variant={value === score ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onChange(score)}
+              onClick={() => onChange?.(score)}
+              disabled={!onChange}
               role="radio"
               aria-checked={value === score}
               aria-label={`Score ${score}`}
