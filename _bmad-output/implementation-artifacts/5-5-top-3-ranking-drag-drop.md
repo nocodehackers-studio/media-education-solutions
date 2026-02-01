@@ -1,6 +1,6 @@
 # Story 5.5: Top 3 Ranking (Drag & Drop)
 
-Status: implementation-complete
+Status: done
 
 ## Story
 
@@ -204,6 +204,18 @@ So that **the best entries are identified for awards**.
   - [x] 13.4 `npm run test` passes (all existing + new tests)
   - [x] 13.5 Manual smoke test: review all submissions → "Proceed to Ranking" appears → click → ranking page loads → drag submission to 1st → drag another to 2nd → drag third to 3rd → constraint blocks if needed → Save Rankings → success toast
   - [x] 13.6 Manual smoke test: keyboard navigation → Tab to submission → Enter → Arrow keys to select slot → Enter → confirm → repeat for all 3
+
+### Review Follow-ups (AI) — Triaged 2026-02-01
+
+**Tracked in future-work.md (real findings):**
+- [x] [MEDIUM] Filter ranking pool to exclude unreviewed submissions — defensive; AC1 gate prevents in normal flow, but direct URL bypasses it
+- [x] [MEDIUM] Implement custom KeyboardSensor coordinateGetter for slot-based navigation — baseline keyboard DnD works, but polished slot-snapping per AC7/task 8.2 not implemented
+- [x] [LOW] Add visible helper text when "Proceed to Ranking" is disabled — currently sr-only, context is clear from progress bar but explicit text would improve UX
+
+**Dismissed (noise / incorrect):**
+- ~~[MEDIUM] Update ARIA role to `listbox`~~ — `role="group"` is more semantically correct for a single-item drop zone; `listbox` implies a list of selectable options
+- ~~[MEDIUM] File List missing RPC migration~~ — documentation-only in a story file that will be closed; migration exists and works
+- ~~[HIGH] File List doesn't match git diff~~ — reviewer ran `git diff --name-only` (uncommitted changes = empty) instead of `git diff --name-only main...HEAD` (26 files, matches File List); incorrect finding
 
 ## Dev Notes
 

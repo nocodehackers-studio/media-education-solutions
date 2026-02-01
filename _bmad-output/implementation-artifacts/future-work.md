@@ -1,7 +1,7 @@
 # Future Work & Deferred Items
 
 **Project:** media-education-solutions
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-02-01
 
 ---
 
@@ -415,6 +415,26 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-01-31
   - **Files:** `src/features/reviews/components/RatingDisplay.tsx`
 
+- **[Story 5-5]** Filter ranking pool to exclude unreviewed submissions
+  - **Why:** `RankingPage` displays all submissions from `useSubmissionsForReview` in the available pool without filtering by `reviewId !== null`. AC1 gates entry (button disabled until `progress.pending === 0`), so in the normal flow all submissions are reviewed. However, direct URL navigation bypasses this gate and could expose unreviewed entries in the ranking pool. Adding `.filter(s => s.reviewId !== null)` is trivial defensive coding.
+  - **Priority:** Medium
+  - **Suggested Epic:** Defensive hardening
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/judge/RankingPage.tsx:97-104`
+
+- **[Story 5-5]** Implement custom KeyboardSensor coordinateGetter for slot-based keyboard navigation
+  - **Why:** `KeyboardSensor` is configured and provides baseline keyboard DnD via `@dnd-kit` defaults, but the custom `coordinateGetter` for slot-based navigation (task 8.2) wasn't implemented. Default keyboard behavior moves the overlay by pixel increments rather than snapping between the 3 drop zones. AC7's intended flow (Enter to pick up → Arrow keys to select slot → Enter to confirm) works partially but isn't polished for the drop-zone pattern.
+  - **Priority:** Medium
+  - **Suggested Epic:** Accessibility
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/judge/RankingPage.tsx:83-88`
+
+- **[Story 5-5]** Add visible helper text when "Proceed to Ranking" button is disabled
+  - **Why:** The helper text "Review all submissions before ranking" is `sr-only` (screen reader only). Sighted users see a disabled button with no visible explanation of why. The `ReviewProgress` bar above provides context, but an explicit visible tooltip or text below the button would improve UX per task 9.3 spec.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/judge/CategoryReviewPage.tsx:156-158`
 
 ---
 
