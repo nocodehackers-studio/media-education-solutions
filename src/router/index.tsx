@@ -57,6 +57,11 @@ const RankingPage = lazy(() =>
   import('@/pages/judge/RankingPage').then((m) => ({ default: m.RankingPage }))
 )
 
+// Lazy load public pages (winners)
+const PublicWinnersPage = lazy(() =>
+  import('@/pages/public/PublicWinnersPage').then((m) => ({ default: m.PublicWinnersPage }))
+)
+
 // Lazy load participant pages
 const CodeEntryPage = lazy(() =>
   import('@/pages/participant/CodeEntryPage').then((m) => ({ default: m.CodeEntryPage }))
@@ -239,6 +244,16 @@ const router = createBrowserRouter([
           <SubmissionReviewPage />
         </LazyRoute>
       </JudgeRoute>
+    ),
+  },
+
+  // Story 6-6: Public winners page (no auth required)
+  {
+    path: '/winners/:contestCode',
+    element: (
+      <LazyRoute>
+        <PublicWinnersPage />
+      </LazyRoute>
     ),
   },
 

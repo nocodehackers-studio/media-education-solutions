@@ -14,6 +14,7 @@
 | submissions | File uploads, submission management, admin view, admin overrides, disqualification | UploadProgress, useFileUpload, AdminSubmissionsTable, AdminSubmissionDetail, AdminReviewSection, AdminSubmissionFilters, useAdminSubmissions, OverrideFeedbackDialog, AdminCategoryRankings, useOverrideFeedback, useOverrideRankings, DisqualifyConfirmDialog, RestoreConfirmDialog, useDisqualifySubmission, useRestoreSubmission |
 | reviews | Rating, feedback for submissions | RatingScale, useReviews, ReviewForm (Planned) |
 | rankings | Drag-drop ranking, tier ordering | RankingDropzone, useRankings (Planned) |
+| winners | Public winners page, password-gated display & download | PasswordEntryForm, WinnerCard, VideoPlayerDialog, WinnersDisplay, useDownloadManager, buildDownloadFilename, publicWinnersApi, ContestPublicMetadata, WinnersValidationResponse, DownloadState |
 | notifications | Email triggers via Brevo | useNotifications (Planned) |
 
 ## Shared Code (src/lib/)
@@ -60,7 +61,7 @@
 
 | Route Group | Pages |
 |-------------|-------|
-| public/ | NotFoundPage |
+| public/ | NotFoundPage, PublicWinnersPage |
 | auth/ | LoginPage, ForgotPasswordPage, ResetPasswordPage |
 | admin/ | DashboardPage, ContestsPage, ContestDetailPage, AdminSubmissionsPage, AdminCategoryRankingsPage |
 | judge/ | JudgeDashboardPage (placeholder) |
@@ -95,7 +96,11 @@
 
 ## Edge Functions (supabase/functions/)
 
-Placeholder - to be added for Bunny upload signing (Epic 4)
+| Function | Purpose |
+|----------|---------|
+| validate-participant | Validates participant contest code + participant code for session creation |
+| get-contest-public-metadata | Returns public contest metadata (name, cover image) for winners page initial load |
+| validate-winners-password | Validates winners page password and returns winners data on success |
 
 ## Key Patterns
 
