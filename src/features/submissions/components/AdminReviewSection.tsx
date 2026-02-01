@@ -1,7 +1,7 @@
-// Story 6-2: Admin review section for submission detail panel
-// Displays judge review data or pending review state
+// Story 6-2/6-3: Admin review section for submission detail panel
+// Displays judge review data with override support
 
-import { Badge } from '@/components/ui'
+import { Badge, Button } from '@/components/ui'
 import type { AdminSubmissionReview } from '../types/adminSubmission.types'
 import { formatSubmissionDate, formatRankingPosition } from '../types/adminSubmission.types'
 
@@ -9,12 +9,14 @@ interface AdminReviewSectionProps {
   review: AdminSubmissionReview | null
   assignedJudgeName: string | null
   rankingPosition: number | null
+  onOverrideFeedback?: () => void
 }
 
 export function AdminReviewSection({
   review,
   assignedJudgeName,
   rankingPosition,
+  onOverrideFeedback,
 }: AdminReviewSectionProps) {
   if (!review) {
     return (
@@ -30,9 +32,19 @@ export function AdminReviewSection({
     )
   }
 
+  const hasOverride = review.adminFeedbackOverride != null
+  const effectiveFeedback = hasOverride ? review.adminFeedbackOverride : review.feedback
+
   return (
     <section className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">Judge Review</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-muted-foreground">Judge Review</h3>
+        {onOverrideFeedback && (
+          <Button variant="outline" size="sm" onClick={onOverrideFeedback}>
+            {hasOverride ? 'Edit Override' : 'Override Feedback'}
+          </Button>
+        )}
+      </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted-foreground">Judge</dt>
         <dd>{review.judgeName}</dd>
@@ -46,7 +58,27 @@ export function AdminReviewSection({
         </dd>
 
         <dt className="text-muted-foreground">Feedback</dt>
-        <dd className="whitespace-pre-wrap break-words">{review.feedback || 'No feedback provided'}</dd>
+        <dd>
+          {hasOverride && (
+            <div className="mb-1">
+              <Badge variant="secondary" className="text-xs">Overridden</Badge>
+              {review.adminFeedbackOverrideAt && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {formatSubmissionDate(review.adminFeedbackOverrideAt, 'short')}
+                </span>
+              )}
+            </div>
+          )}
+          <div className="whitespace-pre-wrap break-words">
+            {effectiveFeedback || 'No feedback provided'}
+          </div>
+          {hasOverride && review.feedback && (
+            <div className="mt-2 rounded border bg-muted/50 p-2 text-xs text-muted-foreground">
+              <span className="font-medium">Original: </span>
+              <span className="whitespace-pre-wrap break-words">{review.feedback}</span>
+            </div>
+          )}
+        </dd>
 
         <dt className="text-muted-foreground">Reviewed</dt>
         <dd>{formatSubmissionDate(review.reviewedAt, 'long')}</dd>

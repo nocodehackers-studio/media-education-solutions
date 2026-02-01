@@ -47,6 +47,9 @@ const mockSubmission = {
   categoryType: 'video' as const,
   review: null,
   rankingPosition: null,
+  rankingId: null,
+  adminRankingOverride: null,
+  adminRankingOverrideAt: null,
   assignedJudgeName: 'Test Judge',
 }
 

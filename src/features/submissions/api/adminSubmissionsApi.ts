@@ -23,9 +23,10 @@ export const adminSubmissionsApi = {
           assigned_judge:profiles!assigned_judge_id(first_name, last_name)
         ),
         reviews(id, judge_id, rating, feedback, updated_at,
+          admin_feedback_override, admin_feedback_override_at,
           judge:profiles!judge_id(first_name, last_name)
         ),
-        rankings(rank)
+        rankings(id, rank, submission_id, admin_ranking_override, admin_ranking_override_at)
       `)
       .eq('categories.divisions.contest_id', contestId)
       .order('submitted_at', { ascending: false })
@@ -47,5 +48,59 @@ export const adminSubmissionsApi = {
     }
 
     return (data as unknown as AdminSubmissionRow[]).map(transformAdminSubmission)
+  },
+
+  async overrideFeedback(reviewId: string, feedbackOverride: string): Promise<void> {
+    // reviews table not in generated Supabase types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from as any)('reviews')
+      .update({
+        admin_feedback_override: feedbackOverride,
+        admin_feedback_override_at: new Date().toISOString(),
+      })
+      .eq('id', reviewId)
+
+    if (error) throw new Error(`Failed to save feedback override: ${error.message}`)
+  },
+
+  async clearFeedbackOverride(reviewId: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from as any)('reviews')
+      .update({
+        admin_feedback_override: null,
+        admin_feedback_override_at: null,
+      })
+      .eq('id', reviewId)
+
+    if (error) throw new Error(`Failed to clear feedback override: ${error.message}`)
+  },
+
+  async overrideRankings(
+    _categoryId: string,
+    overrides: { rankingId: string; overrideSubmissionId: string }[]
+  ): Promise<void> {
+    for (const override of overrides) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from as any)('rankings')
+        .update({
+          admin_ranking_override: override.overrideSubmissionId,
+          admin_ranking_override_at: new Date().toISOString(),
+        })
+        .eq('id', override.rankingId)
+
+      if (error) throw new Error(`Failed to save ranking override: ${error.message}`)
+    }
+  },
+
+  async clearRankingOverrides(categoryId: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from as any)('rankings')
+      .update({
+        admin_ranking_override: null,
+        admin_ranking_override_at: null,
+      })
+      .eq('category_id', categoryId)
+
+    if (error) throw new Error(`Failed to clear ranking overrides: ${error.message}`)
   },
 }

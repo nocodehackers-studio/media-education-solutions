@@ -13,6 +13,8 @@ export {
   AdminSubmissionsTable,
   AdminSubmissionDetail,
   AdminReviewSection,
+  OverrideFeedbackDialog,
+  AdminCategoryRankings,
 } from './components'
 
 // === Hooks ===
@@ -23,6 +25,8 @@ export {
   useConfirmSubmission,
   useWithdrawSubmission,
   useAdminSubmissions,
+  useOverrideFeedback,
+  useOverrideRankings,
 } from './hooks'
 
 // === Types ===

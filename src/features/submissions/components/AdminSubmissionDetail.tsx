@@ -1,10 +1,12 @@
-// Story 6-1: Admin submission detail panel (Sheet slide-over)
-// Shows full participant PII + media preview
+// Story 6-1/6-3: Admin submission detail panel (Sheet slide-over)
+// Shows full participant PII + media preview + override controls
 
 import { useState } from 'react'
-import { Camera, Video } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Camera, Video, Trophy } from 'lucide-react'
 import {
   Badge,
+  Button,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -12,6 +14,7 @@ import {
 } from '@/components/ui'
 import { PhotoLightbox } from './PhotoLightbox'
 import { AdminReviewSection } from './AdminReviewSection'
+import { OverrideFeedbackDialog } from './OverrideFeedbackDialog'
 import type { AdminSubmission } from '../types/adminSubmission.types'
 import { SUBMISSION_STATUS_VARIANT, formatSubmissionDate } from '../types/adminSubmission.types'
 
@@ -26,7 +29,9 @@ export function AdminSubmissionDetail({
   open,
   onOpenChange,
 }: AdminSubmissionDetailProps) {
+  const navigate = useNavigate()
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false)
 
   if (!submission) return null
 
@@ -93,7 +98,32 @@ export function AdminSubmissionDetail({
               review={submission.review}
               assignedJudgeName={submission.assignedJudgeName}
               rankingPosition={submission.rankingPosition}
+              onOverrideFeedback={
+                submission.review ? () => setOverrideDialogOpen(true) : undefined
+              }
             />
+
+            {/* View Rankings link */}
+            {submission.categoryId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 w-full"
+                onClick={() => {
+                  onOpenChange(false)
+                  // categories.divisions.contest_id is needed; extract from route or submission context
+                  // The contestId is in the URL when viewing submissions
+                  const match = window.location.pathname.match(/\/admin\/contests\/([^/]+)/)
+                  const contestId = match?.[1]
+                  if (contestId) {
+                    navigate(`/admin/contests/${contestId}/categories/${submission.categoryId}/rankings`)
+                  }
+                }}
+              >
+                <Trophy className="h-4 w-4" />
+                View Category Rankings
+              </Button>
+            )}
 
             {/* Media Preview */}
             <section className="space-y-3">
@@ -140,6 +170,16 @@ export function AdminSubmissionDetail({
           src={submission.mediaUrl}
           alt={`Photo by ${submission.participantCode}`}
           onClose={() => setLightboxOpen(false)}
+        />
+      )}
+
+      {submission.review && (
+        <OverrideFeedbackDialog
+          reviewId={submission.review.reviewId}
+          originalFeedback={submission.review.feedback}
+          currentOverride={submission.review.adminFeedbackOverride}
+          open={overrideDialogOpen}
+          onOpenChange={setOverrideDialogOpen}
         />
       )}
     </>

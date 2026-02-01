@@ -459,7 +459,18 @@ Before marking any story as "review" status, verify ALL items:
 □ npm run build       # Must pass with no errors
 □ npm run lint        # Must pass with no errors
 □ npm run type-check  # Must pass with no errors
-□ npm run test        # Must pass (if tests exist for story)
+□ npx vitest run --changed  # SCOPED tests only — story-related files ONLY
+
+# TESTING POLICY (MANDATORY — NO EXCEPTIONS)
+# - NEVER run `npm run test` or the full test suite. It is BANNED.
+# - ONLY run tests for files created or modified in the current story.
+# - Use `npx vitest run --changed` or target specific test files directly.
+# - HARD LIMITS per story (whichever is hit first):
+#     Max 50 tests total across all test runs in the story.
+#     Max 5 minutes total testing time per story.
+# - If either limit is exceeded: STOP testing immediately, skip, and move on.
+# - These limits apply to ALL test runs combined: quality gate, review fixes, everything.
+# - No exceptions regardless of story complexity.
 
 # Import Compliance (REQUIRED)
 □ grep -r "from '@/" src/ | grep -v "/index'" | grep -v "from '@/lib'" | grep -v "from '@/components/ui'"

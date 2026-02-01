@@ -33,8 +33,13 @@ const mockSubmissions: AdminSubmission[] = [
       ratingTier: 'Advanced Producer',
       feedback: 'Excellent storytelling',
       reviewedAt: '2026-01-31T10:00:00Z',
+      adminFeedbackOverride: null,
+      adminFeedbackOverrideAt: null,
     },
     rankingPosition: 1,
+    rankingId: 'rank-1',
+    adminRankingOverride: null,
+    adminRankingOverrideAt: null,
     assignedJudgeName: 'Jane Doe',
   },
   {
@@ -57,6 +62,9 @@ const mockSubmissions: AdminSubmission[] = [
     categoryType: 'photo',
     review: null,
     rankingPosition: null,
+    rankingId: null,
+    adminRankingOverride: null,
+    adminRankingOverrideAt: null,
     assignedJudgeName: 'John Smith',
   },
 ]

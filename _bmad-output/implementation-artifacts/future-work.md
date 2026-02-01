@@ -492,6 +492,13 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-01
   - **Files:** `src/pages/admin/AdminSubmissionsPage.tsx`
 
+- **[Story 6-3]** Harden trigger bypass logic to explicitly check admin override columns
+  - **Why:** The `prevent_review_modification_on_completed` and `prevent_ranking_modification_on_completed` triggers use an allowlist approach — they check that all known non-override columns are unchanged, then allow the update. If future columns are added to the tables without updating the triggers, those new columns could be modified on completed categories. A more defensive approach would explicitly check that ONLY admin override columns changed (positive check vs negative check).
+  - **Priority:** Low
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-01
+  - **Files:** `supabase/migrations/20260201162435_add_admin_override_columns.sql:17-42, 44-68`
+  - **Notes:** Current implementation is correct for the current schema. This is a defensive hardening measure for future schema evolution.
 
 ---
 

@@ -1,9 +1,24 @@
-// Story 6-1: AdminSubmissionDetail component tests
+// Story 6-1/6-3: AdminSubmissionDetail component tests
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AdminSubmissionDetail } from './AdminSubmissionDetail'
 import type { AdminSubmission } from '../types/adminSubmission.types'
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+function renderWithProviders(ui: ReactElement) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        {ui}
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
 
 const mockSubmission: AdminSubmission = {
   id: 'sub-1',
@@ -31,8 +46,13 @@ const mockSubmission: AdminSubmission = {
     ratingTier: 'Advanced Producer',
     feedback: 'Great work!',
     reviewedAt: '2026-01-31T10:00:00Z',
+    adminFeedbackOverride: null,
+    adminFeedbackOverrideAt: null,
   },
   rankingPosition: 1,
+  rankingId: 'rank-1',
+  adminRankingOverride: null,
+  adminRankingOverrideAt: null,
   assignedJudgeName: 'Jane Doe',
 }
 
@@ -48,7 +68,7 @@ const mockVideoSubmission: AdminSubmission = {
 
 describe('AdminSubmissionDetail', () => {
   it('renders nothing when submission is null', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <AdminSubmissionDetail
         submission={null}
         open={false}
@@ -60,7 +80,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('displays participant info when open', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockSubmission}
         open={true}
@@ -76,7 +96,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('displays submission metadata', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockSubmission}
         open={true}
@@ -90,7 +110,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('renders photo preview for photo submissions', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockSubmission}
         open={true}
@@ -104,7 +124,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('renders video iframe for video submissions', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockVideoSubmission}
         open={true}
@@ -118,7 +138,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('displays sheet title', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockSubmission}
         open={true}
@@ -130,7 +150,7 @@ describe('AdminSubmissionDetail', () => {
   })
 
   it('displays judge review section when reviewed', () => {
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={mockSubmission}
         open={true}
@@ -151,7 +171,7 @@ describe('AdminSubmissionDetail', () => {
       rankingPosition: null,
     }
 
-    render(
+    renderWithProviders(
       <AdminSubmissionDetail
         submission={pendingSubmission}
         open={true}

@@ -1,6 +1,6 @@
 // Story 6-2: AdminReviewSection component tests
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { AdminReviewSection } from './AdminReviewSection'
 import type { AdminSubmissionReview } from '../types/adminSubmission.types'
@@ -13,6 +13,8 @@ const mockReview: AdminSubmissionReview = {
   ratingTier: 'Advanced Producer',
   feedback: 'Great composition and storytelling.',
   reviewedAt: '2026-01-31T10:00:00Z',
+  adminFeedbackOverride: null,
+  adminFeedbackOverrideAt: null,
 }
 
 describe('AdminReviewSection', () => {
@@ -97,5 +99,79 @@ describe('AdminReviewSection', () => {
     )
 
     expect(screen.getByText('No feedback provided')).toBeInTheDocument()
+  })
+
+  it('shows "Overridden" badge when feedback override exists', () => {
+    const overriddenReview: AdminSubmissionReview = {
+      ...mockReview,
+      adminFeedbackOverride: 'Admin corrected feedback',
+      adminFeedbackOverrideAt: '2026-02-01T10:00:00Z',
+    }
+
+    render(
+      <AdminReviewSection
+        review={overriddenReview}
+        assignedJudgeName="Jane Doe"
+        rankingPosition={null}
+      />
+    )
+
+    expect(screen.getByText('Overridden')).toBeInTheDocument()
+    expect(screen.getByText('Admin corrected feedback')).toBeInTheDocument()
+  })
+
+  it('shows original feedback as secondary when override exists', () => {
+    const overriddenReview: AdminSubmissionReview = {
+      ...mockReview,
+      feedback: 'Original feedback text',
+      adminFeedbackOverride: 'Admin override text',
+      adminFeedbackOverrideAt: '2026-02-01T10:00:00Z',
+    }
+
+    render(
+      <AdminReviewSection
+        review={overriddenReview}
+        assignedJudgeName="Jane Doe"
+        rankingPosition={null}
+      />
+    )
+
+    expect(screen.getByText('Admin override text')).toBeInTheDocument()
+    expect(screen.getByText('Original feedback text')).toBeInTheDocument()
+    expect(screen.getByText('Original:')).toBeInTheDocument()
+  })
+
+  it('renders override feedback button when callback provided', () => {
+    const onOverride = vi.fn()
+
+    render(
+      <AdminReviewSection
+        review={mockReview}
+        assignedJudgeName="Jane Doe"
+        rankingPosition={null}
+        onOverrideFeedback={onOverride}
+      />
+    )
+
+    expect(screen.getByText('Override Feedback')).toBeInTheDocument()
+  })
+
+  it('renders "Edit Override" button when override exists and callback provided', () => {
+    const overriddenReview: AdminSubmissionReview = {
+      ...mockReview,
+      adminFeedbackOverride: 'Override text',
+      adminFeedbackOverrideAt: '2026-02-01T10:00:00Z',
+    }
+
+    render(
+      <AdminReviewSection
+        review={overriddenReview}
+        assignedJudgeName="Jane Doe"
+        rankingPosition={null}
+        onOverrideFeedback={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Edit Override')).toBeInTheDocument()
   })
 })
