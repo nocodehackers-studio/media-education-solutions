@@ -107,6 +107,8 @@ describe('CreateContestForm', () => {
       coverImageUrl: null,
       status: 'draft',
       winnersPagePassword: null,
+      winnersPageEnabled: false,
+      winnersPageGeneratedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -195,6 +197,8 @@ describe('CreateContestForm', () => {
       coverImageUrl: null,
       status: 'draft',
       winnersPagePassword: null,
+      winnersPageEnabled: false,
+      winnersPageGeneratedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

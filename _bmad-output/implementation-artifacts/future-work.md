@@ -500,6 +500,28 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Files:** `supabase/migrations/20260201162435_add_admin_override_columns.sql:17-42, 44-68`
   - **Notes:** Current implementation is correct for the current schema. This is a defensive hardening measure for future schema evolution.
 
+- **[Story 6-5]** Regenerate Winners Page flow with re-approval enforcement (AC9)
+  - **Why:** AC9 specifies "Regenerate Winners Page" with re-approval of modified categories and stable URL. Requires schema changes to track category modification timestamps vs approval timestamps, new API logic to detect and reset modified categories, and a new UI flow. Current implementation covers the generate-once happy path.
+  - **Priority:** Medium
+  - **Suggested Epic:** Admin tools / Winners management
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/features/contests/components/WinnersSetupForm.tsx`, `src/features/contests/api/winnersApi.ts`
+  - **Notes:** Needs: (1) `modified_after_approval` tracking on categories, (2) "Regenerate" button on the generated state, (3) auto-reset `approved_for_winners` for modified categories, (4) re-approval gate before regeneration.
+
+- **[Story 6-5]** Approval-category detail view embedded in Winners tab (AC2)
+  - **Why:** AC2 specifies viewing submissions, ratings, rankings, overrides, and top 3 winners inline during the approval process. The existing AdminCategoryRankingsPage (story 6-3) already shows this data — the category name links to it. An embedded detail view within the Winners tab would reduce navigation but is not strictly needed since the data is accessible.
+  - **Priority:** Low
+  - **Suggested Epic:** UX enhancement / Admin tools
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/features/contests/components/CategoryApprovalList.tsx`
+
+- **[Story 6-5]** Disable Generate button until password form is valid
+  - **Why:** The Generate button is currently enabled with empty password fields. Clicking triggers Zod validation which shows error messages and prevents submission — standard form UX. Disabling the button until fields are valid would hide why the button is disabled but some teams prefer this pattern.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/features/contests/components/WinnersSetupForm.tsx:313-316`
+
 ---
 
 ### Epic 7: Email Notification System

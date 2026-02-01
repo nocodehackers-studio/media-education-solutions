@@ -25,6 +25,8 @@ function transformContestRow(row: ContestRow): Contest {
     coverImageUrl: row.cover_image_url,
     status: row.status,
     winnersPagePassword: row.winners_page_password,
+    winnersPageEnabled: row.winners_page_enabled ?? false,
+    winnersPageGeneratedAt: row.winners_page_generated_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

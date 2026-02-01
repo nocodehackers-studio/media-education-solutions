@@ -16,6 +16,8 @@ export interface ContestRow {
   cover_image_url: string | null;
   status: ContestStatus;
   winners_page_password: string | null;
+  winners_page_enabled: boolean;
+  winners_page_generated_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +35,8 @@ export interface Contest {
   coverImageUrl: string | null;
   status: ContestStatus;
   winnersPagePassword: string | null;
+  winnersPageEnabled: boolean;
+  winnersPageGeneratedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
