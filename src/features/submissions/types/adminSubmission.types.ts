@@ -27,6 +27,8 @@ export interface AdminSubmissionRow {
   status: SubmissionStatus
   submitted_at: string
   created_at: string
+  disqualified_at: string | null
+  restored_at: string | null
   participants: {
     id: string
     code: string
@@ -74,6 +76,8 @@ export interface AdminSubmission {
   status: SubmissionStatus
   submittedAt: string
   createdAt: string
+  disqualifiedAt: string | null
+  restoredAt: string | null
   participantId: string
   participantCode: string
   participantName: string | null
@@ -150,6 +154,8 @@ export function transformAdminSubmission(row: AdminSubmissionRow): AdminSubmissi
     status: row.status,
     submittedAt: row.submitted_at,
     createdAt: row.created_at,
+    disqualifiedAt: row.disqualified_at ?? null,
+    restoredAt: row.restored_at ?? null,
     participantId: row.participants.id,
     participantCode: row.participants.code,
     participantName: row.participants.name,

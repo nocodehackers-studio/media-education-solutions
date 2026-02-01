@@ -11,7 +11,7 @@
 | contests | Contest CRUD, status management | ContestCard, useContests, contestsApi (Planned) |
 | categories | Category management within contests | CategoryCard, useCategories (Planned) |
 | participants | Participant codes, session, info | ParticipantCodeEntry, useParticipantSession (Planned) |
-| submissions | File uploads, submission management, admin view, admin overrides | UploadProgress, useFileUpload, AdminSubmissionsTable, AdminSubmissionDetail, AdminReviewSection, AdminSubmissionFilters, useAdminSubmissions, OverrideFeedbackDialog, AdminCategoryRankings, useOverrideFeedback, useOverrideRankings |
+| submissions | File uploads, submission management, admin view, admin overrides, disqualification | UploadProgress, useFileUpload, AdminSubmissionsTable, AdminSubmissionDetail, AdminReviewSection, AdminSubmissionFilters, useAdminSubmissions, OverrideFeedbackDialog, AdminCategoryRankings, useOverrideFeedback, useOverrideRankings, DisqualifyConfirmDialog, RestoreConfirmDialog, useDisqualifySubmission, useRestoreSubmission |
 | reviews | Rating, feedback for submissions | RatingScale, useReviews, ReviewForm (Planned) |
 | rankings | Drag-drop ranking, tier ordering | RankingDropzone, useRankings (Planned) |
 | notifications | Email triggers via Brevo | useNotifications (Planned) |

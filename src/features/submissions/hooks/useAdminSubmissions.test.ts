@@ -48,6 +48,8 @@ const mockSubmission = {
   review: null,
   rankingPosition: null,
   rankingId: null,
+  disqualifiedAt: null,
+  restoredAt: null,
   adminRankingOverride: null,
   adminRankingOverrideAt: null,
   assignedJudgeName: 'Test Judge',

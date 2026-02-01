@@ -15,6 +15,8 @@ import {
 import { PhotoLightbox } from './PhotoLightbox'
 import { AdminReviewSection } from './AdminReviewSection'
 import { OverrideFeedbackDialog } from './OverrideFeedbackDialog'
+import { DisqualifyConfirmDialog } from './DisqualifyConfirmDialog'
+import { RestoreConfirmDialog } from './RestoreConfirmDialog'
 import type { AdminSubmission } from '../types/adminSubmission.types'
 import { SUBMISSION_STATUS_VARIANT, formatSubmissionDate } from '../types/adminSubmission.types'
 
@@ -32,6 +34,8 @@ export function AdminSubmissionDetail({
   const navigate = useNavigate()
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false)
+  const [disqualifyOpen, setDisqualifyOpen] = useState(false)
+  const [restoreOpen, setRestoreOpen] = useState(false)
 
   if (!submission) return null
 
@@ -91,6 +95,33 @@ export function AdminSubmissionDetail({
                   </Badge>
                 </dd>
               </dl>
+
+              {/* Disqualify / Restore actions */}
+              {submission.status === 'submitted' && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDisqualifyOpen(true)}
+                >
+                  Disqualify
+                </Button>
+              )}
+              {submission.status === 'disqualified' && (
+                <div className="space-y-2">
+                  {submission.disqualifiedAt && (
+                    <p className="text-sm text-muted-foreground">
+                      Disqualified {formatSubmissionDate(submission.disqualifiedAt)}
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRestoreOpen(true)}
+                  >
+                    Restore
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Judge Review */}
@@ -180,6 +211,26 @@ export function AdminSubmissionDetail({
           currentOverride={submission.review.adminFeedbackOverride}
           open={overrideDialogOpen}
           onOpenChange={setOverrideDialogOpen}
+        />
+      )}
+
+      {submission.status === 'submitted' && (
+        <DisqualifyConfirmDialog
+          submissionId={submission.id}
+          participantCode={submission.participantCode}
+          categoryName={submission.categoryName}
+          open={disqualifyOpen}
+          onOpenChange={setDisqualifyOpen}
+        />
+      )}
+
+      {submission.status === 'disqualified' && (
+        <RestoreConfirmDialog
+          submissionId={submission.id}
+          participantCode={submission.participantCode}
+          categoryName={submission.categoryName}
+          open={restoreOpen}
+          onOpenChange={setRestoreOpen}
         />
       )}
     </>

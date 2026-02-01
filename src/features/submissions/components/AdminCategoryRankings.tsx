@@ -13,7 +13,7 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { Trophy, AlertTriangle } from 'lucide-react'
+import { Trophy, AlertTriangle, Ban } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button, Badge, Skeleton } from '@/components/ui'
 import { RankingSlot, DraggableSubmissionCard } from '@/features/reviews'
@@ -88,10 +88,11 @@ export function AdminCategoryRankings({ categoryId, contestId }: AdminCategoryRa
 
   const hasOverrides = rankedSubmissions.some((s) => s.adminRankingOverride != null)
 
-  // Submissions pool for override mode (all category submissions, sorted by rating DESC)
+  // Submissions pool for override mode (exclude disqualified, sorted by rating DESC)
   const submissionsPool = useMemo(() => {
     if (!allSubmissions) return []
     return [...allSubmissions]
+      .filter((s) => s.status !== 'disqualified')
       .map(toSubmissionForReview)
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
   }, [allSubmissions])
@@ -333,12 +334,44 @@ export function AdminCategoryRankings({ categoryId, contestId }: AdminCategoryRa
         /* View mode: display effective rankings */
         <div className="space-y-3">
           {effectiveRankings.map((sub, idx) => {
-            if (!sub) return null
             const position = idx + 1
             const positionLabels = ['1st', '2nd', '3rd']
             const positionEmojis = ['🥇', '🥈', '🥉']
             const originalSub = rankedSubmissions.find((s) => s.rankingPosition === position)
+
+            // If no submission at this position, skip
+            if (!sub && !originalSub) return null
+
+            // Check if effective submission is disqualified
+            const isDisqualified = sub?.status === 'disqualified'
             const isOverridden = originalSub?.adminRankingOverride != null
+
+            // Show empty position warning for disqualified submissions
+            if (!sub || isDisqualified) {
+              return (
+                <div
+                  key={`empty-${position}`}
+                  className="flex items-center gap-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950"
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold w-20 flex-shrink-0">
+                    <span>{positionEmojis[idx]}</span>
+                    <span>{positionLabels[idx]}</span>
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Ban className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                    <span className="text-sm text-amber-700 dark:text-amber-300">
+                      Ranking position is now empty
+                    </span>
+                  </div>
+                  {isDisqualified && sub && (
+                    <div className="flex-shrink-0">
+                      <Badge variant="destructive" className="text-xs">Disqualified</Badge>
+                      <p className="text-xs text-muted-foreground mt-0.5 font-mono">{sub.participantCode}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            }
 
             const thumbnailSrc =
               sub.mediaType === 'photo' ? sub.mediaUrl : sub.thumbnailUrl
