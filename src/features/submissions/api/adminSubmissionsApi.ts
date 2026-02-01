@@ -15,7 +15,7 @@ export const adminSubmissionsApi = {
       .from('submissions')
       .select(`
         id, media_type, media_url, bunny_video_id, thumbnail_url,
-        status, submitted_at, created_at,
+        status, submitted_at, created_at, disqualified_at, restored_at,
         participants!inner(id, code, name, organization_name, tlc_name, tlc_email),
         categories!inner(
           id, name, type, assigned_judge_id,
@@ -102,5 +102,34 @@ export const adminSubmissionsApi = {
       .eq('category_id', categoryId)
 
     if (error) throw new Error(`Failed to clear ranking overrides: ${error.message}`)
+  },
+
+  async disqualifySubmission(submissionId: string): Promise<void> {
+    const { data, error } = await supabase
+      .from('submissions')
+      .update({
+        status: 'disqualified',
+        disqualified_at: new Date().toISOString(),
+        restored_at: null,
+      } as Record<string, unknown>)
+      .eq('id', submissionId)
+      .select('id')
+
+    if (error) throw new Error(`Failed to disqualify submission: ${error.message}`)
+    if (!data || data.length === 0) throw new Error('Failed to disqualify submission: no matching submission found')
+  },
+
+  async restoreSubmission(submissionId: string): Promise<void> {
+    const { data, error } = await supabase
+      .from('submissions')
+      .update({
+        status: 'submitted',
+        restored_at: new Date().toISOString(),
+      } as Record<string, unknown>)
+      .eq('id', submissionId)
+      .select('id')
+
+    if (error) throw new Error(`Failed to restore submission: ${error.message}`)
+    if (!data || data.length === 0) throw new Error('Failed to restore submission: no matching submission found')
   },
 }

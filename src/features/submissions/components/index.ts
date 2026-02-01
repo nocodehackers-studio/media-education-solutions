@@ -12,3 +12,7 @@ export { AdminSubmissionDetail } from './AdminSubmissionDetail'
 export { AdminReviewSection } from './AdminReviewSection'
 export { OverrideFeedbackDialog } from './OverrideFeedbackDialog'
 export { AdminCategoryRankings } from './AdminCategoryRankings'
+
+// Story 6-4: Disqualify/Restore dialogs
+export { DisqualifyConfirmDialog } from './DisqualifyConfirmDialog'
+export { RestoreConfirmDialog } from './RestoreConfirmDialog'

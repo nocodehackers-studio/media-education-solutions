@@ -14,6 +14,8 @@ function makeBaseRow(overrides: Partial<AdminSubmissionRow> = {}): AdminSubmissi
     status: 'submitted',
     submitted_at: '2026-01-30T10:00:00Z',
     created_at: '2026-01-30T10:00:00Z',
+    disqualified_at: null,
+    restored_at: null,
     participants: {
       id: 'p-1',
       code: 'ABC12345',

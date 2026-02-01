@@ -15,6 +15,8 @@ export {
   AdminReviewSection,
   OverrideFeedbackDialog,
   AdminCategoryRankings,
+  DisqualifyConfirmDialog,
+  RestoreConfirmDialog,
 } from './components'
 
 // === Hooks ===
@@ -27,6 +29,8 @@ export {
   useAdminSubmissions,
   useOverrideFeedback,
   useOverrideRankings,
+  useDisqualifySubmission,
+  useRestoreSubmission,
 } from './hooks'
 
 // === Types ===

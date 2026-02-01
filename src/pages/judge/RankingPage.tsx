@@ -95,14 +95,16 @@ export function RankingPage() {
     [ranked]
   );
 
-  // Submissions sorted by rating DESC for the available pool
+  // Submissions sorted by rating DESC for the available pool (exclude disqualified)
   const sortedSubmissions = useMemo(() => {
     if (!submissions) return [];
-    return [...submissions].sort((a, b) => {
-      const rA = a.rating ?? 0;
-      const rB = b.rating ?? 0;
-      return rB - rA;
-    });
+    return [...submissions]
+      .filter((s) => s.status !== 'disqualified')
+      .sort((a, b) => {
+        const rA = a.rating ?? 0;
+        const rB = b.rating ?? 0;
+        return rB - rA;
+      });
   }, [submissions]);
 
   // Active submission for DragOverlay

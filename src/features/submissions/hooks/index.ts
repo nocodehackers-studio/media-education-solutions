@@ -11,3 +11,7 @@ export { useAdminSubmissions } from './useAdminSubmissions'
 // Story 6-3: Override hooks
 export { useOverrideFeedback } from './useOverrideFeedback'
 export { useOverrideRankings } from './useOverrideRankings'
+
+// Story 6-4: Disqualify/Restore hooks
+export { useDisqualifySubmission } from './useDisqualifySubmission'
+export { useRestoreSubmission } from './useRestoreSubmission'

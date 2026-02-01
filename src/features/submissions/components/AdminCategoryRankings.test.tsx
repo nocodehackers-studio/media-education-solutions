@@ -86,6 +86,8 @@ function createSubmission(overrides: Partial<AdminSubmission> = {}): AdminSubmis
     },
     rankingPosition: null,
     rankingId: null,
+    disqualifiedAt: null,
+    restoredAt: null,
     adminRankingOverride: null,
     adminRankingOverrideAt: null,
     assignedJudgeName: 'Jane Doe',

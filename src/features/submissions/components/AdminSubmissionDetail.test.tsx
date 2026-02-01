@@ -1,4 +1,4 @@
-// Story 6-1/6-3: AdminSubmissionDetail component tests
+// Story 6-1/6-3/6-4: AdminSubmissionDetail component tests
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -49,6 +49,8 @@ const mockSubmission: AdminSubmission = {
     adminFeedbackOverride: null,
     adminFeedbackOverrideAt: null,
   },
+  disqualifiedAt: null,
+  restoredAt: null,
   rankingPosition: 1,
   rankingId: 'rank-1',
   adminRankingOverride: null,
@@ -181,5 +183,73 @@ describe('AdminSubmissionDetail', () => {
 
     expect(screen.getByText('Pending Review')).toBeInTheDocument()
     expect(screen.getByText(/Jane Doe/)).toBeInTheDocument()
+  })
+
+  it('shows Disqualify button for submitted submissions', () => {
+    renderWithProviders(
+      <AdminSubmissionDetail
+        submission={mockSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Disqualify')).toBeInTheDocument()
+    expect(screen.queryByText('Restore')).not.toBeInTheDocument()
+  })
+
+  it('shows Restore button for disqualified submissions', () => {
+    const disqualifiedSubmission: AdminSubmission = {
+      ...mockSubmission,
+      status: 'disqualified',
+      disqualifiedAt: '2026-01-31T12:00:00Z',
+    }
+
+    renderWithProviders(
+      <AdminSubmissionDetail
+        submission={disqualifiedSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Restore')).toBeInTheDocument()
+    expect(screen.queryByText('Disqualify')).not.toBeInTheDocument()
+  })
+
+  it('displays disqualifiedAt timestamp for disqualified submissions', () => {
+    const disqualifiedSubmission: AdminSubmission = {
+      ...mockSubmission,
+      status: 'disqualified',
+      disqualifiedAt: '2026-01-31T12:00:00Z',
+    }
+
+    renderWithProviders(
+      <AdminSubmissionDetail
+        submission={disqualifiedSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(/Disqualified/)).toBeInTheDocument()
+  })
+
+  it('does not show Disqualify button for non-submitted statuses', () => {
+    const uploadingSubmission: AdminSubmission = {
+      ...mockSubmission,
+      status: 'uploading',
+    }
+
+    renderWithProviders(
+      <AdminSubmissionDetail
+        submission={uploadingSubmission}
+        open={true}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(screen.queryByText('Disqualify')).not.toBeInTheDocument()
+    expect(screen.queryByText('Restore')).not.toBeInTheDocument()
   })
 })
