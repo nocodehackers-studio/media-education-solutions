@@ -432,6 +432,45 @@ export const categoriesApi = {
   },
 
   // ==========================================================================
+  // Story 5-6: Mark Category Complete
+  // ==========================================================================
+
+  /**
+   * Mark a category as complete (judge finished all reviews and rankings)
+   * Calls RPC to validate and mark complete, then fires admin notification
+   * @param categoryId Category ID to mark complete
+   * @returns Result with success status and completion timestamp
+   */
+  async markCategoryComplete(
+    categoryId: string
+  ): Promise<{ success: boolean; completedAt?: string; error?: string }> {
+    // Step 1: Call RPC to validate and mark complete
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('mark_category_complete', {
+      p_category_id: categoryId,
+    });
+
+    if (error) throw error;
+
+    // RPC returns JSON with success/error
+    const result = data as { success: boolean; error?: string; completed_at?: string };
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    // Step 2: Trigger admin notification (fire-and-forget, failure doesn't undo completion)
+    try {
+      await supabase.functions.invoke('notify-admin-category-complete', {
+        body: { categoryId },
+      });
+    } catch (emailError) {
+      console.warn('Admin notification failed (non-blocking):', emailError);
+    }
+
+    return { success: true, completedAt: result.completed_at };
+  },
+
+  // ==========================================================================
   // Story 3-4: Judge Dashboard Methods
   // ==========================================================================
 

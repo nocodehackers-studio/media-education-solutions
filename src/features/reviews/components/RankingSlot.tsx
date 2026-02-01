@@ -17,7 +17,7 @@ const POSITION_CONFIG: Record<RankingPosition, { label: string; emoji: string; c
 interface RankingSlotProps {
   position: RankingPosition;
   submission: SubmissionForReview | null;
-  onRemove: () => void;
+  onRemove?: () => void;
 }
 
 export function RankingSlot({ position, submission, onRemove }: RankingSlotProps) {
@@ -79,19 +79,21 @@ export function RankingSlot({ position, submission, onRemove }: RankingSlotProps
             )}
           </div>
 
-          {/* Remove button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            aria-label={`Remove from rank ${position}`}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {/* Remove button (hidden when read-only) */}
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              aria-label={`Remove from rank ${position}`}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex h-[60px] items-center justify-center text-sm text-muted-foreground">

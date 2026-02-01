@@ -29,6 +29,8 @@ export {
   useDeleteCategory,
   // Story 3-5: Judge progress hook
   useJudgeProgress,
+  // Story 5-6: Mark category complete hook
+  useMarkCategoryComplete,
   useRemoveJudge,
   useUpdateCategory,
   useUpdateCategoryStatus,

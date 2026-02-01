@@ -14,7 +14,7 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { ArrowLeft, Trophy, Save, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Trophy, Save, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts';
 import { useCategoriesByJudge } from '@/features/categories';
@@ -49,6 +49,7 @@ export function RankingPage() {
   // Category context
   const { data: categories } = useCategoriesByJudge(user?.id);
   const category = categories?.find((c) => c.id === categoryId);
+  const isCompleted = !!category?.judgingCompletedAt;
 
   // Derive initial rankings from persisted data
   const restoredRankings = useMemo<(SubmissionForReview | null)[]>(() => {
@@ -80,11 +81,12 @@ export function RankingPage() {
     });
   }, [restoredRankings]);
 
-  // DnD sensors
+  // DnD sensors (disabled when category is completed - Story 5-6)
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } });
+  const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor)
+    ...(isCompleted ? [] : [pointerSensor, touchSensor, keyboardSensor])
   );
 
   // Set of ranked submission IDs
@@ -247,6 +249,16 @@ export function RankingPage() {
           </div>
         </div>
 
+        {/* Completion banner - Story 5-6 */}
+        {isCompleted && (
+          <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <CheckCircle2 className="h-4 w-4" />
+            Category completed on{' '}
+            {new Date(category!.judgingCompletedAt!).toLocaleDateString()}
+            {' '}&mdash; rankings are read-only
+          </div>
+        )}
+
         {/* DnD Context wraps both sections */}
         <DndContext
           sensors={sensors}
@@ -264,7 +276,7 @@ export function RankingPage() {
                     key={pos}
                     position={pos}
                     submission={ranked[pos - 1]}
-                    onRemove={() => handleRemove(pos)}
+                    onRemove={isCompleted ? undefined : () => handleRemove(pos)}
                   />
                 ))}
               </div>
@@ -298,18 +310,20 @@ export function RankingPage() {
           </DragOverlay>
         </DndContext>
 
-        {/* Save button */}
-        <div className="flex justify-center pt-4">
-          <Button
-            size="lg"
-            onClick={handleSave}
-            disabled={!allRanked || saveRankingsMutation.isPending}
-            className="gap-2 w-full sm:w-auto"
-          >
-            <Save className="h-4 w-4" />
-            {saveRankingsMutation.isPending ? 'Saving...' : 'Save Rankings'}
-          </Button>
-        </div>
+        {/* Save button (hidden when completed - Story 5-6) */}
+        {!isCompleted && (
+          <div className="flex justify-center pt-4">
+            <Button
+              size="lg"
+              onClick={handleSave}
+              disabled={!allRanked || saveRankingsMutation.isPending}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Save className="h-4 w-4" />
+              {saveRankingsMutation.isPending ? 'Saving...' : 'Save Rankings'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

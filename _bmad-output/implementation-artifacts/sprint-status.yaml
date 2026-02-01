@@ -84,13 +84,13 @@ development_status:
   epic-4-retrospective: done  # 2026-01-31: Velocity gains documented, deferred items to post-epic hardening phase
 
   # Epic 5: Judging & Evaluation Workflow (6 stories)
-  epic-5: in-progress
+  epic-5: done  # Completed 2026-02-01
   5-1-judge-review-dashboard: done  # Completed 2026-01-31
   5-2-anonymous-submission-view: done  # Completed 2026-01-31
   5-3-media-playback-photo-video: done  # Completed 2026-01-31
   5-4-rating-feedback-form: done  # Completed 2026-01-31
   5-5-top-3-ranking-drag-drop: done  # Completed 2026-02-01
-  5-6-mark-category-complete-notify-admin: backlog
+  5-6-mark-category-complete-notify-admin: done  # Completed 2026-02-01
   epic-5-retrospective: optional
 
   # Epic 6: Admin Oversight & Results Publication (7 stories)

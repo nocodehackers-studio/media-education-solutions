@@ -5,7 +5,9 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts';
+import { useCategoriesByJudge } from '@/features/categories';
 import {
   useSubmissionsForReview,
   useUpsertReview,
@@ -30,6 +32,11 @@ export function SubmissionReviewPage() {
   // Fetch submissions (cached from CategoryReviewPage)
   const { data: submissions, isLoading } = useSubmissionsForReview(categoryId);
   const { mutateAsync: saveReview, isPending: isSaving } = useUpsertReview(categoryId);
+
+  // Category completion state (Story 5-6)
+  const { data: categories } = useCategoriesByJudge(user?.id);
+  const category = categories?.find((c) => c.id === categoryId);
+  const isReadOnly = !!category?.judgingCompletedAt;
 
   // Find current submission and compute navigation
   const currentIndex = useMemo(
@@ -255,6 +262,14 @@ export function SubmissionReviewPage() {
           </span>
         </div>
 
+        {/* Read-only banner (Story 5-6) */}
+        {isReadOnly && (
+          <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <CheckCircle2 className="h-4 w-4" />
+            Read-only: Category completed
+          </div>
+        )}
+
         {/* Participant code */}
         <div>
           <p className="text-lg font-semibold">{currentSubmission.participantCode}</p>
@@ -274,8 +289,8 @@ export function SubmissionReviewPage() {
         {/* Rating */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Rating</label>
-          <RatingDisplay value={localRating} onChange={handleRatingChange} />
-          {ratingWarning && (
+          <RatingDisplay value={localRating} onChange={isReadOnly ? undefined : handleRatingChange} />
+          {ratingWarning && !isReadOnly && (
             <p className="text-sm text-destructive">Please select a rating before continuing</p>
           )}
         </div>
@@ -290,8 +305,9 @@ export function SubmissionReviewPage() {
           <Textarea
             id="feedback"
             value={localFeedback}
-            onChange={(e) => handleFeedbackChange(e.target.value)}
-            onBlur={handleFeedbackBlur}
+            onChange={isReadOnly ? undefined : (e) => handleFeedbackChange(e.target.value)}
+            onBlur={isReadOnly ? undefined : handleFeedbackBlur}
+            readOnly={isReadOnly}
             placeholder="Provide constructive feedback for the participant... (optional)"
             rows={4}
           />
@@ -323,7 +339,17 @@ export function SubmissionReviewPage() {
               </p>
             )}
           </div>
-          {localRating !== null && saveNextTarget ? (
+          {isReadOnly ? (
+            <Button
+              variant="outline"
+              disabled={!nextSubmission}
+              onClick={() => nextSubmission && navigate(`/judge/categories/${categoryId}/review/${nextSubmission.id}`)}
+              className="gap-2"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : localRating !== null && saveNextTarget ? (
             <Button
               disabled={isSaving}
               onClick={() => handleNavigateNext(saveNextTarget.id)}

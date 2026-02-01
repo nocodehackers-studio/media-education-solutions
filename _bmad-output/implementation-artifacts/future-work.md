@@ -436,6 +436,36 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-01
   - **Files:** `src/pages/judge/CategoryReviewPage.tsx:156-158`
 
+- **[Story 5-6]** Lock down `notify-admin-category-complete` Edge Function to assigned judge
+  - **Why:** The Edge Function only verifies the caller is authenticated (valid JWT), but does NOT verify that `auth.uid()` matches `categories.assigned_judge_id`. Any authenticated user could call the endpoint with any categoryId and trigger spam admin emails. The RPC `mark_category_complete` has the proper guard, but the Edge Function endpoint itself is unprotected against direct calls bypassing the client flow.
+  - **Priority:** High
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-01
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts:23-43`
+  - **Notes:** Fix: after fetching the category, add a check that `categories.assigned_judge_id = user.id`. Alternatively, verify `judging_completed_at IS NOT NULL` to prove the RPC already ran successfully.
+
+- **[Story 5-6]** Prevent admin notification email when `judging_completed_at` is NULL
+  - **Why:** Edge Function falls back to `new Date().toLocaleString()` when `judging_completed_at` is NULL (line 128-130), sending an email with a fabricated timestamp instead of failing fast. This masks the case where the endpoint is called before the RPC completes or by an unauthorized caller. Should reject with an error when the category isn't actually completed.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-01
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts:128-130`
+  - **Notes:** Directly related to the auth lockdown finding above. If the assigned judge check is added and `judging_completed_at IS NOT NULL` is verified, the fallback becomes dead code.
+
+- **[Story 5-6]** Add RankingPage read-only mode tests
+  - **Why:** Task 11.4 in the story spec explicitly calls for tests covering read-only mode on the RankingPage (no drag-and-drop, no save button, completion banner). The `RankingPage.test.tsx` file was not modified in this story — these tests were never implemented. The read-only enforcement is backed by DB triggers, so the risk is cosmetic (UI), not data integrity.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/judge/RankingPage.test.tsx`
+
+- **[Story 5-6]** Add SubmissionReviewPage read-only mode tests
+  - **Why:** SubmissionReviewPage has `isReadOnly` state (line 39) that disables rating, makes feedback read-only, and changes navigation buttons, but no test coverage exists for these behaviors. The `SubmissionReviewPage.test.tsx` file was not modified in this story. DB triggers are the safety net for data integrity, so this is a UI test gap.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-02-01
+  - **Files:** `src/pages/judge/SubmissionReviewPage.test.tsx`
+
 ---
 
 ### Epic 6: Admin Oversight & Results Publication

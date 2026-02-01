@@ -4,7 +4,7 @@
 import { type ComponentType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { Calendar, ClipboardList, LogOut, Play } from 'lucide-react';
+import { Calendar, CheckCircle2, ClipboardList, Eye, LogOut, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts';
 import { useCategoriesByJudge, type CategoryWithContext } from '@/features/categories';
@@ -40,8 +40,10 @@ export function JudgeDashboardPage() {
 
   // Stats
   const totalCategories = categories?.length || 0;
+  const completedCategories =
+    categories?.filter((c) => !!c.judgingCompletedAt).length || 0;
   const closedCategories =
-    categories?.filter((c) => c.status === 'closed').length || 0;
+    categories?.filter((c) => c.status === 'closed' && !c.judgingCompletedAt).length || 0;
   const awaitingCategories =
     categories?.filter((c) => c.status === 'published').length || 0;
 
@@ -75,7 +77,7 @@ export function JudgeDashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           <StatCard
             title="Assigned Categories"
             value={totalCategories}
@@ -86,6 +88,11 @@ export function JudgeDashboardPage() {
             value={closedCategories}
             icon={Play}
             highlight
+          />
+          <StatCard
+            title="Completed"
+            value={completedCategories}
+            icon={CheckCircle2}
           />
           <StatCard
             title="Awaiting Deadline"
@@ -167,9 +174,11 @@ interface CategoryCardProps {
 
 function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
   const isClosed = category.status === 'closed';
+  const isCompleted = !!category.judgingCompletedAt;
 
   // Defensive date handling - deadline should always exist but guard against edge cases
   const getDeadlineText = () => {
+    if (isCompleted) return `Completed on ${new Date(category.judgingCompletedAt!).toLocaleDateString()}`;
     if (isClosed) return 'Ready for review';
     if (!category.deadline) return 'Awaiting deadline';
     try {
@@ -183,7 +192,7 @@ function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
   const deadlineText = getDeadlineText();
 
   return (
-    <Card className={isClosed ? 'border-primary shadow-md' : ''}>
+    <Card className={isCompleted ? 'border-green-500 shadow-md' : isClosed ? 'border-primary shadow-md' : ''}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -192,8 +201,10 @@ function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
               {category.contestName} &bull; {category.divisionName}
             </CardDescription>
           </div>
-          <Badge variant={isClosed ? 'default' : 'secondary'}>
-            {isClosed ? 'Closed' : 'Published'}
+          <Badge variant={isCompleted ? 'default' : isClosed ? 'default' : 'secondary'}
+            className={isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}
+          >
+            {isCompleted ? 'Complete' : isClosed ? 'Closed' : 'Published'}
           </Badge>
         </div>
       </CardHeader>
@@ -208,11 +219,25 @@ function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
           </div>
           <Button
             onClick={onStartReviewing}
-            disabled={!isClosed}
-            variant={isClosed ? 'default' : 'outline'}
+            disabled={!isClosed && !isCompleted}
+            variant={isClosed || isCompleted ? 'default' : 'outline'}
           >
-            <Play className="mr-2 h-4 w-4" />
-            {isClosed ? 'Start Reviewing' : 'Not Ready'}
+            {isCompleted ? (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                View Reviews
+              </>
+            ) : isClosed ? (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Start Reviewing
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Not Ready
+              </>
+            )}
           </Button>
         </div>
       </CardContent>

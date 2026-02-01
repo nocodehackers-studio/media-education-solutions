@@ -128,6 +128,7 @@ describe('CategoriesTab', () => {
         createdAt: new Date().toISOString(),
         assignedJudgeId: null,
         invitedAt: null,
+        judgingCompletedAt: null,
         assignedJudge: null,
       },
     ]);

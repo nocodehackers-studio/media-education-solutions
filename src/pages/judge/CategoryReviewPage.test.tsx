@@ -44,20 +44,25 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // Mock hooks
 const mockUseSubmissionsForReview = vi.fn();
+const mockUseRankings = vi.fn();
 vi.mock('@/features/reviews', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/reviews')>();
   return {
     ...actual,
     useSubmissionsForReview: () => mockUseSubmissionsForReview(),
+    useRankings: () => mockUseRankings(),
   };
 });
 
 const mockUseCategoriesByJudge = vi.fn();
+const mockMarkCompleteMutate = vi.fn();
+const mockUseMarkCategoryComplete = vi.fn();
 vi.mock('@/features/categories', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/categories')>();
   return {
     ...actual,
     useCategoriesByJudge: () => mockUseCategoriesByJudge(),
+    useMarkCategoryComplete: () => mockUseMarkCategoryComplete(),
   };
 });
 
@@ -107,6 +112,7 @@ const mockCategory = {
   createdAt: '2026-01-01T00:00:00Z',
   assignedJudgeId: 'judge-123',
   invitedAt: null,
+  judgingCompletedAt: null,
 };
 
 function createWrapper() {
@@ -129,6 +135,17 @@ describe('CategoryReviewPage', () => {
     mockUseCategoriesByJudge.mockReturnValue({
       data: [mockCategory],
       isLoading: false,
+    });
+
+    // Story 5-6: Default rankings and mark complete mocks
+    mockUseRankings.mockReturnValue({
+      data: [],
+      isLoading: false,
+    });
+
+    mockUseMarkCategoryComplete.mockReturnValue({
+      mutate: mockMarkCompleteMutate,
+      isPending: false,
     });
   });
 
@@ -315,5 +332,180 @@ describe('CategoryReviewPage', () => {
 
     await user.click(rankingBtn);
     expect(mockNavigate).toHaveBeenCalledWith('/judge/categories/cat-1/ranking');
+  });
+
+  // Story 5-6: Mark as Complete tests
+  describe('Story 5-6: Mark as Complete', () => {
+    it('shows disabled "Mark as Complete" button when reviews are incomplete', () => {
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: mockSubmissions,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 1, pending: 1, percentage: 50 },
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      const completeBtn = screen.getByRole('button', { name: /Mark as Complete/i });
+      expect(completeBtn).toBeDisabled();
+      expect(screen.getByText('Review all submissions before completing')).toBeInTheDocument();
+    });
+
+    it('shows disabled "Mark as Complete" button when rankings are missing', () => {
+      const allReviewed = mockSubmissions.map((s) => ({
+        ...s,
+        reviewId: `rev-${s.id}`,
+        rating: 7,
+      }));
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: allReviewed,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      mockUseRankings.mockReturnValue({
+        data: [],
+        isLoading: false,
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      const completeBtn = screen.getByRole('button', { name: /Mark as Complete/i });
+      expect(completeBtn).toBeDisabled();
+      expect(screen.getByText('Rank your top 3 before completing')).toBeInTheDocument();
+    });
+
+    it('shows enabled "Mark as Complete" button when all reviewed + 3 rankings', () => {
+      const allReviewed = mockSubmissions.map((s) => ({
+        ...s,
+        reviewId: `rev-${s.id}`,
+        rating: 7,
+      }));
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: allReviewed,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      mockUseRankings.mockReturnValue({
+        data: [
+          { rank: 1, submissionId: 'sub-1' },
+          { rank: 2, submissionId: 'sub-2' },
+          { rank: 3, submissionId: 'sub-3' },
+        ],
+        isLoading: false,
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      const completeBtn = screen.getByRole('button', { name: /Mark as Complete/i });
+      expect(completeBtn).not.toBeDisabled();
+    });
+
+    it('shows confirmation dialog with review count when clicking Mark as Complete', async () => {
+      const user = userEvent.setup();
+      const allReviewed = mockSubmissions.map((s) => ({
+        ...s,
+        reviewId: `rev-${s.id}`,
+        rating: 7,
+      }));
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: allReviewed,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      mockUseRankings.mockReturnValue({
+        data: [
+          { rank: 1, submissionId: 'sub-1' },
+          { rank: 2, submissionId: 'sub-2' },
+          { rank: 3, submissionId: 'sub-3' },
+        ],
+        isLoading: false,
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      await user.click(screen.getByRole('button', { name: /Mark as Complete/i }));
+
+      expect(screen.getByText('Mark Category as Complete?')).toBeInTheDocument();
+      expect(screen.getByText(/You reviewed 2 submissions/)).toBeInTheDocument();
+    });
+
+    it('shows completion indicator when category is completed', () => {
+      const completedCategory = {
+        ...mockCategory,
+        judgingCompletedAt: '2026-01-30T12:00:00Z',
+      };
+
+      mockUseCategoriesByJudge.mockReturnValue({
+        data: [completedCategory],
+        isLoading: false,
+      });
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: mockSubmissions,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      expect(screen.getByText(/Completed on/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Mark as Complete/i })).not.toBeInTheDocument();
+    });
+
+    it('hides "Proceed to Ranking" button when category is completed', () => {
+      const completedCategory = {
+        ...mockCategory,
+        judgingCompletedAt: '2026-01-30T12:00:00Z',
+      };
+
+      mockUseCategoriesByJudge.mockReturnValue({
+        data: [completedCategory],
+        isLoading: false,
+      });
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: mockSubmissions,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      expect(screen.queryByRole('button', { name: /Proceed to Ranking/i })).not.toBeInTheDocument();
+    });
+
+    it('shows read-only banner when category is completed', () => {
+      const completedCategory = {
+        ...mockCategory,
+        judgingCompletedAt: '2026-01-30T12:00:00Z',
+      };
+
+      mockUseCategoriesByJudge.mockReturnValue({
+        data: [completedCategory],
+        isLoading: false,
+      });
+
+      mockUseSubmissionsForReview.mockReturnValue({
+        data: mockSubmissions,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        progress: { total: 2, reviewed: 2, pending: 0, percentage: 100 },
+      });
+
+      render(<CategoryReviewPage />, { wrapper: createWrapper() });
+      expect(screen.getByText(/Read-only: Category completed on/)).toBeInTheDocument();
+    });
   });
 });
