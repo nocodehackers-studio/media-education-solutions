@@ -1,6 +1,6 @@
 # Story 7.3: Admin Notification - Judge Complete
 
-Status: in-progress
+Status: done
 
 ## Story
 
