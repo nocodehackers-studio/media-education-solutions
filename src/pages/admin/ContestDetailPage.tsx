@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import {
@@ -5,6 +6,10 @@ import {
   Button,
   Card,
   CardContent,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
   Skeleton,
   Tabs,
   TabsContent,
@@ -21,6 +26,10 @@ import {
 import type { ContestStatus } from '@/features/contests';
 import { CategoriesTab, JudgesTab } from '@/features/categories';
 import { DivisionList } from '@/features/divisions';
+import {
+  NotificationSummary,
+  NotificationLogsTable,
+} from '@/features/notifications';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string }> = {
@@ -39,6 +48,7 @@ const statusConfig: Record<ContestStatus, { label: string; className: string }> 
 export function ContestDetailPage() {
   const { contestId } = useParams<{ contestId: string }>();
   const { data: contest, isLoading, error } = useContest(contestId!);
+  const [logsSheetOpen, setLogsSheetOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -126,6 +136,7 @@ export function ContestDetailPage() {
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="codes">Codes</TabsTrigger>
           <TabsTrigger value="judges">Judges</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {(contest.status === 'reviewed' || contest.status === 'finished') && (
             <TabsTrigger value="winners">Winners</TabsTrigger>
           )}
@@ -151,12 +162,36 @@ export function ContestDetailPage() {
           <JudgesTab contestId={contest.id} />
         </TabsContent>
 
+        <TabsContent value="notifications" className="mt-6">
+          <div className="space-y-4">
+            <NotificationSummary contestId={contest.id} />
+            <Button
+              variant="outline"
+              onClick={() => setLogsSheetOpen(true)}
+            >
+              View All Notifications
+            </Button>
+          </div>
+        </TabsContent>
+
         {(contest.status === 'reviewed' || contest.status === 'finished') && (
           <TabsContent value="winners" className="mt-6">
             <AdminWinnersTab contest={contest} />
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Notification Logs Sheet */}
+      <Sheet open={logsSheetOpen} onOpenChange={setLogsSheetOpen}>
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Notification Logs</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <NotificationLogsTable contestId={contest.id} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

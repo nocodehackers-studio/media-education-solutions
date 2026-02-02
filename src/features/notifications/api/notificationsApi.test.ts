@@ -91,10 +91,11 @@ describe('notificationsApi', () => {
     ];
 
     it('returns transformed logs without filter', async () => {
-      const mockOrder = vi.fn().mockResolvedValue({
+      const mockLimit = vi.fn().mockResolvedValue({
         data: mockDbRows,
         error: null,
       });
+      const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit });
       const mockSelect = vi.fn().mockReturnValue({ order: mockOrder });
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
@@ -125,7 +126,8 @@ describe('notificationsApi', () => {
         data: mockDbRows,
         error: null,
       });
-      const mockOrder = vi.fn().mockReturnValue({ eq: mockEq });
+      const mockLimit = vi.fn().mockReturnValue({ eq: mockEq });
+      const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit });
       const mockSelect = vi.fn().mockReturnValue({ order: mockOrder });
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
@@ -137,10 +139,11 @@ describe('notificationsApi', () => {
     });
 
     it('throws on database error', async () => {
-      const mockOrder = vi.fn().mockResolvedValue({
+      const mockLimit = vi.fn().mockResolvedValue({
         data: null,
         error: { message: 'DB error' },
       });
+      const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit });
       const mockSelect = vi.fn().mockReturnValue({ order: mockOrder });
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,

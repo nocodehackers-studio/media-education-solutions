@@ -4,6 +4,8 @@ import type {
   SendNotificationRequest,
   SendNotificationResponse,
   NotificationLog,
+  NotificationType,
+  RetryNotificationResponse,
 } from '../types/notification.types';
 
 type NotificationLogRow =
@@ -23,19 +25,38 @@ export const notificationsApi = {
     return data as SendNotificationResponse;
   },
 
-  async getNotificationLogs(contestId?: string): Promise<NotificationLog[]> {
+  async getNotificationLogs(
+    contestId?: string,
+    type?: NotificationType
+  ): Promise<NotificationLog[]> {
     let query = supabase
       .from('notification_logs')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500); // F5: Cap query to prevent unbounded fetches
 
     if (contestId) {
       query = query.eq('related_contest_id', contestId);
     }
 
+    if (type) {
+      query = query.eq('type', type);
+    }
+
     const { data, error } = await query;
     if (error) throw error;
     return (data || []).map(transformNotificationLog);
+  },
+
+  async retryNotification(
+    logId: string
+  ): Promise<RetryNotificationResponse> {
+    const { data, error } = await supabase.functions.invoke(
+      'retry-notification',
+      { body: { logId } }
+    );
+    if (error) return { success: false, error: error.message };
+    return data as RetryNotificationResponse;
   },
 };
 

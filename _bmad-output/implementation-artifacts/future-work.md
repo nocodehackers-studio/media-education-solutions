@@ -1,7 +1,7 @@
 # Future Work & Deferred Items
 
 **Project:** media-education-solutions
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-02
 **Consolidated:** Per Epic 6 retrospective action item #1 — all per-story future-work files merged into this single document.
 
 ---
@@ -937,6 +937,65 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Priority:** Low
   - **Discovered:** 2026-02-02
   - **Files:** `src/features/contests/api/contestsApi.ts`
+
+- **[Story 7-5]** `any` types in `retry-notification` Edge Function (`buildRetryEmail` parameters)
+  - **Why:** `supabaseAdmin: any` and `log: any` bypass TypeScript checking. Common in Deno Edge Functions where Supabase client types require Deno-compatible type generation. Not a runtime risk.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Type safety
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `supabase/functions/retry-notification/index.ts:218`
+
+- **[Story 7-5]** String comparison for date sorting in NotificationLogsTable
+  - **Why:** `sortedLogs` sorts by `String(aVal).localeCompare(String(bVal))` for all fields including `createdAt`. ISO 8601 date strings sort correctly with `localeCompare`, so this is not a bug. A dedicated date comparator would be more explicit but functionally equivalent.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/components/NotificationLogsTable.tsx:70-75`
+
+- **[Story 7-5]** Test coverage constrained by 12-test project limit
+  - **Why:** Story 7-5 has 8 tests (2 summary + 6 table). Additional test cases for retry mutation, CSV content validation, and edge cases would improve coverage but exceed the project's strict testing budget. Prioritize if testing policy is relaxed.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Test coverage improvement
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/components/NotificationSummary.test.tsx`, `src/features/notifications/components/NotificationLogsTable.test.tsx`
+
+- **[Story 7-5]** Error messages from retry Edge Function may expose internal details in CSV export
+  - **Why:** `errorMessage` field from Brevo API errors is included verbatim in the CSV export. Not a concern for admin-only UI access, but exported CSVs could be shared externally. Consider sanitizing error details before export.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/components/NotificationLogsTable.tsx:260-288`
+
+- **[Story 7-5]** CORS wildcard on `retry-notification` Edge Function
+  - **Why:** Pre-existing pattern across all Edge Functions (`Access-Control-Allow-Origin: *`). Not new debt introduced by Story 7-5. Already tracked as cross-cutting concern under Stories 4-1 and 4-6.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `supabase/functions/retry-notification/index.ts:9`
+
+- **[Story 7-5]** Notification logs `.limit(500)` truncates summary totals and CSV export for high-volume contests
+  - **Why:** Summary stats and CSV export use the same capped query. For contests with >500 notifications, totals would be inaccurate and export incomplete. In practice, contests generate ~50-100 emails. Adding pagination or a separate uncapped summary query would address this if volume grows. Note: the limit was added per F5 adversarial review finding to prevent unbounded fetches.
+  - **Priority:** Low
+  - **Suggested Epic:** Performance / Pagination
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/api/notificationsApi.ts:36`
+
+- **[Story 7-5]** Error column hidden on mobile/tablet viewports
+  - **Why:** The error message column uses `hidden md:table-cell`, making failure details invisible below `md` breakpoint. Admin notification management is primarily a desktop workflow. Surfacing errors on mobile would require a detail modal or row expansion pattern.
+  - **Priority:** Low
+  - **Suggested Epic:** UX polish / Mobile
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/components/NotificationLogsTable.tsx:186,220`
+
+- **[Story 7-5]** Raw `<button>` elements for sortable table headers instead of component library Button
+  - **Why:** Sortable column headers use plain `<button>` with Tailwind classes. This is the standard shadcn/ui DataTable pattern — the `Button` component adds padding, focus ring, and sizing that conflicts with `TableHead` styling. Not a real consistency violation.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/components/NotificationLogsTable.tsx:160-184`
+
+- **[Story 7-5]** Missing automated tests for retry state transitions (AC4/AC5)
+  - **Why:** No tests verify retry_count increment, status transitions (failed→sent, failed→permanently_failed), or optimistic lock behavior. Retry logic lives in Edge Function (requires Deno test infrastructure) and TanStack mutation hook (thin wrapper). Test budget already at 13/12. Already tracked as broader concern under Stories 7-1 through 7-4.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test infrastructure
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/hooks/useRetryNotification.ts`, `supabase/functions/retry-notification/index.ts`
 
 ---
 
