@@ -102,7 +102,7 @@ development_status:
   6-5-generate-winners-page: done  # Completed 2026-02-01
   6-6-winners-page-display-download: done  # Completed 2026-02-01
   6-7-participant-feedback-view: done  # Completed 2026-02-01
-  epic-6-retrospective: optional
+  epic-6-retrospective: done  # 2026-02-01: 4 action items, min-viable testing directive, single future-work.md consolidation
 
   # Epic 7: Email Notification System (5 stories)
   epic-7: backlog
