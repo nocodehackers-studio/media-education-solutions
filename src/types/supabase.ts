@@ -185,6 +185,72 @@ export type Database = {
           }
         ]
       }
+      // Story 7-1: Notification logs for email delivery tracking
+      notification_logs: {
+        Row: {
+          id: string
+          type: string
+          recipient_email: string
+          recipient_id: string | null
+          related_contest_id: string | null
+          related_category_id: string | null
+          brevo_message_id: string | null
+          status: string
+          error_message: string | null
+          retry_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          recipient_email: string
+          recipient_id?: string | null
+          related_contest_id?: string | null
+          related_category_id?: string | null
+          brevo_message_id?: string | null
+          status?: string
+          error_message?: string | null
+          retry_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          type?: string
+          recipient_email?: string
+          recipient_id?: string | null
+          related_contest_id?: string | null
+          related_category_id?: string | null
+          brevo_message_id?: string | null
+          status?: string
+          error_message?: string | null
+          retry_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notification_logs_recipient_id_fkey'
+            columns: ['recipient_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notification_logs_related_contest_id_fkey'
+            columns: ['related_contest_id']
+            isOneToOne: false
+            referencedRelation: 'contests'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notification_logs_related_category_id_fkey'
+            columns: ['related_category_id']
+            isOneToOne: false
+            referencedRelation: 'categories'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       submissions: {
         Row: {
           id: string
