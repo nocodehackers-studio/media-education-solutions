@@ -1,6 +1,6 @@
 # Story 7.3: Admin Notification - Judge Complete
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -39,6 +39,15 @@ so that **admins are tracked on notifications received and get a clear signal wh
   - [x] 3.2 Target: under 6 tests total (5 tests written)
 - [ ] Task 4: Deploy (AC: all)
   - [ ] 4.1 Deploy: `npx supabase functions deploy notify-admin-category-complete`
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] Add per-admin `try/catch` around both Brevo `fetch` calls so one network exception cannot abort remaining recipients; always insert a `notification_logs` record on thrown send errors. **FIXED** - Both email loops wrapped in per-admin try/catch with fallback log insert.
+- [x] [AI-Review][HIGH] Enforce completion state before sending notifications (reject when `judging_completed_at` is null). **FIXED** - Guard added: throws error if `judging_completed_at` is null.
+- [x] [AI-Review][HIGH] Update "All Judging Complete" summary content to include judges, not just category status, per AC5. **FIXED** - Summary table now includes Category, Judge, and Status columns. Judge names fetched via `assigned_judge_id` join to profiles.
+- [x] [AI-Review][MEDIUM] Handle non-throwing `supabase.functions.invoke` failures. **DEFERRED to future-work** - Fire-and-forget is intentional per AC6 (non-blocking).
+- [x] [AI-Review][MEDIUM] Align test scope with Task 3/AC coverage. **DEFERRED to future-work** - Spec says "test the all-complete detection logic." No Deno test infra exists.
+- [x] [AI-Review][MEDIUM] Reconcile Dev Agent Record File List with git working tree. **DEFERRED to future-work** - Process concern, commits exist in branch history.
 
 ## Dev Notes
 
@@ -232,6 +241,7 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - Deploy pending user confirmation
 - Adversarial review: 12 findings total, 5 fixed (F4/F5/F7/F11/F12), 7 deferred to future-work.md
 - Resolution approach: auto-fix real findings, defer noise/pre-existing to future-work
+- Code review: 6 findings, 3 fixed (per-admin try/catch, completion state guard, judges in summary), 3 deferred to future-work
 
 ### File List
 
@@ -243,3 +253,47 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 **New Files:**
 - src/features/notifications/utils/isAllJudgingComplete.ts
 - src/features/notifications/utils/isAllJudgingComplete.test.ts
+
+## Senior Developer Review (AI)
+
+### Review Date
+
+2026-02-02
+
+### Reviewer
+
+Barry (Quick Flow Solo Dev)
+
+### Outcome
+
+Changes Requested
+
+### Findings
+
+1. **HIGH** - Unhandled network exceptions in per-admin Brevo sends can abort the loop, skip remaining admins, and skip logging for the failed recipient. [`supabase/functions/notify-admin-category-complete/index.ts:141-230`, `supabase/functions/notify-admin-category-complete/index.ts:277-367`]
+2. **HIGH** - Function does not verify `judging_completed_at` before sending notifications, so completion notifications can be triggered without a confirmed completed category. [`supabase/functions/notify-admin-category-complete/index.ts:66`, `supabase/functions/notify-admin-category-complete/index.ts:135-140`]
+3. **HIGH** - AC5 requires summary of categories **and judges**, but summary email renders category/status only. [`_bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md:21`, `supabase/functions/notify-admin-category-complete/index.ts:302-307`]
+4. **MEDIUM** - `markCategoryComplete` does not inspect non-throw `invoke` failures (`{ error, data }`), so notification failures may be silent. [`src/features/categories/api/categoriesApi.ts:505-511`]
+5. **MEDIUM** - Task 3 is marked done for AC coverage, but test scope only covers a utility helper; no tests validate Edge Function delivery/logging behavior. [`_bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md:37-39`, `src/features/notifications/utils/isAllJudgingComplete.test.ts:1-39`]
+6. **MEDIUM** - Story File List cannot be validated from current git reality (clean tree), reducing traceability. [`_bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md:236-245`]
+
+### AC Validation
+
+- AC1: **PARTIAL** (trigger exists, but completion-state enforcement is missing)
+- AC2: **PARTIAL** (intended all-admin send exists, but loop abort risk on thrown fetch errors)
+- AC3: **IMPLEMENTED**
+- AC4: **PARTIAL** (non-OK responses logged, thrown send failures can bypass per-recipient logging)
+- AC5: **PARTIAL** (summary send exists; missing judges in summary content)
+- AC6: **PARTIAL** (non-blocking from caller path is present; failure logging is not comprehensive for thrown send errors)
+
+### Git vs Story Discrepancy Check
+
+- Files in git but not in story File List: 0
+- Files in story File List but not in current git diff/staged diff: 5
+- Uncommitted changes not documented in story: 0
+
+## Change Log
+
+| Date | Author | Change |
+|------|--------|--------|
+| 2026-02-02 | Barry (AI Reviewer) | Added Senior Developer Review findings, AC validation, and AI follow-up tasks; set status to `in-progress` |

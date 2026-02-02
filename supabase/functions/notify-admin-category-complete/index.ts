@@ -132,12 +132,16 @@ Deno.serve(async (req) => {
     const senderName = 'Media Education Solutions';
     const senderEmail =
       Deno.env.get('BREVO_SENDER_EMAIL') || 'noreply@yourdomain.com';
-    const completedAt = categoryData.judging_completed_at
-      ? new Date(categoryData.judging_completed_at).toLocaleString()
-      : new Date().toLocaleString();
+    // Enforce completion state - reject if category not actually completed (Review F2)
+    if (!categoryData.judging_completed_at) {
+      throw new Error('Category judging not yet completed');
+    }
+
+    const completedAt = new Date(categoryData.judging_completed_at).toLocaleString();
 
     // Send individual category-complete email to each admin via Brevo
     for (const admin of admins) {
+      try {
       const emailResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -227,6 +231,22 @@ Deno.serve(async (req) => {
       if (logError) {
         console.error('Failed to log notification:', logError);
       }
+      } catch (sendError) {
+        // Per-admin try/catch: network exception must not abort remaining admins (Review F1)
+        console.error(`Exception sending email to ${admin.email}:`, sendError);
+        const { error: logError } = await supabaseAdmin.from('notification_logs').insert({
+          type: 'judge_complete',
+          recipient_email: admin.email,
+          recipient_id: admin.id,
+          related_contest_id: contestId,
+          related_category_id: categoryId,
+          status: 'failed',
+          error_message: sendError instanceof Error ? sendError.message : 'Network exception during send',
+        });
+        if (logError) {
+          console.error('Failed to log notification after exception:', logError);
+        }
+      }
     }
 
     // Check if ALL categories in the contest are now complete (Story 7-3)
@@ -242,12 +262,17 @@ Deno.serve(async (req) => {
     const divisionIds =
       contestDivisions?.map((d: { id: string }) => d.id) || [];
 
-    let allCategories: { id: string; name: string; judging_completed_at: string | null }[] | null = null;
+    let allCategories: {
+      id: string;
+      name: string;
+      judging_completed_at: string | null;
+      assigned_judge_id: string | null;
+    }[] | null = null;
 
     if (divisionIds.length > 0) {
       const { data: categories, error: categoriesError } = await supabaseAdmin
         .from('categories')
-        .select('id, name, judging_completed_at')
+        .select('id, name, judging_completed_at, assigned_judge_id')
         .in('division_id', divisionIds);
 
       if (categoriesError) {
@@ -265,15 +290,41 @@ Deno.serve(async (req) => {
       );
 
     if (allComplete) {
+      // Fetch judge names for summary email (Review F3 - AC5 requires categories AND judges)
+      const judgeIds = [
+        ...new Set(
+          allCategories
+            .map((c) => c.assigned_judge_id)
+            .filter((id): id is string => id !== null)
+        ),
+      ];
+      const judgeNameMap: Record<string, string> = {};
+      if (judgeIds.length > 0) {
+        const { data: judgeProfiles } = await supabaseAdmin
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', judgeIds);
+        if (judgeProfiles) {
+          for (const jp of judgeProfiles) {
+            judgeNameMap[jp.id] = jp.first_name
+              ? `${jp.first_name} ${jp.last_name || ''}`.trim()
+              : jp.email;
+          }
+        }
+      }
+
       const categorySummary = allCategories
-        .map(
-          (c: { name: string; judging_completed_at: string | null }) =>
-            `<tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${c.name}</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #16a34a;">Complete</td></tr>`
-        )
+        .map((c) => {
+          const jName = c.assigned_judge_id
+            ? judgeNameMap[c.assigned_judge_id] || 'Unknown'
+            : 'Unassigned';
+          return `<tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${c.name}</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${jName}</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #16a34a;">Complete</td></tr>`;
+        })
         .join('');
 
       // Send "All Judging Complete" summary email to all admins
       for (const admin of admins) {
+        try {
         const summaryResponse = await fetch(
           'https://api.brevo.com/v3/smtp/email',
           {
@@ -302,6 +353,7 @@ Deno.serve(async (req) => {
                     <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                       <tr style="background: #f3f4f6;">
                         <th style="padding: 8px; text-align: left;">Category</th>
+                        <th style="padding: 8px; text-align: left;">Judge</th>
                         <th style="padding: 8px; text-align: left;">Status</th>
                       </tr>
                       ${categorySummary}
@@ -363,6 +415,21 @@ Deno.serve(async (req) => {
         });
         if (summaryLogError) {
           console.error('Failed to log summary notification:', summaryLogError);
+        }
+        } catch (sendError) {
+          // Per-admin try/catch: network exception must not abort remaining admins (Review F1)
+          console.error(`Exception sending summary to ${admin.email}:`, sendError);
+          const { error: logError } = await supabaseAdmin.from('notification_logs').insert({
+            type: 'judge_complete',
+            recipient_email: admin.email,
+            recipient_id: admin.id,
+            related_contest_id: contestId,
+            status: 'failed',
+            error_message: sendError instanceof Error ? sendError.message : 'Network exception during summary send',
+          });
+          if (logError) {
+            console.error('Failed to log summary notification after exception:', logError);
+          }
         }
       }
     }

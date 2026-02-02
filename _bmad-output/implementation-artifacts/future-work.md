@@ -905,6 +905,26 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-02
   - **Files:** `supabase/functions/notify-admin-category-complete/index.ts:135-137`
 
+- **[Story 7-3]** `markCategoryComplete` doesn't inspect non-throw `invoke` failures for notification
+  - **Why:** `supabase.functions.invoke` returns `{ error, data }` instead of throwing on HTTP errors. The fire-and-forget pattern (AC6: non-blocking) is intentional — notification failure must not undo completion. Adding error inspection would only improve observability (console.warn), not change behavior.
+  - **Priority:** Low
+  - **Suggested Epic:** Observability / Logging improvements
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/categories/api/categoriesApi.ts:505-511`
+
+- **[Story 7-3]** Edge Function tests only cover utility helper, not Brevo delivery/logging behavior
+  - **Why:** No Deno test infrastructure exists in this project. Tests cover the `isAllJudgingComplete` detection logic per the spec ("Max 6 tests, test the all-complete detection logic"). Full Edge Function behavior tests require Deno test setup. Already tracked as a broader concern under Story 7-1 future-work item.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test infrastructure
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `src/features/notifications/utils/isAllJudgingComplete.test.ts`, `supabase/functions/notify-admin-category-complete/index.ts`
+
+- **[Story 7-3]** Story File List not verifiable from clean git tree
+  - **Why:** After commits, `git status` is clean so the File List cannot be validated via `git status --porcelain`. The File List was generated at implementation time and commits exist in branch history (`git diff --name-only db419db..HEAD`). Process improvement: generate File List from `git diff --name-only` against baseline commit, not `git status`.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `_bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md`
+
 ---
 
 ## Cross-Cutting Technical Debt
