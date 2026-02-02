@@ -859,6 +859,52 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-02
   - **Files:** `supabase/functions/send-judge-invitation/index.ts`
 
+- **[Story 7-3]** `isAllJudgingComplete` utility exported but not used by Edge Function (by design)
+  - **Why:** Edge Functions are standalone Deno code that cannot import from `src/`. The utility exists as a testable proxy for the same inline logic in the Edge Function. Consider adding Deno test infrastructure to test Edge Function logic directly.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `src/features/notifications/utils/isAllJudgingComplete.ts`, `supabase/functions/notify-admin-category-complete/index.ts`
+
+- **[Story 7-3]** Summary and per-category notification logs use same `type: 'judge_complete'` — indistinguishable
+  - **Why:** DB CHECK constraint limits type to `('judge_invitation', 'judge_complete', 'tlc_results', 'contest_status')`. Adding `'all_judging_complete'` requires a schema migration + TypeScript type update. Currently the only differentiator is the absence of `related_category_id` on summary logs.
+  - **Priority:** Medium
+  - **Suggested Epic:** Notification system refinement
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts`, `supabase/migrations/` (CHECK constraint), `src/features/notifications/types/notification.types.ts`
+
+- **[Story 7-3]** Race condition: concurrent last-category completions trigger duplicate summary emails
+  - **Why:** Two judges completing the last two remaining categories near-simultaneously will both see `allComplete === true` and both send the summary email. No advisory lock, deduplication, or `notification_logs` check exists. Impact is duplicate emails (not data corruption). Fix requires either a DB advisory lock or a `SELECT ... FOR UPDATE` guard.
+  - **Priority:** Medium
+  - **Suggested Epic:** Notification system hardening
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts:250-350`
+
+- **[Story 7-3]** XSS via unsanitized user-controlled strings in email HTML templates (pre-existing)
+  - **Why:** `contestName`, `categoryData.name`, `judgeName`, `admin.first_name`, and category names from `c.name` are interpolated directly into HTML without escaping. Pre-existing from Story 5-6, expanded by 7-3's category summary table. Email clients strip scripts, but HTML injection for phishing is possible. Apply HTML escaping utility to all interpolated strings.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts`, all email-sending Edge Functions
+
+- **[Story 7-3]** Missing `related_category_id` on summary notification log (by design)
+  - **Why:** Summary email is contest-level, not category-level. The omission is intentional but when combined with same `type` value makes log entries harder to distinguish. If `type` is updated (see item above), this becomes a non-issue.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts`
+
+- **[Story 7-3]** Sequential email sending is a timeout risk on Edge Functions (pre-existing pattern)
+  - **Why:** Both email loops use sequential `for...of` with `await`. For N admins, worst case sends 2N emails + 2N DB inserts sequentially. Consider `Promise.allSettled` for parallelism or per-iteration try/catch for error isolation. Pre-existing from Story 5-6.
+  - **Priority:** Medium
+  - **Suggested Epic:** Performance / Edge Function optimization
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts`
+
+- **[Story 7-3]** `toLocaleString()` without explicit locale/timezone is non-deterministic on Edge Functions (pre-existing)
+  - **Why:** Pre-existing from Story 5-6. Deno Edge Function runtime locale is not guaranteed. Use `toLocaleString('en-US', { timeZone: 'UTC' })` or `toISOString()` for deterministic output.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/notify-admin-category-complete/index.ts:135-137`
+
 ---
 
 ## Cross-Cutting Technical Debt

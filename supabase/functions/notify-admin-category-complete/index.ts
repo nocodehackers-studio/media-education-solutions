@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     // Fetch all admin emails
     const { data: admins, error: adminsError } = await supabaseAdmin
       .from('profiles')
-      .select('email, first_name')
+      .select('id, email, first_name')
       .eq('role', 'admin');
 
     if (adminsError || !admins || admins.length === 0) {
@@ -214,30 +214,47 @@ Deno.serve(async (req) => {
         );
       }
 
-      await supabaseAdmin.from('notification_logs').insert({
+      const { error: logError } = await supabaseAdmin.from('notification_logs').insert({
         type: 'judge_complete',
         recipient_email: admin.email,
+        recipient_id: admin.id,
         related_contest_id: contestId,
         related_category_id: categoryId,
         brevo_message_id: messageId,
         status: emailResponse.ok ? 'sent' : 'failed',
         error_message: errorMsg,
       });
+      if (logError) {
+        console.error('Failed to log notification:', logError);
+      }
     }
 
     // Check if ALL categories in the contest are now complete (Story 7-3)
-    const { data: contestDivisions } = await supabaseAdmin
+    const { data: contestDivisions, error: divisionsError } = await supabaseAdmin
       .from('divisions')
       .select('id')
       .eq('contest_id', contestId);
 
+    if (divisionsError) {
+      console.error('Failed to query contest divisions:', divisionsError);
+    }
+
     const divisionIds =
       contestDivisions?.map((d: { id: string }) => d.id) || [];
 
-    const { data: allCategories } = await supabaseAdmin
-      .from('categories')
-      .select('id, name, judging_completed_at')
-      .in('division_id', divisionIds);
+    let allCategories: { id: string; name: string; judging_completed_at: string | null }[] | null = null;
+
+    if (divisionIds.length > 0) {
+      const { data: categories, error: categoriesError } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, judging_completed_at')
+        .in('division_id', divisionIds);
+
+      if (categoriesError) {
+        console.error('Failed to query categories for all-complete check:', categoriesError);
+      }
+      allCategories = categories;
+    }
 
     const allComplete =
       allCategories &&
@@ -323,18 +340,30 @@ Deno.serve(async (req) => {
             // Response parsing OK
           }
         } else {
-          summaryErrorMsg = `All-complete summary send failed for ${admin.email}`;
-          console.error(summaryErrorMsg);
+          try {
+            const errorData = await summaryResponse.json();
+            summaryErrorMsg = `All-complete summary send failed: ${JSON.stringify(errorData)}`;
+          } catch {
+            summaryErrorMsg = `All-complete summary send failed: HTTP ${summaryResponse.status}`;
+          }
+          console.error(
+            `Failed to send all-complete summary to ${admin.email}:`,
+            summaryErrorMsg
+          );
         }
 
-        await supabaseAdmin.from('notification_logs').insert({
+        const { error: summaryLogError } = await supabaseAdmin.from('notification_logs').insert({
           type: 'judge_complete',
           recipient_email: admin.email,
+          recipient_id: admin.id,
           related_contest_id: contestId,
           brevo_message_id: summaryMessageId,
           status: summaryResponse.ok ? 'sent' : 'failed',
           error_message: summaryErrorMsg,
         });
+        if (summaryLogError) {
+          console.error('Failed to log summary notification:', summaryLogError);
+        }
       }
     }
 
