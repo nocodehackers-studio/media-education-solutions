@@ -2,7 +2,7 @@
 // Display a category with status badge, type badge, judge info, and actions
 
 import { useState, useEffect } from 'react';
-import { Video, Camera, UserMinus } from 'lucide-react';
+import { Video, Camera, UserMinus, Send, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui';
 import { useUpdateCategoryStatus } from '../hooks/useUpdateCategoryStatus';
 import { useRemoveJudge } from '../hooks/useRemoveJudge';
+import { useResendJudgeInvitation } from '../hooks/useResendJudgeInvitation';
 import { categoriesApi } from '../api/categoriesApi';
 import { EditCategoryForm } from './EditCategoryForm';
 import { DeleteCategoryButton } from './DeleteCategoryButton';
@@ -85,8 +86,10 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [submissionCount, setSubmissionCount] = useState<number | null>(null);
   const [isLoadingCount, setIsLoadingCount] = useState(true);
   const [submissionCountError, setSubmissionCountError] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
   const updateStatus = useUpdateCategoryStatus(contestId);
   const removeJudge = useRemoveJudge();
+  const resendInvitation = useResendJudgeInvitation(contestId);
 
   // Sync optimistic status with prop changes (per story 2-4 pattern)
   useEffect(() => {
@@ -116,6 +119,30 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category.id]);
+
+  // Story 7-2: Send/Resend judge invitation handler
+  const canSendInvite =
+    optimisticStatus === 'closed' &&
+    !!category.assignedJudge;
+  const isResend = !!category.invitedAt;
+
+  const handleSendInvite = async () => {
+    try {
+      const result = await resendInvitation.mutateAsync(category.id);
+      if (result.success) {
+        toast.success(isResend ? 'Invitation resent successfully' : 'Invitation sent successfully');
+        // F2: 30-second cooldown to prevent spam
+        setResendCooldown(true);
+        setTimeout(() => setResendCooldown(false), 30_000);
+      } else {
+        toast.error(result.error || 'Failed to resend invitation');
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to resend invitation'
+      );
+    }
+  };
 
   const isDraft = optimisticStatus === 'draft';
   const isEditable = isDraft;
@@ -215,6 +242,49 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
               <span className="text-sm text-muted-foreground">
                 {category.assignedJudge.email}
               </span>
+              {/* F18: Invitation status indicator */}
+              {optimisticStatus === 'closed' && !category.invitedAt && (
+                <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
+                  Not invited
+                </Badge>
+              )}
+              {/* Story 7-2: Send/Resend Invite with confirmation dialog */}
+              {canSendInvite && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2"
+                      disabled={resendInvitation.isPending || resendCooldown}
+                      title={isResend ? 'Resend invitation email' : 'Send invitation email'}
+                      aria-label={isResend ? 'Resend invitation email' : 'Send invitation email'}
+                    >
+                      {resendInvitation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{isResend ? 'Resend Invitation' : 'Send Invitation'}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will send {isResend ? 'a new' : 'an'} invitation email to{' '}
+                        <strong>{category.assignedJudge?.email}</strong> and
+                        generate a login link.{isResend && ' Any previous invitation link will no longer work.'}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSendInvite}>
+                        {isResend ? 'Resend' : 'Send'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               {/* AC5: Remove Judge with confirmation */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>

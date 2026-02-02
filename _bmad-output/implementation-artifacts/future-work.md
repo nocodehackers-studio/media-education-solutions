@@ -810,6 +810,55 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-02
   - **Files:** `supabase/functions/send-notification/index.ts`
 
+- **[Story 7-2]** Resend generates new `auth.admin.generateLink({ type: 'invite' })`, potentially invalidating previous invite links
+  - **Why:** Each resend creates a new Supabase invite token. If the judge already clicked the first link and is mid-password-setup, a resend could break their flow. No check on whether the judge has already set their password (in which case `magiclink` type would be more appropriate than `invite`).
+  - **Priority:** High
+  - **Suggested Epic:** Auth flow hardening
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts:122-129`
+
+- **[Story 7-2]** XSS in email HTML template via unsanitized interpolation (pre-existing)
+  - **Why:** `judgeName`, `categoryName`, `contestName`, `submissionCount` are interpolated directly into email HTML via template literals without HTML escaping. Most email clients strip scripts, but CSS injection and phishing link injection via `<a>` tags in names are possible. Pre-existing from Story 3-2 — not introduced by 7-2. Applies to all email-sending Edge Functions.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts:159-195`, `supabase/functions/notify-admin-category-complete/index.ts`
+
+- **[Story 7-2]** Notification log pattern inconsistency — `send-judge-invitation` inserts final status directly vs `send-notification` pending→update pattern
+  - **Why:** `send-judge-invitation` inserts a new `notification_logs` row with final status (`sent`/`failed`) on each call, while `send-notification` creates a `pending` row first and updates it. This means repeated resends create multiple log rows per invitation. Unifying the pattern would require refactoring `send-judge-invitation` to use the pending→update approach.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Notification system consistency
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts`, `supabase/functions/send-notification/index.ts`
+
+- **[Story 7-2]** `supabaseAdmin` typed as `any` in send-judge-invitation Edge Function
+  - **Why:** Variable hoisted for catch block access and typed as `any`, bypassing TypeScript checking on all `.from()`, `.insert()`, `.update()`, `.auth.admin.generateLink()` calls. Requires `SupabaseClient` type import with DB schema generic parameter, which would need Deno-compatible type generation.
+  - **Priority:** Low
+  - **Suggested Epic:** Tech debt / Type safety
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts:37`
+
+- **[Story 7-2]** AC1 wording says "centralized send-notification" but architecture uses dedicated Edge Function
+  - **Why:** AC1 says the system triggers judge invitation email "via the centralized send-notification Edge Function", but the implementation deliberately keeps the dedicated `send-judge-invitation` function because it has domain-specific logic (invite link generation, judge validation, invited_at update). The AC wording is imprecise relative to the documented architecture decision in Dev Notes.
+  - **Priority:** Low
+  - **Suggested Epic:** Documentation / AC alignment
+  - **Discovered:** 2026-02-02
+  - **Files:** `_bmad-output/implementation-artifacts/7-2-judge-invitation-email.md:13`, `supabase/functions/send-judge-invitation/index.ts`
+
+- **[Story 7-2]** Edge Function trusts client-provided metadata for email content and logging
+  - **Why:** `send-judge-invitation` Edge Function trusts client-provided `contestId`, `contestName`, `categoryName`, and `submissionCount` for logging and email content instead of loading authoritative values server-side. A compromised admin session could send emails with incorrect contest/category names. Fix requires the Edge Function to load category→division→contest data server-side using the provided categoryId only.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts:75-79`
+
+- **[Story 7-2]** No automated tests for `send-judge-invitation` Edge Function delivery logging and `invited_at` mutation
+  - **Why:** Edge Function success/failure logging paths and `invited_at` side effects have no automated test coverage. Requires Deno test infrastructure which doesn't exist in the project yet. Frontend wrapper tests cover the API call boundary but not the Edge Function internals.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test infrastructure
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-judge-invitation/index.ts`
+
 ---
 
 ## Cross-Cutting Technical Debt

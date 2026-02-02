@@ -31,6 +31,8 @@ export {
   useJudgeProgress,
   // Story 5-6: Mark category complete hook
   useMarkCategoryComplete,
+  // Story 7-2: Resend judge invitation hook
+  useResendJudgeInvitation,
   useRemoveJudge,
   useUpdateCategory,
   useUpdateCategoryStatus,
