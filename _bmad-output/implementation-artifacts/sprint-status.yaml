@@ -105,10 +105,10 @@ development_status:
   epic-6-retrospective: done  # 2026-02-01: 4 action items, min-viable testing directive, single future-work.md consolidation
 
   # Epic 7: Email Notification System (5 stories)
-  epic-7: in-progress
+  epic-7: done  # Completed 2026-02-02
   7-1-email-infrastructure-setup-brevo-integration: done  # Completed 2026-02-02
   7-2-judge-invitation-email: done  # Completed 2026-02-02
   7-3-admin-notification-judge-complete: done  # Completed 2026-02-02
   7-4-contest-status-update-emails: done  # Completed 2026-02-02
-  7-5-email-delivery-tracking-retry: ready-for-dev  # Story file created 2026-02-02
+  7-5-email-delivery-tracking-retry: done  # Completed 2026-02-02, review follow-ups resolved
   epic-7-retrospective: optional

@@ -96,3 +96,14 @@ export interface CategoryCompleteResponse {
   success: boolean;
   error?: string;
 }
+
+/**
+ * Story 7-5: Response from retry-notification Edge Function
+ */
+export interface RetryNotificationResponse {
+  success: boolean;
+  messageId?: string;
+  retryCount?: number;
+  newStatus?: string;
+  error?: string;
+}
