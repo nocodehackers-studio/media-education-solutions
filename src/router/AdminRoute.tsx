@@ -42,7 +42,6 @@ export function AdminRoute({ children }: AdminRouteProps) {
   const waitingForProfile = !isLoading && isAuthenticated && !user
   useEffect(() => {
     if (!waitingForProfile) {
-      setProfileTimedOut(false)
       return
     }
 
@@ -61,7 +60,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
   }
 
   // No session (or safety-net timed out) - redirect to login
-  if (!isAuthenticated || profileTimedOut) {
+  if (!isAuthenticated || (waitingForProfile && profileTimedOut)) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
