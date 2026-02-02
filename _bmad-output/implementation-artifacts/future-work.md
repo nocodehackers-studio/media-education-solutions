@@ -778,7 +778,37 @@ This document tracks valuable features, improvements, and technical debt discove
 
 ## Epic 7: Email Notification System
 
-*No items tracked*
+- **[Story 7-1]** Sanitize or restrict `htmlContent` in send-notification Edge Function
+  - **Why:** The centralized `send-notification` function accepts pre-built `htmlContent` from callers and forwards it to Brevo without sanitization. By design (callers build their own HTML), but a compromised admin/judge account could craft arbitrary HTML for phishing. Consider server-side HTML sanitization or a template-only approach.
+  - **Priority:** Medium
+  - **Suggested Epic:** Security hardening / Pre-production
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-notification/index.ts`
+
+- **[Story 7-1]** Adversarial review test coverage assessment was based on truncated diff
+  - **Why:** Review agent received summarized test file content rather than full source, leading to false finding about missing tests. Actual test file has 5 passing tests. Non-actionable — process improvement for future reviews to always include full test source in diff.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `src/features/notifications/api/notificationsApi.test.ts`
+
+- **[Story 7-1]** AC1/AC3 wording suggests internal template routing, but architecture decision uses caller-provided htmlContent
+  - **Why:** AC1 says "routes to the correct email template" and AC3 lists `params` as a contract field, but the documented architecture decision (Dev Notes: "Key Design Decision: htmlContent from Caller") deliberately delegates HTML construction to callers. The AC prose is imprecise relative to the refined design. Consider updating AC wording to match the implemented architecture for clarity in future stories (7-2, 7-3, 7-4).
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `_bmad-output/implementation-artifacts/7-1-email-infrastructure-setup-brevo-integration.md`
+
+- **[Story 7-1]** Record deployment/migration CLI output as evidence in story artifacts
+  - **Why:** Code reviewer flagged that Task 7 completion has no recorded evidence (no command output or links). Process improvement: capture CLI output in Debug Log References when deploying Edge Functions and applying migrations.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `_bmad-output/implementation-artifacts/7-1-email-infrastructure-setup-brevo-integration.md`
+
+- **[Story 7-1]** Add Deno test infrastructure for Edge Function unit tests
+  - **Why:** Automated tests only cover the frontend API wrapper. Edge Function auth, validation, and error-log state transitions are untested. Requires Deno test setup (not present in project). Per project testing policy, frontend wrapper tests are the appropriate layer for current scope.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test infrastructure
+  - **Discovered:** 2026-02-02
+  - **Files:** `supabase/functions/send-notification/index.ts`
 
 ---
 
