@@ -62,6 +62,7 @@ export const updateContestSchema = z.object({
     .optional(),
   description: z.string().optional(),
   rules: z.string().optional(),
+  notifyTlc: z.boolean().optional(),
 });
 
 /**

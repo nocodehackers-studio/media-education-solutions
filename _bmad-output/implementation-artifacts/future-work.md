@@ -925,6 +925,19 @@ This document tracks valuable features, improvements, and technical debt discove
   - **Discovered:** 2026-02-02 (Code Review)
   - **Files:** `_bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md`
 
+- **[Story 7-4]** Automated tests for `send-tlc-notification` Edge Function
+  - **Why:** No tests covering deduplication logic, toggle-off short-circuit, or failed-send logging path. Requires Deno test infrastructure which doesn't exist in the project. Already tracked as broader concern under Stories 7-1, 7-2, 7-3.
+  - **Priority:** Medium
+  - **Suggested Epic:** Tech debt / Test infrastructure
+  - **Discovered:** 2026-02-02 (Code Review)
+  - **Files:** `supabase/functions/send-tlc-notification/index.ts`
+
+- **[Story 7-4]** Inconsistent conditional vs unconditional field inclusion in contestsApi.update()
+  - **Why:** `notify_tlc` is conditionally included in the update payload (only when defined) while `name`/`description`/`rules` are always included. Both approaches work correctly — conditional avoids sending `undefined` to Supabase, unconditional relies on Supabase ignoring `undefined` values. Unifying the pattern is a style preference.
+  - **Priority:** Low
+  - **Discovered:** 2026-02-02
+  - **Files:** `src/features/contests/api/contestsApi.ts`
+
 ---
 
 ## Cross-Cutting Technical Debt

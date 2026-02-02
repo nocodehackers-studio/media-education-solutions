@@ -127,6 +127,14 @@ export const winnersApi = {
       .eq('id', contestId);
 
     if (error) throw new Error(`Failed to generate winners page: ${error.message}`);
+
+    // Story 7-4: True fire-and-forget T/L/C notification
+    // Edge Function checks notify_tlc flag internally; do NOT await — caller should not block
+    supabase.functions.invoke('send-tlc-notification', {
+      body: { contestId },
+    }).then(({ error }) => {
+      if (error) console.warn('T/L/C notification failed (non-blocking):', error);
+    });
   },
 
   async updateWinnersPassword(contestId: string, password: string): Promise<void> {

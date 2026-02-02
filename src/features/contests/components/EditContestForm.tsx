@@ -4,11 +4,13 @@ import {
   Button,
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
   Input,
+  Switch,
   Textarea,
   toast,
 } from '@/components/ui';
@@ -36,6 +38,7 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
       name: contest.name,
       description: contest.description || '',
       rules: contest.rules || '',
+      notifyTlc: contest.notifyTlc,
     },
   });
 
@@ -100,6 +103,24 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
                 />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notifyTlc"
+          render={({ field }) => (
+            <FormItem className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel>Notify T/L/C when results published</FormLabel>
+                <FormDescription>
+                  Send email to all teacher/leader/coach contacts when contest finishes
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
             </FormItem>
           )}
         />

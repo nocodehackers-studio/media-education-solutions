@@ -141,5 +141,8 @@ export {
 // === Checkbox ===
 export { Checkbox } from './checkbox'
 
+// === Switch ===
+export { Switch } from './switch'
+
 // === Progress ===
 export { Progress } from './progress'

@@ -65,6 +65,7 @@ const mockContest: Contest = {
   winnersPagePassword: null,
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
+  notifyTlc: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
