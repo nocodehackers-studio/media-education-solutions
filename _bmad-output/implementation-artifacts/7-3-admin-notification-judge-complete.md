@@ -230,6 +230,8 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - 5 tests for isAllJudgingComplete utility (all passing)
 - Build, lint, type-check all clean
 - Deploy pending user confirmation
+- Adversarial review: 12 findings total, 5 fixed (F4/F5/F7/F11/F12), 7 deferred to future-work.md
+- Resolution approach: auto-fix real findings, defer noise/pre-existing to future-work
 
 ### File List
 
