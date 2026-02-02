@@ -9,5 +9,6 @@ export function useContests() {
   return useQuery({
     queryKey: ['contests'],
     queryFn: () => contestsApi.list(),
+    placeholderData: (previousData) => previousData,
   });
 }

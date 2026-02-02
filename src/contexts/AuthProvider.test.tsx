@@ -12,6 +12,7 @@ vi.mock('@/lib/supabase', () => ({
     auth: {
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(),
+      signOut: vi.fn(),
     },
   },
 }))
@@ -42,6 +43,7 @@ describe('AuthProvider', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
 
     // Default mock: no session
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
@@ -55,7 +57,7 @@ describe('AuthProvider', () => {
   })
 
   describe('Initial State', () => {
-    it('starts with loading state', () => {
+    it('starts with loading state when no cache exists', () => {
       const wrapper = ({ children }: { children: ReactNode }) => (
         <AuthProvider>{children}</AuthProvider>
       )
@@ -111,6 +113,131 @@ describe('AuthProvider', () => {
     })
   })
 
+  describe('localStorage Cache', () => {
+    it('restores cached profile from localStorage on mount', () => {
+      localStorage.setItem(
+        'admin_profile_v1',
+        JSON.stringify({ user: mockUser, sessionUserId: 'user-123' })
+      )
+
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <AuthProvider>{children}</AuthProvider>
+      )
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      // Synchronous — no waitFor needed
+      expect(result.current.user).toEqual(mockUser)
+      expect(result.current.isAuthenticated).toBe(true)
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('caches profile to localStorage on successful sign-in', async () => {
+      vi.mocked(authApi.signIn).mockResolvedValue(mockUser)
+
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <AuthProvider>{children}</AuthProvider>
+      )
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      await result.current.signIn('admin@example.com', 'password123')
+
+      await waitFor(() => {
+        expect(result.current.user).toEqual(mockUser)
+      })
+
+      const cached = JSON.parse(localStorage.getItem('admin_profile_v1')!)
+      expect(cached).toEqual({ user: mockUser, sessionUserId: 'user-123' })
+    })
+
+    it('clears cached profile on sign-out', async () => {
+      // Start with cached profile
+      localStorage.setItem(
+        'admin_profile_v1',
+        JSON.stringify({ user: mockUser, sessionUserId: 'user-123' })
+      )
+
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: {
+          session: {
+            user: { id: 'user-123' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
+        },
+        error: null,
+      })
+      vi.mocked(authApi.fetchProfile).mockResolvedValue(mockUser)
+      vi.mocked(authApi.signOut).mockResolvedValue()
+
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <AuthProvider>{children}</AuthProvider>
+      )
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      // Starts with cached user
+      expect(result.current.user).toEqual(mockUser)
+
+      await result.current.signOut()
+
+      await waitFor(() => {
+        expect(result.current.user).toBeNull()
+      })
+
+      expect(localStorage.getItem('admin_profile_v1')).toBeNull()
+      expect(result.current.isAuthenticated).toBe(false)
+    })
+
+    it('handles corrupted localStorage gracefully', () => {
+      localStorage.setItem('admin_profile_v1', 'not-valid-json{{{')
+
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <AuthProvider>{children}</AuthProvider>
+      )
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      // Falls back to network path — isLoading starts true
+      expect(result.current.isLoading).toBe(true)
+      expect(result.current.user).toBeNull()
+    })
+
+    it('clears cache when session is gone', async () => {
+      localStorage.setItem(
+        'admin_profile_v1',
+        JSON.stringify({ user: mockUser, sessionUserId: 'user-123' })
+      )
+
+      // No session from Supabase
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: { session: null },
+        error: null,
+      })
+
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <AuthProvider>{children}</AuthProvider>
+      )
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      // Immediately shows cached user
+      expect(result.current.user).toEqual(mockUser)
+
+      // After getSession resolves with no session, cache is cleared
+      await waitFor(() => {
+        expect(result.current.user).toBeNull()
+      })
+
+      expect(localStorage.getItem('admin_profile_v1')).toBeNull()
+      expect(result.current.isAuthenticated).toBe(false)
+    })
+  })
+
   describe('signIn', () => {
     it('updates user state on successful sign in', async () => {
       vi.mocked(authApi.signIn).mockResolvedValue(mockUser)
@@ -121,15 +248,12 @@ describe('AuthProvider', () => {
 
       const { result } = renderHook(() => useAuth(), { wrapper })
 
-      // Wait for initial load
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Sign in
       await result.current.signIn('admin@example.com', 'password123')
 
-      // Wait for state update
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
       })
@@ -154,24 +278,19 @@ describe('AuthProvider', () => {
 
       const { result } = renderHook(() => useAuth(), { wrapper })
 
-      // Wait for initial load
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Start sign in (don't await)
       const signInCall = result.current.signIn('admin@example.com', 'password123')
 
-      // Should be loading
       await waitFor(() => {
         expect(result.current.isLoading).toBe(true)
       })
 
-      // Resolve sign in
       resolveSignIn!(mockUser)
       await signInCall
 
-      // Should finish loading
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
@@ -180,7 +299,6 @@ describe('AuthProvider', () => {
 
   describe('signOut', () => {
     it('clears user state on sign out', async () => {
-      // Start with authenticated user
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
@@ -200,15 +318,12 @@ describe('AuthProvider', () => {
 
       const { result } = renderHook(() => useAuth(), { wrapper })
 
-      // Wait for initial load with user
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
       })
 
-      // Sign out
       await result.current.signOut()
 
-      // Wait for state update
       await waitFor(() => {
         expect(result.current.user).toBeNull()
       })
@@ -256,12 +371,10 @@ describe('AuthProvider', () => {
 
       const { result } = renderHook(() => useAuth(), { wrapper })
 
-      // Wait for initial load
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Trigger SIGNED_IN event
       await authCallback('SIGNED_IN', {
         user: { id: 'user-123' },
       })
@@ -278,7 +391,6 @@ describe('AuthProvider', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let authCallback: any
 
-      // Start with authenticated user
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: {
           session: {
@@ -302,12 +414,10 @@ describe('AuthProvider', () => {
 
       const { result } = renderHook(() => useAuth(), { wrapper })
 
-      // Wait for initial load with user
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
       })
 
-      // Trigger SIGNED_OUT event
       await authCallback('SIGNED_OUT', null)
 
       await waitFor(() => {

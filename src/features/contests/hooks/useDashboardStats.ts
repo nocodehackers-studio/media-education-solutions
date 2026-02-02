@@ -10,5 +10,6 @@ export function useDashboardStats() {
     queryKey: ['dashboard-stats'],
     queryFn: () => contestsApi.getStats(),
     staleTime: 30_000, // 30 seconds - stats don't need to be real-time
+    placeholderData: (previousData) => previousData,
   });
 }

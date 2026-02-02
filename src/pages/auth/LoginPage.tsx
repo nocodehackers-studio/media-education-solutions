@@ -39,8 +39,16 @@ export function LoginPage() {
   // Don't render form if already authenticated (prevents flash)
   if (isLoading || isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-4">
+          <div className="h-8 w-48 mx-auto bg-muted animate-pulse rounded" />
+          <div className="h-4 w-64 mx-auto bg-muted animate-pulse rounded" />
+          <div className="space-y-3 pt-4">
+            <div className="h-10 w-full bg-muted animate-pulse rounded" />
+            <div className="h-10 w-full bg-muted animate-pulse rounded" />
+            <div className="h-10 w-full bg-muted animate-pulse rounded" />
+          </div>
+        </div>
       </div>
     )
   }

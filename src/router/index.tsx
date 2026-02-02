@@ -18,12 +18,12 @@ const SetPasswordPage = lazy(() =>
   import('@/pages/auth/SetPasswordPage').then((m) => ({ default: m.SetPasswordPage }))
 )
 
-// Lazy load public pages (AC3: keep login page minimal)
+// Lazy load public pages
 const NotFoundPage = lazy(() =>
   import('@/pages/public/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
 )
 
-// Lazy load admin pages (AC2/AC3: split routes into chunks)
+// Lazy load admin pages
 const AdminLayout = lazy(() =>
   import('@/features/admin').then((m) => ({ default: m.AdminLayout }))
 )
@@ -88,22 +88,47 @@ const SubmissionPreviewPage = lazy(() =>
 )
 
 /**
- * Loading fallback for lazy-loaded routes.
- * AC2/AC3: Suspense boundaries with loading fallbacks.
+ * F3 fix: Two fallback variants for different route contexts.
+ *
+ * AdminLazyFallback: Renders in the AdminLayout <Outlet /> content area.
+ * Uses flex-1 to fill remaining space inside the already-visible layout.
  */
-function LazyFallback() {
+function AdminLazyFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    <div className="flex-1 p-4 md:p-6">
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        <div className="h-32 w-full bg-muted animate-pulse rounded mt-4" />
+      </div>
     </div>
   )
 }
 
 /**
- * Wrapper for lazy-loaded routes with Suspense boundary.
+ * PageLazyFallback: For standalone full-page routes (auth, participant, public, judge).
+ * Provides its own min-h-screen centering since there's no parent layout.
  */
-function LazyRoute({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<LazyFallback />}>{children}</Suspense>
+function PageLazyFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="space-y-4 w-full max-w-md p-4">
+        <div className="h-8 w-48 mx-auto bg-muted animate-pulse rounded" />
+        <div className="h-4 w-64 mx-auto bg-muted animate-pulse rounded" />
+        <div className="h-32 w-full bg-muted animate-pulse rounded mt-4" />
+      </div>
+    </div>
+  )
+}
+
+/** Suspense wrapper for routes inside AdminLayout */
+function AdminLazyRoute({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<AdminLazyFallback />}>{children}</Suspense>
+}
+
+/** Suspense wrapper for standalone full-page routes */
+function PageLazyRoute({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLazyFallback />}>{children}</Suspense>
 }
 
 const router = createBrowserRouter([
@@ -116,37 +141,36 @@ const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <ForgotPasswordPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
   {
     path: '/reset-password',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <ResetPasswordPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
   {
     path: '/set-password',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <SetPasswordPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
 
   // Admin routes (protected - admin only) with layout
-  // AC2/AC3: Admin routes lazy loaded, only fetched after login
   {
     path: '/admin',
     element: (
       <AdminRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <AdminLayout />
-        </LazyRoute>
+        </PageLazyRoute>
       </AdminRoute>
     ),
     children: [
@@ -154,41 +178,41 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <LazyRoute>
+          <AdminLazyRoute>
             <AdminDashboardPage />
-          </LazyRoute>
+          </AdminLazyRoute>
         ),
       },
       {
         path: 'contests',
         element: (
-          <LazyRoute>
+          <AdminLazyRoute>
             <ContestsPage />
-          </LazyRoute>
+          </AdminLazyRoute>
         ),
       },
       {
         path: 'contests/:contestId',
         element: (
-          <LazyRoute>
+          <AdminLazyRoute>
             <ContestDetailPage />
-          </LazyRoute>
+          </AdminLazyRoute>
         ),
       },
       {
         path: 'contests/:contestId/submissions',
         element: (
-          <LazyRoute>
+          <AdminLazyRoute>
             <AdminSubmissionsPage />
-          </LazyRoute>
+          </AdminLazyRoute>
         ),
       },
       {
         path: 'contests/:contestId/categories/:categoryId/rankings',
         element: (
-          <LazyRoute>
+          <AdminLazyRoute>
             <AdminCategoryRankingsPage />
-          </LazyRoute>
+          </AdminLazyRoute>
         ),
       },
     ],
@@ -207,9 +231,9 @@ const router = createBrowserRouter([
     path: '/judge/dashboard',
     element: (
       <JudgeRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <JudgeDashboardPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </JudgeRoute>
     ),
   },
@@ -218,9 +242,9 @@ const router = createBrowserRouter([
     path: '/judge/categories/:categoryId',
     element: (
       <JudgeRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <CategoryReviewPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </JudgeRoute>
     ),
   },
@@ -229,9 +253,9 @@ const router = createBrowserRouter([
     path: '/judge/categories/:categoryId/ranking',
     element: (
       <JudgeRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <RankingPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </JudgeRoute>
     ),
   },
@@ -240,9 +264,9 @@ const router = createBrowserRouter([
     path: '/judge/categories/:categoryId/review/:submissionId',
     element: (
       <JudgeRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <SubmissionReviewPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </JudgeRoute>
     ),
   },
@@ -251,9 +275,9 @@ const router = createBrowserRouter([
   {
     path: '/winners/:contestCode',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <PublicWinnersPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
 
@@ -261,9 +285,9 @@ const router = createBrowserRouter([
   {
     path: '/enter',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <CodeEntryPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
   {
@@ -274,9 +298,9 @@ const router = createBrowserRouter([
     path: '/participant/info',
     element: (
       <ParticipantRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <ParticipantInfoPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </ParticipantRoute>
     ),
   },
@@ -284,9 +308,9 @@ const router = createBrowserRouter([
     path: '/participant/categories',
     element: (
       <ParticipantRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <ParticipantCategoriesPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </ParticipantRoute>
     ),
   },
@@ -294,9 +318,9 @@ const router = createBrowserRouter([
     path: '/participant/submit/:categoryId',
     element: (
       <ParticipantRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <SubmitPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </ParticipantRoute>
     ),
   },
@@ -305,9 +329,9 @@ const router = createBrowserRouter([
     path: '/participant/preview/:submissionId',
     element: (
       <ParticipantRoute>
-        <LazyRoute>
+        <PageLazyRoute>
           <SubmissionPreviewPage />
-        </LazyRoute>
+        </PageLazyRoute>
       </ParticipantRoute>
     ),
   },
@@ -318,13 +342,13 @@ const router = createBrowserRouter([
     element: <Navigate to="/login" replace />,
   },
 
-  // 404 catch-all - lazy loaded (AC3: not needed for login page)
+  // 404 catch-all - lazy loaded
   {
     path: '*',
     element: (
-      <LazyRoute>
+      <PageLazyRoute>
         <NotFoundPage />
-      </LazyRoute>
+      </PageLazyRoute>
     ),
   },
 ])

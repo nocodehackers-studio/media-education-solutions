@@ -52,7 +52,7 @@ describe('AdminRoute', () => {
   })
 
   describe('Loading State', () => {
-    it('renders loading screen when isLoading is true', () => {
+    it('renders skeleton when isLoading is true', () => {
       renderWithAuth(<div>Admin Content</div>, {
         user: null,
         isLoading: true,
@@ -62,8 +62,7 @@ describe('AdminRoute', () => {
         resetPassword: vi.fn(),
       })
 
-      // AC3: Uses minimal CSS-only loading indicator
-      expect(screen.getByText('Loading...')).toBeInTheDocument()
+      expect(screen.getByTestId('admin-loading-skeleton')).toBeInTheDocument()
       expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
     })
   })
@@ -151,8 +150,6 @@ describe('AdminRoute', () => {
       )
 
       expect(screen.getByText('Login Page')).toBeInTheDocument()
-      // Note: Testing location.state preservation requires react-router v6.4+ features
-      // This test verifies the redirect happens; integration tests can verify state
     })
   })
 })

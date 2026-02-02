@@ -11,13 +11,20 @@ interface JudgeRouteProps {
 const PROFILE_WAIT_TIMEOUT = 5000
 
 /**
- * Minimal loading screen for auth check.
- * AC3: Uses CSS-only animation to avoid pulling in UI components to initial bundle.
+ * Simple centered skeleton for judge routes (no sidebar layout).
+ * CSS-only, no UI component imports.
  */
-function LoadingScreen() {
+function JudgeLoadingSkeleton() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    <div className="min-h-screen bg-background p-4 md:p-6" data-testid="judge-loading-skeleton">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        <div className="space-y-3 pt-4">
+          <div className="h-24 w-full bg-muted animate-pulse rounded" />
+          <div className="h-24 w-full bg-muted animate-pulse rounded" />
+        </div>
+      </div>
     </div>
   )
 }
@@ -25,10 +32,9 @@ function LoadingScreen() {
 /**
  * Protected route that requires judge role.
  * Redirects:
- * - Unauthenticated users → /login
+ * - Unauthenticated users -> /login
  * - Admins can also access judge routes (admin is superset of judge)
  *
- * AC1: Handles case where session exists but profile still loading.
  * Safety net: times out after 5s to prevent infinite loading.
  */
 export function JudgeRoute({ children }: JudgeRouteProps) {
@@ -55,7 +61,7 @@ export function JudgeRoute({ children }: JudgeRouteProps) {
 
   // Still loading auth state
   if (isLoading) {
-    return <LoadingScreen />
+    return <JudgeLoadingSkeleton />
   }
 
   // No session (or safety-net timed out) - redirect to login
@@ -63,10 +69,9 @@ export function JudgeRoute({ children }: JudgeRouteProps) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // AC1: Session exists but profile still loading in background
-  // Show loading screen briefly, safety-net timeout prevents infinite spin
+  // Session exists but profile still loading in background
   if (!user) {
-    return <LoadingScreen />
+    return <JudgeLoadingSkeleton />
   }
 
   // Profile loaded, check role - both admin and judge can access judge routes

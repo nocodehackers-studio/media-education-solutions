@@ -448,63 +448,44 @@ export const contestsApi = {
    * @returns Dashboard stats: total contests, active contests, total participants, total submissions
    */
   async getStats(): Promise<DashboardStats> {
-    // Total contests
-    const { count: totalContests, error: contestsError } = await supabase
-      .from('contests')
-      .select('*', { count: 'exact', head: true });
+    // Run all 4 COUNT queries in parallel — Supabase never rejects, errors are in response
+    const [contestsResult, activeResult, participantsResult, submissionsResult] = await Promise.all([
+      supabase.from('contests').select('*', { count: 'exact', head: true }),
+      supabase.from('contests').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+      supabase.from('participants').select('*', { count: 'exact', head: true }),
+      supabase.from('submissions').select('*', { count: 'exact', head: true }),
+    ]);
 
-    if (contestsError) {
-      throw new Error(`Failed to fetch contests count: ${contestsError.message}`);
+    // Check each result for errors individually
+    if (contestsResult.error) {
+      throw new Error(`Failed to fetch contests count: ${contestsResult.error.message}`);
+    }
+    if (activeResult.error) {
+      throw new Error(`Failed to fetch active contests count: ${activeResult.error.message}`);
+    }
+    if (participantsResult.error) {
+      throw new Error(`Failed to fetch participants count: ${participantsResult.error.message}`);
     }
 
-    // Active contests (published)
-    const { count: activeContests, error: activeError } = await supabase
-      .from('contests')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'published');
-
-    if (activeError) {
-      throw new Error(`Failed to fetch active contests count: ${activeError.message}`);
-    }
-
-    // Total participants (codes generated)
-    const { count: totalParticipants, error: participantsError } = await supabase
-      .from('participants')
-      .select('*', { count: 'exact', head: true });
-
-    if (participantsError) {
-      throw new Error(`Failed to fetch participants count: ${participantsError.message}`);
-    }
-
-    // Total submissions (0 until Epic 4)
-    // submissions table may not exist yet - handle gracefully
-    const { count: totalSubmissions, error: submissionsError } = await supabase
-      .from('submissions')
-      .select('*', { count: 'exact', head: true });
-
-    // Only ignore "relation does not exist" error (table not created yet)
-    // Re-throw real errors (RLS, config, network issues)
+    // Submissions: gracefully handle missing table (42P01)
     let submissions = 0;
-    if (submissionsError) {
-      // PostgreSQL error code 42P01 = undefined_table
-      // Also check message for "relation" errors in case code isn't available
+    if (submissionsResult.error) {
       const isTableMissing =
-        submissionsError.code === '42P01' ||
-        submissionsError.message?.includes('relation') ||
-        submissionsError.message?.includes('does not exist');
+        submissionsResult.error.code === '42P01' ||
+        submissionsResult.error.message?.includes('relation') ||
+        submissionsResult.error.message?.includes('does not exist');
 
       if (!isTableMissing) {
-        throw new Error(`Failed to fetch submissions count: ${submissionsError.message}`);
+        throw new Error(`Failed to fetch submissions count: ${submissionsResult.error.message}`);
       }
-      // Table doesn't exist yet - this is expected until Epic 4
     } else {
-      submissions = totalSubmissions ?? 0;
+      submissions = submissionsResult.count ?? 0;
     }
 
     return {
-      totalContests: totalContests ?? 0,
-      activeContests: activeContests ?? 0,
-      totalParticipants: totalParticipants ?? 0,
+      totalContests: contestsResult.count ?? 0,
+      activeContests: activeResult.count ?? 0,
+      totalParticipants: participantsResult.count ?? 0,
       totalSubmissions: submissions,
     };
   },

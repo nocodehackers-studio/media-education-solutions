@@ -8,5 +8,6 @@ export function useActiveContests() {
   return useQuery({
     queryKey: ['active-contests'],
     queryFn: () => contestsApi.listActiveContests(),
+    placeholderData: (previousData) => previousData,
   });
 }

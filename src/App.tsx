@@ -6,7 +6,7 @@ export function App() {
   return (
     <ErrorBoundary>
       <AppRouter />
-      <Toaster position="top-right" duration={4000} closeButton />
+      <Toaster position="bottom-right" duration={10000} closeButton />
     </ErrorBoundary>
   )
 }
