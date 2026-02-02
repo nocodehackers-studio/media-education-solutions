@@ -56,6 +56,7 @@
 | Separator | Visual divider line |
 | Avatar, AvatarFallback | User avatar with initials fallback |
 | Breadcrumb, BreadcrumbList, etc. | Navigation breadcrumb trail |
+| Switch | Toggle switch control |
 
 ## Pages (src/pages/)
 
@@ -101,6 +102,7 @@
 | validate-participant | Validates participant contest code + participant code for session creation |
 | get-contest-public-metadata | Returns public contest metadata (name, cover image) for winners page initial load |
 | validate-winners-password | Validates winners page password and returns winners data on success |
+| send-tlc-notification | Sends T/L/C notification emails when contest finishes (Story 7-4) |
 
 ## Key Patterns
 

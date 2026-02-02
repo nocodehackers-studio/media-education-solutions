@@ -42,6 +42,7 @@ const baseContest: Contest = {
   winnersPagePassword: null,
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
+  notifyTlc: false,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
 };
@@ -51,6 +52,7 @@ const finishedContest: Contest = {
   status: 'finished',
   winnersPageEnabled: true,
   winnersPageGeneratedAt: '2026-01-20T10:00:00Z',
+  notifyTlc: false,
   winnersPagePassword: 'secret123',
 };
 

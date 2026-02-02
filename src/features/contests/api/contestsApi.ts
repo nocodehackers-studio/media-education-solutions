@@ -27,6 +27,7 @@ function transformContestRow(row: ContestRow): Contest {
     winnersPagePassword: row.winners_page_password,
     winnersPageEnabled: row.winners_page_enabled ?? false,
     winnersPageGeneratedAt: row.winners_page_generated_at ?? null,
+    notifyTlc: row.notify_tlc ?? false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -192,13 +193,17 @@ export const contestsApi = {
     const emptyToNull = (val: string | undefined) =>
       val === '' ? null : val;
 
+    // Build update payload, only including defined fields
+    const updatePayload = {
+      name: input.name,
+      description: emptyToNull(input.description),
+      rules: emptyToNull(input.rules),
+      ...(input.notifyTlc !== undefined && { notify_tlc: input.notifyTlc }),
+    };
+
     const { data, error } = await supabase
       .from('contests')
-      .update({
-        name: input.name,
-        description: emptyToNull(input.description),
-        rules: emptyToNull(input.rules),
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();

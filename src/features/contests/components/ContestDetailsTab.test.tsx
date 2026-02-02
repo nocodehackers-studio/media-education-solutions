@@ -37,6 +37,7 @@ const mockContest: Contest = {
   winnersPagePassword: null,
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
+  notifyTlc: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -127,5 +128,19 @@ describe('ContestDetailsTab', () => {
     renderWithProviders(<ContestDetailsTab contest={publishedContest} />);
 
     expect(screen.getByText('Published')).toBeInTheDocument();
+  });
+
+  it('shows T/L/C notification status as Disabled when notifyTlc is false', () => {
+    renderWithProviders(<ContestDetailsTab contest={mockContest} />);
+
+    expect(screen.getByText('T/L/C Notifications')).toBeInTheDocument();
+    expect(screen.getByText('Disabled')).toBeInTheDocument();
+  });
+
+  it('shows T/L/C notification status as Enabled when notifyTlc is true', () => {
+    const contestWithTlc: Contest = { ...mockContest, notifyTlc: true };
+    renderWithProviders(<ContestDetailsTab contest={contestWithTlc} />);
+
+    expect(screen.getByText('Enabled')).toBeInTheDocument();
   });
 });

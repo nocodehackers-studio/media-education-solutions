@@ -38,6 +38,7 @@ const mockContest: Contest = {
   winnersPagePassword: null,
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
+  notifyTlc: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -153,6 +154,24 @@ describe('EditContestForm', () => {
     renderWithProviders(<EditContestForm contest={mockContest} />);
 
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+  });
+
+  it('renders notifyTlc toggle with correct initial state', () => {
+    renderWithProviders(<EditContestForm contest={mockContest} />);
+
+    expect(screen.getByText(/notify t\/l\/c when results published/i)).toBeInTheDocument();
+    const toggle = screen.getByRole('switch');
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('data-state', 'unchecked');
+  });
+
+  it('renders notifyTlc toggle as checked when contest has it enabled', () => {
+    renderWithProviders(
+      <EditContestForm contest={{ ...mockContest, notifyTlc: true }} />
+    );
+
+    const toggle = screen.getByRole('switch');
+    expect(toggle).toHaveAttribute('data-state', 'checked');
   });
 
   it('disables submit button while submitting', async () => {

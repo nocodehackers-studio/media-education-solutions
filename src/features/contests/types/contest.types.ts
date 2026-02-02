@@ -18,6 +18,7 @@ export interface ContestRow {
   winners_page_password: string | null;
   winners_page_enabled: boolean;
   winners_page_generated_at: string | null;
+  notify_tlc: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +38,7 @@ export interface Contest {
   winnersPagePassword: string | null;
   winnersPageEnabled: boolean;
   winnersPageGeneratedAt: string | null;
+  notifyTlc: boolean;
   createdAt: string;
   updatedAt: string;
 }

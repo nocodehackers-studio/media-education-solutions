@@ -109,6 +109,6 @@ development_status:
   7-1-email-infrastructure-setup-brevo-integration: done  # Completed 2026-02-02
   7-2-judge-invitation-email: done  # Completed 2026-02-02
   7-3-admin-notification-judge-complete: done  # Completed 2026-02-02
-  7-4-contest-status-update-emails: ready-for-dev  # Story file created 2026-02-02
+  7-4-contest-status-update-emails: done  # Completed 2026-02-02
   7-5-email-delivery-tracking-retry: ready-for-dev  # Story file created 2026-02-02
   epic-7-retrospective: optional

@@ -58,6 +58,7 @@ const mockContest = {
   winnersPagePassword: null,
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
+  notifyTlc: false,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
 }
