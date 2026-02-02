@@ -5,6 +5,9 @@
 // === API ===
 export { notificationsApi } from './api/notificationsApi';
 
+// === Utils ===
+export { isAllJudgingComplete } from './utils/isAllJudgingComplete';
+
 // === Types ===
 export type {
   NotificationType,

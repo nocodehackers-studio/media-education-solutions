@@ -1,6 +1,6 @@
 # Story 7.3: Admin Notification - Judge Complete
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,19 +24,19 @@ so that **admins are tracked on notifications received and get a clear signal wh
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add notification_logs to existing `notify-admin-category-complete` Edge Function (AC: 1, 4, 6)
-  - [ ] 1.1 Update `supabase/functions/notify-admin-category-complete/index.ts`
-  - [ ] 1.2 Insert `notification_logs` entry for each admin email sent
-  - [ ] 1.3 Set status `sent` on success, `failed` on error per admin
-  - [ ] 1.4 Include `related_contest_id` and `related_category_id` in log
-- [ ] Task 2: Add "all judging complete" check (AC: 5)
-  - [ ] 2.1 After individual notification, query all categories for the contest
-  - [ ] 2.2 Check if ALL categories have `judging_completed_at` set
-  - [ ] 2.3 If all complete, send additional summary email to all admins
-  - [ ] 2.4 Log summary email in notification_logs with type `judge_complete` and note in params
-- [ ] Task 3: Write minimal tests (AC: all)
-  - [ ] 3.1 Test the "all complete" detection logic (mock category query)
-  - [ ] 3.2 Target: under 6 tests total
+- [x] Task 1: Add notification_logs to existing `notify-admin-category-complete` Edge Function (AC: 1, 4, 6)
+  - [x] 1.1 Update `supabase/functions/notify-admin-category-complete/index.ts`
+  - [x] 1.2 Insert `notification_logs` entry for each admin email sent
+  - [x] 1.3 Set status `sent` on success, `failed` on error per admin
+  - [x] 1.4 Include `related_contest_id` and `related_category_id` in log
+- [x] Task 2: Add "all judging complete" check (AC: 5)
+  - [x] 2.1 After individual notification, query all categories for the contest
+  - [x] 2.2 Check if ALL categories have `judging_completed_at` set
+  - [x] 2.3 If all complete, send additional summary email to all admins
+  - [x] 2.4 Log summary email in notification_logs with type `judge_complete` and note in params
+- [x] Task 3: Write minimal tests (AC: all)
+  - [x] 3.1 Test the "all complete" detection logic (mock category query)
+  - [x] 3.2 Target: under 6 tests total (5 tests written)
 - [ ] Task 4: Deploy (AC: all)
   - [ ] 4.1 Deploy: `npx supabase functions deploy notify-admin-category-complete`
 
@@ -217,10 +217,27 @@ No frontend changes needed. The existing `categoriesApi.markCategoryComplete()` 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- All 6 ACs satisfied
+- Edge Function augmented from 211 to 352 lines
+- notification_logs entries created for both individual and summary emails
+- "All Judging Complete" detection uses divisions→categories query pattern
+- 5 tests for isAllJudgingComplete utility (all passing)
+- Build, lint, type-check all clean
+- Deploy pending user confirmation
+
 ### File List
+
+**Modified Files:**
+- supabase/functions/notify-admin-category-complete/index.ts
+- src/features/notifications/index.ts
+- _bmad-output/implementation-artifacts/7-3-admin-notification-judge-complete.md
+
+**New Files:**
+- src/features/notifications/utils/isAllJudgingComplete.ts
+- src/features/notifications/utils/isAllJudgingComplete.test.ts
