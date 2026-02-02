@@ -28,6 +28,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const mountedRef = useRef(true)
   // Track timeout ID to clear on successful profile fetch
   const sessionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Ref mirrors sessionUserId state so event listeners can read it synchronously
+  const sessionUserIdRef = useRef<string | null>(null)
 
   /**
    * Fetch user profile from database with timeout.
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         setUser(null)
         setSessionUserId(null)
+        sessionUserIdRef.current = null
         setIsLoading(false)
         return
       }
@@ -69,7 +72,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(profile)
     } catch (error) {
       // Network error, timeout, or other exception - don't sign out (session may still be valid)
-      // Just clear local state; next navigation will retry
       if (mountedRef.current) {
         setUser(null)
         console.error('Failed to fetch user profile:', error)
@@ -130,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // AC1: Set sessionUserId IMMEDIATELY when session exists
           // This enables isAuthenticated=true even before profile loads
           setSessionUserId(session.user.id)
+          sessionUserIdRef.current = session.user.id
           fetchUserProfile(session.user.id)
         } else {
           resolveLoading()
@@ -156,11 +159,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (event === 'SIGNED_IN' && session?.user) {
+        // Skip redundant events for the same user (token refresh fires SIGNED_IN).
+        // Only fetch profile for a genuinely new session (different user).
+        if (session.user.id === sessionUserIdRef.current) return
+
         setSessionUserId(session.user.id)
+        sessionUserIdRef.current = session.user.id
         await fetchUserProfile(session.user.id)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setSessionUserId(null)
+        sessionUserIdRef.current = null
         setIsLoading(false)
       } else if (event === 'PASSWORD_RECOVERY') {
         // User is in password recovery flow - keep loading state
@@ -188,6 +197,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const profile = await authApi.signIn(email, password)
       setSessionUserId(profile.id)
+      sessionUserIdRef.current = profile.id
       setUser(profile)
     } finally {
       setIsLoading(false)
@@ -199,13 +209,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Errors propagate to caller to allow UI to display feedback.
    */
   const signOut = useCallback(async () => {
-    setIsLoading(true)
+    // Clear local state immediately so route guards redirect without delay.
+    // This prevents a LoadingScreen flash when called from safety-net timeouts.
+    setUser(null)
+    setSessionUserId(null)
+    sessionUserIdRef.current = null
     try {
       await authApi.signOut()
-      setUser(null)
-      setSessionUserId(null)
-    } finally {
-      setIsLoading(false)
+    } catch {
+      // API sign-out failed, but local state is already cleared
     }
   }, [])
 
