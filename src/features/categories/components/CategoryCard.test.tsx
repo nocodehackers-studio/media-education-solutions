@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { CategoryCard } from './CategoryCard';
+import { toast } from '@/components/ui';
 import * as categoriesApi from '../api/categoriesApi';
 import type { Category } from '../types/category.types';
 
@@ -20,6 +21,8 @@ vi.mock('../api/categoriesApi', () => ({
     removeJudge: vi.fn(),
     getJudgeByEmail: vi.fn(),
     sendJudgeInvitation: vi.fn(), // Story 3-2: Send judge invitation
+    resendJudgeInvitation: vi.fn(), // Story 7-2: Resend judge invitation
+    _invokeJudgeInvitation: vi.fn(), // Story 7-2: Shared helper
   },
 }));
 
@@ -335,5 +338,155 @@ describe('CategoryCard', () => {
     const result = await categoriesApi.categoriesApi.sendJudgeInvitation('cat-1');
     expect(result.error).toBe('ALREADY_INVITED');
     expect(result.success).toBe(false);
+  });
+
+  // Story 7-2: Resend Invite Tests
+
+  it('shows resend invite button when category is closed with invited judge (Story 7-2 AC7)', () => {
+    const closedInvitedCategory: Category = {
+      ...baseMockCategory,
+      status: 'closed',
+      assignedJudgeId: 'judge-123',
+      invitedAt: new Date().toISOString(),
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+    );
+
+    const resendButton = screen.getByTitle('Resend invitation email');
+    expect(resendButton).toBeInTheDocument();
+  });
+
+  it('hides resend invite button when category is not closed (Story 7-2)', () => {
+    const publishedWithJudge: Category = {
+      ...baseMockCategory,
+      status: 'published',
+      assignedJudgeId: 'judge-123',
+      invitedAt: new Date().toISOString(),
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={publishedWithJudge} contestId="contest-123" />
+    );
+
+    expect(screen.queryByTitle('Resend invitation email')).not.toBeInTheDocument();
+  });
+
+  it('shows send invite button and not-invited badge when closed with judge but no prior invitation (Story 7-2 F17/F18)', () => {
+    const closedNotInvited: Category = {
+      ...baseMockCategory,
+      status: 'closed',
+      assignedJudgeId: 'judge-123',
+      invitedAt: null,
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={closedNotInvited} contestId="contest-123" />
+    );
+
+    // F17: Button shows with "Send" title (not "Resend") when no prior invitation
+    const sendButton = screen.getByTitle('Send invitation email');
+    expect(sendButton).toBeInTheDocument();
+    // F18: "Not invited" indicator visible
+    expect(screen.getByText('Not invited')).toBeInTheDocument();
+  });
+
+  it('calls resendJudgeInvitation after confirmation dialog (Story 7-2 AC7)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(categoriesApi.categoriesApi.resendJudgeInvitation).mockResolvedValue({ success: true });
+
+    const closedInvitedCategory: Category = {
+      ...baseMockCategory,
+      status: 'closed',
+      assignedJudgeId: 'judge-123',
+      invitedAt: new Date().toISOString(),
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+    );
+
+    // Click resend button to open confirmation dialog
+    const resendButton = screen.getByTitle('Resend invitation email');
+    await user.click(resendButton);
+
+    // Confirm in the dialog
+    await waitFor(() => {
+      expect(screen.getByText(/resend invitation/i)).toBeInTheDocument();
+    });
+    const confirmButton = screen.getByRole('button', { name: /^resend$/i });
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(categoriesApi.categoriesApi.resendJudgeInvitation).toHaveBeenCalledWith('cat-1');
+    });
+  });
+
+  it('shows error toast when resend fails (Story 7-2 F8)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(categoriesApi.categoriesApi.resendJudgeInvitation).mockResolvedValue({
+      success: false,
+      error: 'Category is not in closed status',
+    });
+
+    const closedInvitedCategory: Category = {
+      ...baseMockCategory,
+      status: 'closed',
+      assignedJudgeId: 'judge-123',
+      invitedAt: new Date().toISOString(),
+      assignedJudge: {
+        id: 'judge-123',
+        email: 'judge@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    };
+
+    renderWithProviders(
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+    );
+
+    // Open and confirm dialog
+    const resendButton = screen.getByTitle('Resend invitation email');
+    await user.click(resendButton);
+    await waitFor(() => {
+      expect(screen.getByText(/resend invitation/i)).toBeInTheDocument();
+    });
+    const confirmButton = screen.getByRole('button', { name: /^resend$/i });
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(categoriesApi.categoriesApi.resendJudgeInvitation).toHaveBeenCalledWith('cat-1');
+    });
+
+    // F20: Verify error toast is shown with the error message
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Category is not in closed status');
+    });
   });
 });

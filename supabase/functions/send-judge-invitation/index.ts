@@ -1,4 +1,5 @@
 // Story 3-2 & 3-3: Edge Function to send judge invitation emails
+// Story 7-2: Added notification_logs logging for delivery tracking
 // CRITICAL: Uses service role to update invited_at timestamp and generate invite links
 // Uses Brevo API for transactional email delivery
 // Story 3-3: Generate Supabase invite link for password setup flow
@@ -13,11 +14,13 @@ const corsHeaders = {
 
 interface InvitationRequest {
   categoryId: string;
+  contestId: string;
   judgeEmail: string;
   judgeName?: string;
   categoryName: string;
   contestName: string;
   submissionCount: number;
+  categoryDeadline?: string;
 }
 
 Deno.serve(async (req) => {
@@ -25,6 +28,15 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  // Hoisted for catch block access (notification logging on failure)
+  let categoryId: string | undefined;
+  let contestId: string | undefined;
+  let judgeEmail: string | undefined;
+  let judgeProfileId: string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let supabaseAdmin: any;
+  let brevoErrorLogged = false;
 
   try {
     // Verify caller is authenticated admin
@@ -61,14 +73,11 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const {
-      categoryId,
-      judgeEmail,
-      judgeName,
-      categoryName,
-      contestName,
-      submissionCount,
-    }: InvitationRequest = await req.json();
+    const body: InvitationRequest = await req.json();
+    categoryId = body.categoryId;
+    contestId = body.contestId;
+    judgeEmail = body.judgeEmail;
+    const { judgeName, categoryName, contestName, submissionCount, categoryDeadline } = body;
 
     // Validate required fields
     if (!categoryId || !judgeEmail || !categoryName || !contestName) {
@@ -76,7 +85,7 @@ Deno.serve(async (req) => {
     }
 
     // Create service role client for admin operations (needed for profile check and invite link)
-    const supabaseAdmin = createClient(
+    supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
@@ -97,6 +106,8 @@ Deno.serve(async (req) => {
     if (judgeProfile.role !== 'judge') {
       throw new Error(`User ${judgeEmail} is not a judge (role: ${judgeProfile.role})`);
     }
+
+    judgeProfileId = judgeProfile.id;
 
     // Get Brevo API key
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
@@ -159,7 +170,8 @@ Deno.serve(async (req) => {
                 <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                   <p style="margin: 0;"><strong>Contest:</strong> ${contestName}</p>
                   <p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${categoryName}</p>
-                  <p style="margin: 8px 0 0 0;"><strong>Submissions to Review:</strong> ${submissionCount}</p>
+                  <p style="margin: 8px 0 0 0;"><strong>Submissions to Review:</strong> ${submissionCount}</p>${categoryDeadline ? `
+                  <p style="margin: 8px 0 0 0;"><strong>Judging Deadline:</strong> ${new Date(categoryDeadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
                 </div>
 
                 <p>The submission deadline has passed and the category is now ready for judging.</p>
@@ -187,8 +199,44 @@ Deno.serve(async (req) => {
     });
 
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      throw new Error(`Brevo API error: ${JSON.stringify(errorData)}`);
+      let errorMsg: string;
+      try {
+        const errorData = await emailResponse.json();
+        errorMsg = `Brevo API error: ${JSON.stringify(errorData)}`;
+      } catch {
+        errorMsg = `Brevo API error: HTTP ${emailResponse.status} ${emailResponse.statusText}`;
+      }
+
+      // Log failed send to notification_logs
+      await supabaseAdmin.from('notification_logs').insert({
+        type: 'judge_invitation',
+        recipient_email: judgeEmail,
+        recipient_id: judgeProfileId,
+        related_contest_id: contestId,
+        related_category_id: categoryId,
+        status: 'failed',
+        error_message: errorMsg,
+      });
+      brevoErrorLogged = true;
+
+      throw new Error(errorMsg);
+    }
+
+    const brevoResult = await emailResponse.json();
+    const messageId = brevoResult.messageId || null;
+
+    // Log successful send to notification_logs
+    const { error: logError } = await supabaseAdmin.from('notification_logs').insert({
+      type: 'judge_invitation',
+      recipient_email: judgeEmail,
+      recipient_id: judgeProfileId,
+      related_contest_id: contestId,
+      related_category_id: categoryId,
+      brevo_message_id: messageId,
+      status: 'sent',
+    });
+    if (logError) {
+      console.error('Failed to log notification:', logError);
     }
 
     // Update invited_at timestamp on category (supabaseAdmin already created above)
@@ -203,12 +251,30 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Invitation sent' }),
+      JSON.stringify({ success: true, message: 'Invitation sent', messageId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('send-judge-invitation error:', message);
+
+    // Log failure if not already logged in Brevo error path and we have enough context
+    if (!brevoErrorLogged && supabaseAdmin && categoryId) {
+      try {
+        await supabaseAdmin.from('notification_logs').insert({
+          type: 'judge_invitation',
+          recipient_email: judgeEmail || 'unknown',
+          recipient_id: judgeProfileId || null,
+          related_contest_id: contestId,
+          related_category_id: categoryId,
+          status: 'failed',
+          error_message: message,
+        });
+      } catch (logError) {
+        console.error('Failed to log notification error:', logError);
+      }
+    }
+
     return new Response(JSON.stringify({ success: false, error: message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -325,21 +325,25 @@ export const categoriesApi = {
   // ==========================================================================
 
   /**
-   * Send judge invitation email when category is closed
-   * Calls Edge Function to send email via Brevo and update invited_at
-   * @param categoryId Category ID to send invitation for
-   * @returns Result with success status and optional error code
+   * Shared helper for sending judge invitation emails
+   * Story 7-2: Extracted to avoid duplication between send and resend
+   * @param categoryId Category ID
+   * @param options.skipAlreadyInvitedCheck Skip the duplicate check (for manual resend)
+   * @param options.requireClosedStatus Require category to be in 'closed' status (for manual resend)
    */
-  async sendJudgeInvitation(
-    categoryId: string
+  async _invokeJudgeInvitation(
+    categoryId: string,
+    options: { skipAlreadyInvitedCheck?: boolean; requireClosedStatus?: boolean } = {}
   ): Promise<{ success: boolean; error?: string }> {
-    // First, get category with judge and contest info (through division)
-    const { data: category, error: fetchError } = await supabase
+    // Build query — always include invited_at for the duplicate check option
+    let query = supabase
       .from('categories')
       .select(
         `
         id,
         name,
+        deadline,
+        status,
         invited_at,
         assigned_judge_id,
         profiles:assigned_judge_id (
@@ -356,10 +360,19 @@ export const categoriesApi = {
         )
       `
       )
-      .eq('id', categoryId)
-      .single();
+      .eq('id', categoryId);
+
+    // F11: Server-side status check for resend
+    if (options.requireClosedStatus) {
+      query = query.eq('status', 'closed');
+    }
+
+    const { data: category, error: fetchError } = await query.single();
 
     if (fetchError) {
+      if (options.requireClosedStatus && fetchError.code === 'PGRST116') {
+        return { success: false, error: 'Category is not in closed status' };
+      }
       return { success: false, error: fetchError.message };
     }
 
@@ -367,6 +380,8 @@ export const categoriesApi = {
     const categoryData = category as unknown as {
       id: string;
       name: string;
+      deadline: string;
+      status: string;
       invited_at: string | null;
       assigned_judge_id: string | null;
       profiles: {
@@ -383,13 +398,13 @@ export const categoriesApi = {
       };
     };
 
-    // Check if judge assigned (AC3: no email if no judge)
+    // Check if judge assigned
     if (!categoryData.assigned_judge_id || !categoryData.profiles) {
       return { success: false, error: 'NO_JUDGE_ASSIGNED' };
     }
 
-    // Check if already invited (AC4: prevent duplicate emails)
-    if (categoryData.invited_at) {
+    // Check if already invited (unless explicitly skipped for resend)
+    if (!options.skipAlreadyInvitedCheck && categoryData.invited_at) {
       return { success: false, error: 'ALREADY_INVITED' };
     }
 
@@ -410,11 +425,13 @@ export const categoriesApi = {
       {
         body: {
           categoryId,
+          contestId: categoryData.divisions.contests.id,
           judgeEmail: categoryData.profiles.email,
           judgeName,
           categoryName: categoryData.name,
           contestName: categoryData.divisions.contests.name,
           submissionCount: submissionCount ?? 0,
+          categoryDeadline: categoryData.deadline,
         },
       }
     );
@@ -423,12 +440,38 @@ export const categoriesApi = {
       return { success: false, error: error.message };
     }
 
-    // Check for error in response body
     if (data && !data.success) {
       return { success: false, error: data.error || 'Unknown error' };
     }
 
     return { success: true };
+  },
+
+  /**
+   * Send judge invitation email when category is closed
+   * Calls Edge Function to send email via Brevo and update invited_at
+   * @param categoryId Category ID to send invitation for
+   * @returns Result with success status and optional error code
+   */
+  async sendJudgeInvitation(
+    categoryId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    return this._invokeJudgeInvitation(categoryId);
+  },
+
+  /**
+   * Story 7-2: Resend judge invitation email (manual admin action)
+   * Skips ALREADY_INVITED check, requires category to be in 'closed' status
+   * @param categoryId Category ID to resend invitation for
+   * @returns Result with success status and optional error
+   */
+  async resendJudgeInvitation(
+    categoryId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    return this._invokeJudgeInvitation(categoryId, {
+      skipAlreadyInvitedCheck: true,
+      requireClosedStatus: true,
+    });
   },
 
   // ==========================================================================

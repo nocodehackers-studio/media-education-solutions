@@ -63,11 +63,13 @@ export interface NotificationLog {
  */
 export interface JudgeInvitationPayload {
   categoryId: string;
+  contestId: string;
   judgeEmail: string;
   judgeName?: string;
   categoryName: string;
   contestName: string;
   submissionCount: number;
+  categoryDeadline?: string;
 }
 
 /**
