@@ -25,6 +25,7 @@ import {
   toast,
 } from '@/components/ui';
 import { useAssignJudge } from '../hooks/useAssignJudge';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 
 // Validation schema for judge email
 const assignJudgeSchema = z.object({
@@ -62,12 +63,20 @@ export function AssignJudgeSheet({
     },
   });
 
-  // Reset form when sheet closes (handles Cancel and outside clicks)
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: form.formState.isDirty,
+    onConfirmDiscard: () => form.reset(),
+  });
+
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      form.reset();
+      guardClose(() => {
+        form.reset();
+        setOpen(false);
+      });
+    } else {
+      setOpen(true);
     }
-    setOpen(newOpen);
   };
 
   const onSubmit = async (data: AssignJudgeInput) => {
@@ -155,6 +164,7 @@ export function AssignJudgeSheet({
           </form>
         </Form>
       </SheetContent>
+      {confirmDialog}
     </Sheet>
   );
 }

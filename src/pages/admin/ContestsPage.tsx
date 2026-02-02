@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Plus } from 'lucide-react';
 import {
@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from '@/components/ui';
 import { ContestCard, CreateContestForm, useContests } from '@/features/contests';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 
 /**
  * Contests page - List and manage contests
@@ -22,10 +23,32 @@ import { ContestCard, CreateContestForm, useContests } from '@/features/contests
  */
 export function ContestsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
   const { data: contests, isLoading, error } = useContests();
 
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: isFormDirty,
+    onConfirmDiscard: () => {
+      setFormKey((k) => k + 1);
+      setIsFormDirty(false);
+    },
+  });
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      guardClose(() => {
+        setIsFormDirty(false);
+        setIsSheetOpen(false);
+      });
+    } else {
+      setIsSheetOpen(true);
+    }
+  }, [guardClose]);
+
   const handleSuccess = () => {
+    setIsFormDirty(false);
     setIsSheetOpen(false);
   };
 
@@ -59,7 +82,7 @@ export function ContestsPage() {
           <h1 className="text-2xl font-semibold">Contests</h1>
           <p className="text-muted-foreground">Manage your contests</p>
         </div>
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <Sheet open={isSheetOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -75,9 +98,10 @@ export function ContestsPage() {
               </SheetDescription>
             </SheetHeader>
             <div className="mt-6">
-              <CreateContestForm onSuccess={handleSuccess} />
+              <CreateContestForm key={formKey} onSuccess={handleSuccess} onDirtyChange={setIsFormDirty} />
             </div>
           </SheetContent>
+          {confirmDialog}
         </Sheet>
       </div>
 

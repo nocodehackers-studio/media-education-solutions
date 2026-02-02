@@ -20,6 +20,7 @@ import {
   SheetTitle,
   toast,
 } from '@/components/ui';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 import { updateDivisionSchema, type UpdateDivisionInput } from '../types/division.schemas';
 import { useUpdateDivision } from '../hooks/useUpdateDivision';
 import type { Division } from '../types/division.types';
@@ -60,6 +61,22 @@ export function EditDivisionSheet({
     });
   }, [division, form]);
 
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: form.formState.isDirty,
+    onConfirmDiscard: () => form.reset({
+      name: division.name,
+      displayOrder: division.displayOrder,
+    }),
+  });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      guardClose(() => onOpenChange(false));
+    } else {
+      onOpenChange(true);
+    }
+  };
+
   const onSubmit = async (data: UpdateDivisionInput) => {
     try {
       await updateDivision.mutateAsync({
@@ -77,7 +94,7 @@ export function EditDivisionSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Edit Division</SheetTitle>
@@ -124,7 +141,7 @@ export function EditDivisionSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>
@@ -140,6 +157,7 @@ export function EditDivisionSheet({
           </form>
         </Form>
       </SheetContent>
+      {confirmDialog}
     </Sheet>
   );
 }

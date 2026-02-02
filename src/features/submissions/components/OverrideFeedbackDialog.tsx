@@ -1,5 +1,5 @@
 // Story 6-3: Admin override feedback dialog (AC: #1, #2)
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
   Badge,
 } from '@/components/ui'
 import { useOverrideFeedback } from '../hooks/useOverrideFeedback'
+import { useConfirmClose } from '@/hooks/useConfirmClose'
 
 interface OverrideFeedbackDialogProps {
   reviewId: string
@@ -27,22 +28,44 @@ export function OverrideFeedbackDialog({
   open,
   onOpenChange,
 }: OverrideFeedbackDialogProps) {
+  const [isFormDirty, setIsFormDirty] = useState(false)
+
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: isFormDirty,
+    onConfirmDiscard: () => setIsFormDirty(false),
+  })
+
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (!newOpen) {
+      guardClose(() => {
+        setIsFormDirty(false)
+        onOpenChange(false)
+      })
+    } else {
+      onOpenChange(true)
+    }
+  }, [guardClose, onOpenChange])
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Override Feedback</DialogTitle>
-        </DialogHeader>
-        {open && (
-          <OverrideFeedbackForm
-            reviewId={reviewId}
-            originalFeedback={originalFeedback}
-            currentOverride={currentOverride}
-            onClose={() => onOpenChange(false)}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Override Feedback</DialogTitle>
+          </DialogHeader>
+          {open && (
+            <OverrideFeedbackForm
+              reviewId={reviewId}
+              originalFeedback={originalFeedback}
+              currentOverride={currentOverride}
+              onClose={() => onOpenChange(false)}
+              onDirtyChange={setIsFormDirty}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      {confirmDialog}
+    </>
   )
 }
 
@@ -51,6 +74,7 @@ interface OverrideFeedbackFormProps {
   originalFeedback: string | null
   currentOverride: string | null
   onClose: () => void
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
 function OverrideFeedbackForm({
@@ -58,9 +82,15 @@ function OverrideFeedbackForm({
   originalFeedback,
   currentOverride,
   onClose,
+  onDirtyChange,
 }: OverrideFeedbackFormProps) {
   const [feedbackText, setFeedbackText] = useState(currentOverride ?? '')
   const { overrideMutation, clearMutation } = useOverrideFeedback()
+
+  const isDirty = feedbackText !== (currentOverride ?? '')
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   const handleSave = async () => {
     if (!feedbackText.trim()) {

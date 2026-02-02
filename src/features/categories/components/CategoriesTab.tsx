@@ -2,7 +2,7 @@
 // Main tab content for category management in ContestDetailPage
 // Story 2-9: Shows categories grouped by division with collapsible sections
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Plus, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 import {
   Button,
@@ -25,6 +25,7 @@ import { useCategoriesByDivision } from '../hooks/useCategoriesByDivision';
 import { CategoryCard } from './CategoryCard';
 import { CreateCategoryForm } from './CreateCategoryForm';
 import type { Contest } from '@/features/contests';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 
 interface CategoriesTabProps {
   contest: Contest;
@@ -48,7 +49,28 @@ function DivisionSection({
 }: DivisionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [createOpen, setCreateOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const { data: categories, isLoading } = useCategoriesByDivision(division.id);
+
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: isFormDirty,
+    onConfirmDiscard: () => {
+      setFormKey((k) => k + 1);
+      setIsFormDirty(false);
+    },
+  });
+
+  const handleCreateOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      guardClose(() => {
+        setIsFormDirty(false);
+        setCreateOpen(false);
+      });
+    } else {
+      setCreateOpen(true);
+    }
+  }, [guardClose]);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-2">
@@ -68,7 +90,7 @@ function DivisionSection({
           </Button>
         </CollapsibleTrigger>
         {canAddCategory && (
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <Sheet open={createOpen} onOpenChange={handleCreateOpenChange}>
             <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
               <Plus className="h-3 w-3 mr-1" />
               Add
@@ -78,11 +100,17 @@ function DivisionSection({
                 <SheetTitle>Create Category in {division.name}</SheetTitle>
               </SheetHeader>
               <CreateCategoryForm
+                key={formKey}
                 divisionId={division.id}
                 contestId={contestId}
-                onSuccess={() => setCreateOpen(false)}
+                onSuccess={() => {
+                  setIsFormDirty(false);
+                  setCreateOpen(false);
+                }}
+                onDirtyChange={setIsFormDirty}
               />
             </SheetContent>
+            {confirmDialog}
           </Sheet>
         )}
       </div>

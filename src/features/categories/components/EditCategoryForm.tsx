@@ -1,6 +1,7 @@
 // EditCategoryForm - Story 2.5
 // Form for editing an existing category (only for draft status)
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon } from 'lucide-react';
@@ -44,6 +45,7 @@ interface EditCategoryFormProps {
   category: Category;
   contestId: string;
   onSuccess?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
   /** When true, all fields are disabled (AC3: read-only for published/closed) */
   readOnly?: boolean;
 }
@@ -52,7 +54,7 @@ interface EditCategoryFormProps {
  * Form component for editing an existing category
  * Supports read-only mode for published/closed categories (AC3)
  */
-export function EditCategoryForm({ category, contestId, onSuccess, readOnly = false }: EditCategoryFormProps) {
+export function EditCategoryForm({ category, contestId, onSuccess, onDirtyChange, readOnly = false }: EditCategoryFormProps) {
   const updateCategory = useUpdateCategory(contestId);
 
   const form = useForm<UpdateCategoryInput>({
@@ -66,6 +68,13 @@ export function EditCategoryForm({ category, contestId, onSuccess, readOnly = fa
       deadline: category.deadline,
     },
   });
+
+  const { isDirty } = form.formState;
+  useEffect(() => {
+    if (!readOnly) {
+      onDirtyChange?.(isDirty);
+    }
+  }, [isDirty, readOnly, onDirtyChange]);
 
   const onSubmit = async (data: UpdateCategoryInput) => {
     try {

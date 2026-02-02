@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -19,13 +20,14 @@ import { useCreateContest } from '../hooks/useCreateContest';
 
 interface CreateContestFormProps {
   onSuccess?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 /**
  * Form component for creating a new contest
  * Validates with Zod schema and submits via TanStack Query mutation
  */
-export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
+export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFormProps) {
   const createContest = useCreateContest();
   const navigate = useNavigate();
 
@@ -39,6 +41,11 @@ export function CreateContestForm({ onSuccess }: CreateContestFormProps) {
       rules: '',
     },
   });
+
+  const { isDirty } = form.formState;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const onSubmit = async (data: CreateContestInput) => {
     try {

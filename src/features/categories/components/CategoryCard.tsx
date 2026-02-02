@@ -1,7 +1,7 @@
 // CategoryCard - Story 2.5, Story 3-1
 // Display a category with status badge, type badge, judge info, and actions
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Video, Camera, UserMinus, Send, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -41,6 +41,7 @@ import { EditCategoryForm } from './EditCategoryForm';
 import { DeleteCategoryButton } from './DeleteCategoryButton';
 import { AssignJudgeSheet } from './AssignJudgeSheet';
 import { DuplicateCategoryDialog } from '@/features/divisions';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 import type { Category, CategoryStatus } from '../types/category.types';
 
 interface CategoryCardProps {
@@ -82,6 +83,8 @@ function formatDeadline(dateString: string): string {
  */
 export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const [editOpen, setEditOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const [optimisticStatus, setOptimisticStatus] = useState<CategoryStatus>(category.status);
   const [submissionCount, setSubmissionCount] = useState<number | null>(null);
   const [isLoadingCount, setIsLoadingCount] = useState(true);
@@ -90,6 +93,14 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const updateStatus = useUpdateCategoryStatus(contestId);
   const removeJudge = useRemoveJudge();
   const resendInvitation = useResendJudgeInvitation(contestId);
+
+  const { guardClose, confirmDialog: editConfirmDialog } = useConfirmClose({
+    isDirty: isFormDirty,
+    onConfirmDiscard: () => {
+      setFormKey((k) => k + 1);
+      setIsFormDirty(false);
+    },
+  });
 
   // Sync optimistic status with prop changes (per story 2-4 pattern)
   useEffect(() => {
@@ -147,6 +158,19 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const isDraft = optimisticStatus === 'draft';
   const isEditable = isDraft;
   const deadlinePassed = new Date(category.deadline) < new Date();
+
+  const handleEditOpenChange = useCallback((open: boolean) => {
+    if (!open && isEditable) {
+      guardClose(() => {
+        setIsFormDirty(false);
+        setEditOpen(false);
+      });
+    } else if (!open) {
+      setEditOpen(false);
+    } else {
+      setEditOpen(true);
+    }
+  }, [guardClose, isEditable]);
 
   // AC4: Draft disabled while loading, if has submissions, or on error
   const hasSubmissions = submissionCount !== null && submissionCount > 0;
@@ -370,7 +394,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
               currentDivisionId={category.divisionId}
             />
             {/* AC3: View button for published/closed (read-only form), Edit+Delete for draft */}
-            <Sheet open={editOpen} onOpenChange={setEditOpen}>
+            <Sheet open={editOpen} onOpenChange={handleEditOpenChange}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
                   {isEditable ? 'Edit' : 'View'}
@@ -383,12 +407,18 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
                   </SheetTitle>
                 </SheetHeader>
                 <EditCategoryForm
+                  key={formKey}
                   category={category}
                   contestId={contestId}
-                  onSuccess={() => setEditOpen(false)}
+                  onSuccess={() => {
+                    setIsFormDirty(false);
+                    setEditOpen(false);
+                  }}
+                  onDirtyChange={isEditable ? setIsFormDirty : undefined}
                   readOnly={!isEditable}
                 />
               </SheetContent>
+              {editConfirmDialog}
             </Sheet>
             {isEditable && (
               <DeleteCategoryButton

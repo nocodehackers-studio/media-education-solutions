@@ -1,6 +1,7 @@
 // CreateCategoryForm - Story 2.5
 // Form for creating a new category within a contest
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon } from 'lucide-react';
@@ -43,6 +44,7 @@ interface CreateCategoryFormProps {
   divisionId: string;
   contestId: string;
   onSuccess?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 /**
@@ -50,7 +52,7 @@ interface CreateCategoryFormProps {
  * Story 2-9: Categories now belong to divisions
  * Validates with Zod schema and submits via TanStack Query mutation
  */
-export function CreateCategoryForm({ divisionId, contestId, onSuccess }: CreateCategoryFormProps) {
+export function CreateCategoryForm({ divisionId, contestId, onSuccess, onDirtyChange }: CreateCategoryFormProps) {
   const createCategory = useCreateCategory(divisionId, contestId);
 
   const form = useForm<CreateCategoryInput>({
@@ -64,6 +66,11 @@ export function CreateCategoryForm({ divisionId, contestId, onSuccess }: CreateC
       deadline: '',
     },
   });
+
+  const { isDirty } = form.formState;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const onSubmit = async (data: CreateCategoryInput) => {
     try {

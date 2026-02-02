@@ -18,6 +18,7 @@ import {
   SheetTitle,
   toast,
 } from '@/components/ui';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 import { createDivisionSchema, type CreateDivisionInput } from '../types/division.schemas';
 import { useCreateDivision } from '../hooks/useCreateDivision';
 
@@ -46,6 +47,22 @@ export function CreateDivisionSheet({
     },
   });
 
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: form.formState.isDirty,
+    onConfirmDiscard: () => form.reset(),
+  });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      guardClose(() => {
+        form.reset();
+        onOpenChange(false);
+      });
+    } else {
+      onOpenChange(true);
+    }
+  };
+
   const onSubmit = async (data: CreateDivisionInput) => {
     try {
       await createDivision.mutateAsync({
@@ -63,7 +80,7 @@ export function CreateDivisionSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Create Division</SheetTitle>
@@ -88,7 +105,7 @@ export function CreateDivisionSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>
@@ -104,6 +121,7 @@ export function CreateDivisionSheet({
           </form>
         </Form>
       </SheetContent>
+      {confirmDialog}
     </Sheet>
   );
 }

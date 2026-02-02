@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import { useDivisions } from '../hooks/useDivisions';
 import { useDuplicateCategory } from '../hooks/useDuplicateCategory';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 
 interface DuplicateCategoryDialogProps {
   categoryId: string;
@@ -40,6 +41,11 @@ export function DuplicateCategoryDialog({
   const [selectedDivisions, setSelectedDivisions] = useState<string[]>([]);
   const { data: divisions } = useDivisions(contestId);
   const duplicateCategory = useDuplicateCategory();
+
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: selectedDivisions.length > 0,
+    onConfirmDiscard: () => setSelectedDivisions([]),
+  });
 
   // Filter out the current division
   const availableDivisions = divisions?.filter(
@@ -81,12 +87,15 @@ export function DuplicateCategoryDialog({
     return null;
   }
 
-  // Reset selections when dialog closes to avoid stale state
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      setSelectedDivisions([]);
+      guardClose(() => {
+        setSelectedDivisions([]);
+        setOpen(false);
+      });
+    } else {
+      setOpen(true);
     }
-    setOpen(isOpen);
   };
 
   return (
@@ -125,7 +134,7 @@ export function DuplicateCategoryDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button
@@ -140,6 +149,7 @@ export function DuplicateCategoryDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {confirmDialog}
     </Dialog>
   );
 }

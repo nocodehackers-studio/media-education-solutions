@@ -20,6 +20,7 @@ import {
   toast,
 } from '@/components/ui';
 import { useGenerateSingleCode } from '../hooks/useGenerateSingleCode';
+import { useConfirmClose } from '@/hooks/useConfirmClose';
 
 const addCodeSchema = z.object({
   organizationName: z
@@ -52,11 +53,19 @@ export function AddCodeDialog({ contestId, variant = 'outline' }: AddCodeDialogP
     },
   });
 
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: form.formState.isDirty,
+    onConfirmDiscard: () => form.reset(),
+  });
+
   const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen);
-    // Reset form when dialog closes (via X button, overlay click, or cancel)
     if (!isOpen) {
-      form.reset();
+      guardClose(() => {
+        form.reset();
+        setOpen(false);
+      });
+    } else {
+      setOpen(true);
     }
   };
 
@@ -119,6 +128,7 @@ export function AddCodeDialog({ contestId, variant = 'outline' }: AddCodeDialogP
           </form>
         </Form>
       </SheetContent>
+      {confirmDialog}
     </Sheet>
   );
 }
