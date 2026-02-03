@@ -8,7 +8,7 @@
  *   1. Verify caller has a valid auth token (-> 401 UNAUTHORIZED)
  *   2. Verify caller has admin role (-> 403 FORBIDDEN)
  *   3. Validate email input (-> 422 EMAIL_REQUIRED, EMAIL_INVALID)
- *   4. Look up existing user by email:
+ *   4. Look up existing profile by email (service role, bypasses RLS):
  *      - If exists as judge -> return { judgeId, isExisting: true }
  *      - If exists with different role -> 409 ROLE_CONFLICT
  *   5. Create new auth user; handle_new_user trigger auto-creates profile with role='judge'
@@ -104,30 +104,31 @@ Deno.serve(async (req) => {
       throw new EdgeError('EMAIL_INVALID', 422);
     }
 
-    // Use service role client to create user (bypasses RLS)
+    // Use service role client for admin operations (bypasses RLS)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Check if user already exists with this email using O(1) lookup
-    const { data: existingUserData, error: lookupError } =
-      await supabaseAdmin.auth.admin.getUserByEmail(email.toLowerCase());
-
-    if (existingUserData?.user) {
-      const existingUser = existingUserData.user;
-      // User exists - check if they're already a judge
-      const { data: existingProfile } = await supabaseAdmin
+    // Look up existing profile by email (service role bypasses RLS)
+    const { data: existingProfiles, error: profileLookupError } =
+      await supabaseAdmin
         .from('profiles')
         .select('id, role')
-        .eq('id', existingUser.id)
-        .single();
+        .eq('email', email.toLowerCase())
+        .limit(1);
 
-      if (existingProfile?.role === 'judge') {
+    if (profileLookupError) {
+      throw new EdgeError('CREATE_FAILED', 500);
+    }
+
+    if (existingProfiles && existingProfiles.length > 0) {
+      const existingProfile = existingProfiles[0];
+      if (existingProfile.role === 'judge') {
         // Already a judge, return their ID
         return new Response(
-          JSON.stringify({ judgeId: existingUser.id, isExisting: true }),
+          JSON.stringify({ judgeId: existingProfile.id, isExisting: true }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
@@ -138,13 +139,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // F7: Use exact string match instead of fragile .includes('not found')
-    // getUserByEmail returns an error when user doesn't exist — expected.
-    if (lookupError && lookupError.message !== 'User not found') {
-      throw new EdgeError('CREATE_FAILED', 500);
-    }
-
-    // Create new auth user (trigger will auto-create profile with role='judge')
+    // No profile found — create new auth user
+    // handle_new_user trigger auto-creates profile with role='judge'
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email: email.toLowerCase(),
