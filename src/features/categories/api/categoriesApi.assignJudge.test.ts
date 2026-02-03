@@ -7,6 +7,7 @@ const mockSelect = vi.fn();
 const mockEq = vi.fn();
 const mockSingle = vi.fn();
 const mockUpdateResult = vi.fn();
+const mockRefreshSession = vi.fn();
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -32,6 +33,9 @@ vi.mock('@/lib/supabase', () => ({
         eq: () => mockUpdateResult(),
       }),
     }),
+    auth: {
+      refreshSession: () => mockRefreshSession(),
+    },
     functions: {
       invoke: (...args: unknown[]) => mockInvoke(...args),
     },
@@ -73,6 +77,8 @@ describe('categoriesApi.assignJudge', () => {
     });
     // Default: category update succeeds
     mockUpdateResult.mockReturnValue({ error: null });
+    // Default: session refresh succeeds
+    mockRefreshSession.mockResolvedValue({ error: null });
   });
 
   it('extracts ROLE_CONFLICT error code from FunctionsHttpError', async () => {
@@ -148,6 +154,19 @@ describe('categoriesApi.assignJudge', () => {
     );
 
     expect(result.isNewJudge).toBe(false);
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('throws UNAUTHORIZED when session refresh fails', async () => {
+    mockRefreshSession.mockResolvedValueOnce({
+      error: new Error('Refresh token expired'),
+    });
+
+    await expect(
+      categoriesApi.assignJudge('cat-1', 'test@example.com')
+    ).rejects.toThrow('UNAUTHORIZED');
+
+    // Edge function should NOT be called
     expect(mockInvoke).not.toHaveBeenCalled();
   });
 

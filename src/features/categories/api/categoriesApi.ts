@@ -288,6 +288,14 @@ export const categoriesApi = {
     if (existingJudge) {
       judgeId = existingJudge.id;
     } else {
+      // Refresh session to ensure the JWT is fresh — edge functions validate
+      // the Authorization JWT at the gateway level (unlike REST API which uses
+      // the apikey header). A stale JWT causes 401 "Invalid JWT" from the gateway.
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        throw new Error('UNAUTHORIZED');
+      }
+
       // 2. Create new judge via Edge Function
       const { data, error } = await supabase.functions.invoke('create-judge', {
         body: { email: email.toLowerCase() },
