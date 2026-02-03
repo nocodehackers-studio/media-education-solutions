@@ -149,12 +149,14 @@ Deno.serve(async (req) => {
     const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
     console.log('[send-judge-invitation] APP_URL:', appUrl);
 
-    // Story 3-3: Generate invite link for password setup flow
-    // This creates a one-time use link that logs the judge in and redirects to /set-password
-    console.log('[send-judge-invitation] Generating invite link for:', judgeEmail);
+    // Story 3-3: Generate magic link for password setup flow
+    // Uses 'magiclink' (not 'invite') because the user was already created by create-judge.
+    // 'invite' tries to create the user and fails with "already registered".
+    // Magic link logs the judge in and redirects to /set-password.
+    console.log('[send-judge-invitation] Generating magic link for:', judgeEmail);
     const { data: linkData, error: linkError } =
       await supabaseAdmin.auth.admin.generateLink({
-        type: 'invite',
+        type: 'magiclink',
         email: judgeEmail,
         options: {
           redirectTo: `${appUrl}/set-password`,
