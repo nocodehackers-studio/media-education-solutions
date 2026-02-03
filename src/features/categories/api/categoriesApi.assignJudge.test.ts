@@ -33,6 +33,11 @@ vi.mock('@/lib/supabase', () => ({
       }),
     }),
     auth: {
+      getSession: () =>
+        Promise.resolve({
+          data: { session: { user: { email: 'test-admin@example.com' } } },
+          error: null,
+        }),
       refreshSession: () => mockRefreshSession(),
     },
     functions: {

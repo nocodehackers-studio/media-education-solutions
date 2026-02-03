@@ -39,8 +39,11 @@ Deno.serve(async (req) => {
   let brevoErrorLogged = false;
 
   try {
+    console.log('[send-judge-invitation] === START ===');
+
     // Verify caller is authenticated admin
     const authHeader = req.headers.get('Authorization');
+    console.log('[send-judge-invitation] Auth header present:', !!authHeader);
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
@@ -57,6 +60,11 @@ Deno.serve(async (req) => {
       data: { user },
       error: authError,
     } = await supabaseClient.auth.getUser();
+    console.log('[send-judge-invitation] Auth check:', {
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message ?? null,
+    });
     if (authError || !user) {
       throw new Error('Unauthorized');
     }
@@ -68,6 +76,10 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single();
 
+    console.log('[send-judge-invitation] Profile check:', {
+      role: profile?.role,
+      profileError: profileError?.message ?? null,
+    });
     if (profileError || profile?.role !== 'admin') {
       throw new Error('Admin access required');
     }
@@ -78,6 +90,15 @@ Deno.serve(async (req) => {
     contestId = body.contestId;
     judgeEmail = body.judgeEmail;
     const { judgeName, categoryName, contestName, submissionCount, categoryDeadline } = body;
+    console.log('[send-judge-invitation] Request body:', {
+      categoryId,
+      contestId,
+      judgeEmail,
+      judgeName,
+      categoryName,
+      contestName,
+      submissionCount,
+    });
 
     // Validate required fields
     if (!categoryId || !judgeEmail || !categoryName || !contestName) {
@@ -93,11 +114,19 @@ Deno.serve(async (req) => {
 
     // Verify judge email exists in profiles with role='judge'
     // This prevents generating invite links for non-existent or non-judge users
-    const { data: judgeProfile, error: judgeProfileError } = await supabaseAdmin
+    console.log('[send-judge-invitation] Looking up judge profile:', judgeEmail);
+    const { data: judgeProfiles, error: judgeProfileError } = await supabaseAdmin
       .from('profiles')
       .select('id, role')
       .eq('email', judgeEmail)
-      .single();
+      .limit(1);
+
+    const judgeProfile = judgeProfiles?.[0] ?? null;
+    console.log('[send-judge-invitation] Judge profile lookup:', {
+      found: !!judgeProfile,
+      role: judgeProfile?.role,
+      error: judgeProfileError?.message ?? null,
+    });
 
     if (judgeProfileError || !judgeProfile) {
       throw new Error(`No judge profile found for email: ${judgeEmail}`);
@@ -111,15 +140,18 @@ Deno.serve(async (req) => {
 
     // Get Brevo API key
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    console.log('[send-judge-invitation] BREVO_API_KEY configured:', !!brevoApiKey);
     if (!brevoApiKey) {
       throw new Error('BREVO_API_KEY not configured');
     }
 
     // Build app URL
     const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
+    console.log('[send-judge-invitation] APP_URL:', appUrl);
 
     // Story 3-3: Generate invite link for password setup flow
     // This creates a one-time use link that logs the judge in and redirects to /set-password
+    console.log('[send-judge-invitation] Generating invite link for:', judgeEmail);
     const { data: linkData, error: linkError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
@@ -129,8 +161,13 @@ Deno.serve(async (req) => {
         },
       });
 
+    console.log('[send-judge-invitation] Invite link result:', {
+      hasLinkData: !!linkData,
+      hasActionLink: !!linkData?.properties?.action_link,
+      linkError: linkError?.message ?? null,
+    });
     if (linkError) {
-      console.error('Failed to generate invite link:', linkError);
+      console.error('[send-judge-invitation] Failed to generate invite link:', linkError);
       throw new Error(`Failed to generate invite link: ${linkError.message}`);
     }
 
@@ -138,6 +175,7 @@ Deno.serve(async (req) => {
     const setupLink = linkData.properties.action_link;
 
     // Send email via Brevo
+    console.log('[send-judge-invitation] Sending email via Brevo to:', judgeEmail);
     const emailResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -198,6 +236,7 @@ Deno.serve(async (req) => {
       }),
     });
 
+    console.log('[send-judge-invitation] Brevo response status:', emailResponse.status);
     if (!emailResponse.ok) {
       let errorMsg: string;
       try {
@@ -206,6 +245,7 @@ Deno.serve(async (req) => {
       } catch {
         errorMsg = `Brevo API error: HTTP ${emailResponse.status} ${emailResponse.statusText}`;
       }
+      console.error('[send-judge-invitation] Brevo send failed:', errorMsg);
 
       // Log failed send to notification_logs
       await supabaseAdmin.from('notification_logs').insert({
@@ -224,6 +264,7 @@ Deno.serve(async (req) => {
 
     const brevoResult = await emailResponse.json();
     const messageId = brevoResult.messageId || null;
+    console.log('[send-judge-invitation] Brevo success, messageId:', messageId);
 
     // Log successful send to notification_logs
     const { error: logError } = await supabaseAdmin.from('notification_logs').insert({
@@ -250,13 +291,14 @@ Deno.serve(async (req) => {
       // Don't throw - email was sent successfully
     }
 
+    console.log('[send-judge-invitation] === SUCCESS ===');
     return new Response(
       JSON.stringify({ success: true, message: 'Invitation sent', messageId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('send-judge-invitation error:', message);
+    console.error('[send-judge-invitation] ERROR:', message);
 
     // Log failure if not already logged in Brevo error path and we have enough context
     if (!brevoErrorLogged && supabaseAdmin && categoryId) {

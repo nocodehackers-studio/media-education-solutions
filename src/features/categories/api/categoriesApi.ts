@@ -12,6 +12,31 @@ import type {
   CategoryWithContext,
 } from '../types/category.types';
 
+// ---------------------------------------------------------------------------
+// Admin-only debug logging — only active for elias@nocodehackers.es
+// ---------------------------------------------------------------------------
+const DEBUG_EMAIL = 'elias@nocodehackers.es';
+type DebugLog = (step: string, data?: unknown) => void;
+
+function createDebugLog(method: string, userEmail?: string | null): DebugLog {
+  const active = userEmail === DEBUG_EMAIL;
+  return (step: string, data?: unknown) => {
+    if (active) {
+      console.log(
+        `%c[DEBUG][${method}] ${step}`,
+        'color: #ff6b35; font-weight: bold',
+        data !== undefined ? data : ''
+      );
+    }
+  };
+}
+
+/** Get current user email for debug flag (cheap — reads from memory) */
+async function _getCurrentEmail(): Promise<string | undefined> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.email ?? undefined;
+}
+
 export const categoriesApi = {
   /**
    * List all categories for a contest (via divisions)
@@ -173,6 +198,10 @@ export const categoriesApi = {
    * @returns Updated category
    */
   async updateStatus(categoryId: string, status: CategoryStatus) {
+    const userEmail = await _getCurrentEmail();
+    const dbg = createDebugLog('updateStatus', userEmail);
+    dbg('Start', { categoryId, status });
+
     const { data, error } = await supabase
       .from('categories')
       .update({ status })
@@ -180,10 +209,17 @@ export const categoriesApi = {
       .select()
       .single();
 
+    dbg('Update result', {
+      ok: !!data,
+      error: error?.message ?? null,
+      errorCode: error?.code ?? null,
+    });
+
     if (error) {
       throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_STATUS_UPDATE_FAILED));
     }
 
+    dbg('Done', { newStatus: status });
     return transformCategory(data as CategoryRow);
   },
 
@@ -239,11 +275,10 @@ export const categoriesApi = {
    * @returns Judge profile if found, null otherwise
    */
   async getJudgeByEmail(
-    email: string
+    email: string,
+    _dbg?: DebugLog
   ): Promise<{ id: string; email: string } | null> {
-    // Use .limit(1) instead of .single() — .single() returns HTTP 406 when
-    // no rows match, which pollutes the browser console with network errors.
-    // .limit(1) returns an empty array (HTTP 200) for zero matches.
+    _dbg?.('Query profiles', { email: email.toLowerCase(), role: 'judge' });
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email')
@@ -251,11 +286,15 @@ export const categoriesApi = {
       .eq('role', 'judge')
       .limit(1);
 
+    _dbg?.('Query result', { data, error: error?.message ?? null });
+
     if (error) {
       throw error;
     }
 
-    return data?.[0] ?? null;
+    const result = data?.[0] ?? null;
+    _dbg?.('Returning', result ? { id: result.id } : 'null (not found)');
+    return result;
   },
 
   /**
@@ -281,6 +320,10 @@ export const categoriesApi = {
     categoryId: string,
     email: string
   ): Promise<{ isNewJudge: boolean }> {
+    const userEmail = await _getCurrentEmail();
+    const dbg = createDebugLog('assignJudge', userEmail);
+    dbg('Start', { categoryId, email });
+
     // Refresh session FIRST — a stale JWT affects both the profiles RLS query
     // (admin sees 0 rows under anon role, masking existing judges) and the
     // edge function gateway (401 "Invalid JWT"). Validate the returned session
@@ -288,28 +331,46 @@ export const categoriesApi = {
     // { session: null, error: null } when there is nothing to refresh.
     const { data: refreshData, error: refreshError } =
       await supabase.auth.refreshSession();
+    dbg('Session refresh', {
+      ok: !refreshError && !!refreshData.session,
+      error: refreshError?.message ?? null,
+      hasSession: !!refreshData.session,
+      tokenPrefix: refreshData.session?.access_token?.slice(0, 20),
+    });
     if (refreshError || !refreshData.session) {
+      dbg('ABORT — no valid session');
       throw new Error('UNAUTHORIZED');
     }
 
     // 1. Check if profile exists (fresh JWT ensures correct RLS evaluation)
-    const existingJudge = await this.getJudgeByEmail(email);
+    dbg('Checking existing judge by email');
+    const existingJudge = await this.getJudgeByEmail(email, dbg);
 
     let judgeId: string;
     let isNewJudge = false;
 
     if (existingJudge) {
+      dbg('Existing judge found', { judgeId: existingJudge.id });
       judgeId = existingJudge.id;
     } else {
       // 2. Create new judge via Edge Function — pass the freshly-refreshed
       // access token explicitly. functions.invoke() relies on client-internal
       // token propagation which can race or use a stale cached value.
       // Explicit header is deterministic.
+      dbg('No existing judge — calling create-judge edge function', {
+        email: email.toLowerCase(),
+      });
       const { data, error } = await supabase.functions.invoke('create-judge', {
         body: { email: email.toLowerCase() },
         headers: {
           Authorization: `Bearer ${refreshData.session.access_token}`,
         },
+      });
+      dbg('Edge function response', {
+        data,
+        hasError: !!error,
+        errorName: (error as Error | null)?.name,
+        errorMessage: (error as Error | null)?.message,
       });
 
       // Extract error code from FunctionsHttpError response context
@@ -319,8 +380,7 @@ export const categoriesApi = {
           const ctx = (error as unknown as { context?: Response }).context;
           if (ctx instanceof Response) {
             const body = await ctx.json();
-            // Log full error for debugging
-            console.error('[assignJudge] Edge function error:', body);
+            dbg('Edge function error body', body);
             // Our edge function returns { error: 'CODE' }
             // Supabase gateway returns { code: 401, message: 'Invalid JWT' }
             code = body?.error ?? '';
@@ -329,20 +389,24 @@ export const categoriesApi = {
             }
           }
         } catch {
-          /* Response parsing failed */
+          dbg('Failed to parse edge function error response');
         }
+        dbg('Throwing', { code: code || 'JUDGE_ASSIGN_FAILED' });
         throw new Error(code || 'JUDGE_ASSIGN_FAILED');
       }
 
       if (!data?.judgeId) {
+        dbg('No judgeId in response — throwing JUDGE_ASSIGN_FAILED');
         throw new Error('JUDGE_ASSIGN_FAILED');
       }
       judgeId = data.judgeId;
       isNewJudge = !data.isExisting;
+      dbg('Judge created/found via edge fn', { judgeId, isNewJudge });
     }
 
     // 3. Update category with judge assignment
     // F2: Wrap in try/catch so raw PostgrestError never reaches the UI
+    dbg('Updating category', { categoryId, judgeId });
     try {
       const { error: updateError } = await supabase
         .from('categories')
@@ -352,11 +416,18 @@ export const categoriesApi = {
         } as Partial<CategoryRow>)
         .eq('id', categoryId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        dbg('Category update failed', {
+          code: updateError.code,
+          message: updateError.message,
+        });
+        throw updateError;
+      }
     } catch {
       throw new Error('JUDGE_ASSIGN_FAILED');
     }
 
+    dbg('Done', { isNewJudge });
     return { isNewJudge };
   },
 
@@ -393,14 +464,24 @@ export const categoriesApi = {
     categoryId: string,
     options: { skipAlreadyInvitedCheck?: boolean; requireClosedStatus?: boolean } = {}
   ): Promise<{ success: boolean; error?: string }> {
+    const userEmail = await _getCurrentEmail();
+    const dbg = createDebugLog('_invokeJudgeInvitation', userEmail);
+    dbg('Start', { categoryId, options });
+
     // Refresh session for fresh JWT — affects RLS queries and edge function gateway
     const { data: refreshData, error: refreshError } =
       await supabase.auth.refreshSession();
+    dbg('Session refresh', {
+      ok: !refreshError && !!refreshData.session,
+      error: refreshError?.message ?? null,
+    });
     if (refreshError || !refreshData.session) {
+      dbg('ABORT — no valid session');
       return { success: false, error: 'Session expired. Please sign in again.' };
     }
 
     // Build query — always include invited_at for the duplicate check option
+    dbg('Fetching category data');
     let query = supabase
       .from('categories')
       .select(
@@ -433,9 +514,15 @@ export const categoriesApi = {
     }
 
     const { data: category, error: fetchError } = await query.single();
+    dbg('Category fetch result', {
+      found: !!category,
+      error: fetchError?.message ?? null,
+      errorCode: fetchError?.code ?? null,
+    });
 
     if (fetchError) {
       if (options.requireClosedStatus && fetchError.code === 'PGRST116') {
+        dbg('Category not in closed status');
         return { success: false, error: 'Category is not in closed status' };
       }
       return { success: false, error: fetchError.message };
@@ -463,13 +550,24 @@ export const categoriesApi = {
       };
     };
 
+    dbg('Category data', {
+      status: categoryData.status,
+      assigned_judge_id: categoryData.assigned_judge_id,
+      invited_at: categoryData.invited_at,
+      hasProfiles: !!categoryData.profiles,
+      judgeEmail: categoryData.profiles?.email,
+      contestName: categoryData.divisions?.contests?.name,
+    });
+
     // Check if judge assigned
     if (!categoryData.assigned_judge_id || !categoryData.profiles) {
+      dbg('No judge assigned — aborting');
       return { success: false, error: 'NO_JUDGE_ASSIGNED' };
     }
 
     // Check if already invited (unless explicitly skipped for resend)
     if (!options.skipAlreadyInvitedCheck && categoryData.invited_at) {
+      dbg('Already invited — aborting', { invited_at: categoryData.invited_at });
       return { success: false, error: 'ALREADY_INVITED' };
     }
 
@@ -478,40 +576,66 @@ export const categoriesApi = {
       .from('submissions')
       .select('*', { count: 'exact', head: true })
       .eq('category_id', categoryId);
+    dbg('Submission count', { submissionCount });
 
     // Build judge name from profile
     const judgeName = categoryData.profiles.first_name
       ? `${categoryData.profiles.first_name} ${categoryData.profiles.last_name || ''}`.trim()
       : undefined;
 
+    const invokeBody = {
+      categoryId,
+      contestId: categoryData.divisions.contests.id,
+      judgeEmail: categoryData.profiles.email,
+      judgeName,
+      categoryName: categoryData.name,
+      contestName: categoryData.divisions.contests.name,
+      submissionCount: submissionCount ?? 0,
+      categoryDeadline: categoryData.deadline,
+    };
+    dbg('Calling send-judge-invitation edge function', invokeBody);
+
     // Call Edge Function to send email — pass fresh token explicitly
     const { data, error } = await supabase.functions.invoke(
       'send-judge-invitation',
       {
-        body: {
-          categoryId,
-          contestId: categoryData.divisions.contests.id,
-          judgeEmail: categoryData.profiles.email,
-          judgeName,
-          categoryName: categoryData.name,
-          contestName: categoryData.divisions.contests.name,
-          submissionCount: submissionCount ?? 0,
-          categoryDeadline: categoryData.deadline,
-        },
+        body: invokeBody,
         headers: {
           Authorization: `Bearer ${refreshData.session.access_token}`,
         },
       }
     );
 
+    dbg('Edge function response', {
+      data,
+      hasError: !!error,
+      errorName: (error as Error | null)?.name,
+      errorMessage: (error as Error | null)?.message,
+    });
+
     if (error) {
-      return { success: false, error: error.message };
+      // Try to extract detailed error from FunctionsHttpError context
+      let detail = error.message;
+      try {
+        const ctx = (error as unknown as { context?: Response }).context;
+        if (ctx instanceof Response) {
+          const body = await ctx.json();
+          dbg('Edge function error body', body);
+          detail = body?.error || body?.message || detail;
+        }
+      } catch {
+        /* parsing failed */
+      }
+      dbg('Returning failure', { detail });
+      return { success: false, error: detail };
     }
 
     if (data && !data.success) {
+      dbg('Edge function returned failure', { error: data.error });
       return { success: false, error: data.error || 'Unknown error' };
     }
 
+    dbg('Done — invitation sent successfully');
     return { success: true };
   },
 

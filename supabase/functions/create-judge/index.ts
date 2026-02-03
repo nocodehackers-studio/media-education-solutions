@@ -54,8 +54,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('[create-judge] === START ===');
+
     // Verify caller is authenticated admin
     const authHeader = req.headers.get('Authorization');
+    console.log('[create-judge] Auth header present:', !!authHeader);
     if (!authHeader) {
       throw new EdgeError('UNAUTHORIZED', 401);
     }
@@ -72,6 +75,11 @@ Deno.serve(async (req) => {
       data: { user },
       error: authError,
     } = await supabaseClient.auth.getUser();
+    console.log('[create-judge] Auth check:', {
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message ?? null,
+    });
     if (authError || !user) {
       throw new EdgeError('UNAUTHORIZED', 401);
     }
@@ -83,6 +91,10 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single();
 
+    console.log('[create-judge] Profile check:', {
+      role: profile?.role,
+      profileError: profileError?.message ?? null,
+    });
     if (profileError || profile?.role !== 'admin') {
       throw new EdgeError('FORBIDDEN', 403);
     }
@@ -94,6 +106,7 @@ Deno.serve(async (req) => {
     } catch {
       throw new EdgeError('INVALID_REQUEST_BODY', 400);
     }
+    console.log('[create-judge] Requested email:', email);
     if (!email) {
       throw new EdgeError('EMAIL_REQUIRED', 422);
     }
@@ -112,6 +125,7 @@ Deno.serve(async (req) => {
     );
 
     // Look up existing profile by email (service role bypasses RLS)
+    console.log('[create-judge] Looking up existing profile:', email.toLowerCase());
     const { data: existingProfiles, error: profileLookupError } =
       await supabaseAdmin
         .from('profiles')
@@ -119,14 +133,23 @@ Deno.serve(async (req) => {
         .eq('email', email.toLowerCase())
         .limit(1);
 
+    console.log('[create-judge] Profile lookup result:', {
+      count: existingProfiles?.length ?? 0,
+      error: profileLookupError?.message ?? null,
+    });
     if (profileLookupError) {
       throw new EdgeError('CREATE_FAILED', 500);
     }
 
     if (existingProfiles && existingProfiles.length > 0) {
       const existingProfile = existingProfiles[0];
+      console.log('[create-judge] Existing profile found:', {
+        id: existingProfile.id,
+        role: existingProfile.role,
+      });
       if (existingProfile.role === 'judge') {
         // Already a judge, return their ID
+        console.log('[create-judge] Returning existing judge');
         return new Response(
           JSON.stringify({ judgeId: existingProfile.id, isExisting: true }),
           {
@@ -141,6 +164,7 @@ Deno.serve(async (req) => {
 
     // No profile found — create new auth user
     // handle_new_user trigger auto-creates profile with role='judge'
+    console.log('[create-judge] Creating new auth user:', email.toLowerCase());
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email: email.toLowerCase(),
@@ -148,10 +172,15 @@ Deno.serve(async (req) => {
         user_metadata: { invited_as: 'judge' }, // Note: role is forced in trigger, not from metadata
       });
 
+    console.log('[create-judge] Create user result:', {
+      userId: newUser?.user?.id,
+      createError: createError?.message ?? null,
+    });
     if (createError) {
       throw new EdgeError('CREATE_FAILED', 500);
     }
 
+    console.log('[create-judge] === SUCCESS (new judge) ===');
     return new Response(
       JSON.stringify({ judgeId: newUser.user.id, isExisting: false }),
       {
@@ -163,7 +192,7 @@ Deno.serve(async (req) => {
     const code = error instanceof EdgeError ? error.code : 'UNKNOWN_ERROR';
     const status = error instanceof EdgeError ? error.httpStatus : 500;
     const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[create-judge] ${code}: ${detail}`);
+    console.error(`[create-judge] ERROR ${code}: ${detail}`);
     return new Response(JSON.stringify({ error: code, detail }), {
       status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
