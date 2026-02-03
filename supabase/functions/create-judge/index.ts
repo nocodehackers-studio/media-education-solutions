@@ -166,7 +166,9 @@ Deno.serve(async (req) => {
     // F9: Use semantic HTTP status codes from EdgeError, fallback 500
     const code = error instanceof EdgeError ? error.code : 'UNKNOWN_ERROR';
     const status = error instanceof EdgeError ? error.httpStatus : 500;
-    return new Response(JSON.stringify({ error: code }), {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[create-judge] ${code}: ${detail}`);
+    return new Response(JSON.stringify({ error: code, detail }), {
       status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -319,6 +319,8 @@ export const categoriesApi = {
           const ctx = (error as unknown as { context?: Response }).context;
           if (ctx instanceof Response) {
             const body = await ctx.json();
+            // Log full error for debugging
+            console.error('[assignJudge] Edge function error:', body);
             // Our edge function returns { error: 'CODE' }
             // Supabase gateway returns { code: 401, message: 'Invalid JWT' }
             code = body?.error ?? '';
