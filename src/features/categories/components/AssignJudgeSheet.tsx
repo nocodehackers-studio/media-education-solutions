@@ -22,7 +22,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  toast,
 } from '@/components/ui';
 import { useAssignJudge } from '../hooks/useAssignJudge';
 import { useConfirmClose } from '@/hooks/useConfirmClose';
@@ -81,24 +80,13 @@ export function AssignJudgeSheet({
 
   const onSubmit = async (data: AssignJudgeInput) => {
     try {
-      const result = await assignJudge.mutateAsync({
+      await assignJudge.mutateAsync({
         categoryId,
         email: data.email,
       });
-
-      // AC2: New judge - show invite message
-      // AC3: Existing judge - show simple success
-      if (result.isNewJudge) {
-        toast.success('Judge assigned - invite will be sent when category closes');
-      } else {
-        toast.success('Judge assigned');
-      }
-
       handleOpenChange(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to assign judge'
-      );
+    } catch {
+      // Error toast handled by useAssignJudge onError
     }
   };
 

@@ -1,6 +1,24 @@
-// Story 3-1: Edge Function to create judge profiles
-// CRITICAL: Uses service role to create auth user
-// The handle_new_user trigger will auto-create profile with role='judge'
+/**
+ * create-judge Edge Function
+ *
+ * Creates or identifies a judge user account by email.
+ * Called by admins when assigning a judge to a category.
+ *
+ * Flow:
+ *   1. Verify caller has a valid auth token (-> 401 UNAUTHORIZED)
+ *   2. Verify caller has admin role (-> 403 FORBIDDEN)
+ *   3. Validate email input (-> 422 EMAIL_REQUIRED, EMAIL_INVALID)
+ *   4. Look up existing user by email:
+ *      - If exists as judge -> return { judgeId, isExisting: true }
+ *      - If exists with different role -> 409 ROLE_CONFLICT
+ *   5. Create new auth user; handle_new_user trigger auto-creates profile with role='judge'
+ *      - On failure -> 500 CREATE_FAILED
+ *
+ * Error codes: UNAUTHORIZED, FORBIDDEN, EMAIL_REQUIRED, EMAIL_INVALID,
+ *              ROLE_CONFLICT, CREATE_FAILED, UNKNOWN_ERROR
+ *
+ * Related: send-judge-invitation is a separate function triggered on category close.
+ */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -10,17 +28,36 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 };
 
+/** Typed error with an error code and HTTP status for structured responses. */
+class EdgeError extends Error {
+  constructor(
+    public code: string,
+    public httpStatus: number
+  ) {
+    super(code);
+    this.name = 'EdgeError';
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // F5: Reject non-POST methods
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'METHOD_NOT_ALLOWED' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     // Verify caller is authenticated admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      throw new EdgeError('UNAUTHORIZED', 401);
     }
 
     // Create client with user's auth context to verify permissions
@@ -36,10 +73,10 @@ Deno.serve(async (req) => {
       error: authError,
     } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      throw new EdgeError('UNAUTHORIZED', 401);
     }
 
-    // Verify caller is admin
+    // Verify caller is admin (F1: authenticated but wrong role = FORBIDDEN, not UNAUTHORIZED)
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('role')
@@ -47,19 +84,24 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileError || profile?.role !== 'admin') {
-      throw new Error('Admin access required');
+      throw new EdgeError('FORBIDDEN', 403);
     }
 
-    // Parse request body
-    const { email } = await req.json();
+    // Parse request body (F13: catch malformed JSON)
+    let email: string | undefined;
+    try {
+      ({ email } = await req.json());
+    } catch {
+      throw new EdgeError('INVALID_REQUEST_BODY', 400);
+    }
     if (!email) {
-      throw new Error('Email is required');
+      throw new EdgeError('EMAIL_REQUIRED', 422);
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new Error('Invalid email format');
+      throw new EdgeError('EMAIL_INVALID', 422);
     }
 
     // Use service role client to create user (bypasses RLS)
@@ -92,13 +134,14 @@ Deno.serve(async (req) => {
         );
       } else {
         // User exists but not as judge (e.g., admin) - don't convert
-        throw new Error('User exists with a different role');
+        throw new EdgeError('ROLE_CONFLICT', 409);
       }
     }
 
-    // lookupError with code 'user_not_found' is expected when user doesn't exist
-    if (lookupError && !lookupError.message?.includes('not found')) {
-      throw lookupError;
+    // F7: Use exact string match instead of fragile .includes('not found')
+    // getUserByEmail returns an error when user doesn't exist — expected.
+    if (lookupError && lookupError.message !== 'User not found') {
+      throw new EdgeError('CREATE_FAILED', 500);
     }
 
     // Create new auth user (trigger will auto-create profile with role='judge')
@@ -110,7 +153,7 @@ Deno.serve(async (req) => {
       });
 
     if (createError) {
-      throw createError;
+      throw new EdgeError('CREATE_FAILED', 500);
     }
 
     return new Response(
@@ -120,9 +163,11 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
+    // F9: Use semantic HTTP status codes from EdgeError, fallback 500
+    const code = error instanceof EdgeError ? error.code : 'UNKNOWN_ERROR';
+    const status = error instanceof EdgeError ? error.httpStatus : 500;
+    return new Response(JSON.stringify({ error: code }), {
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

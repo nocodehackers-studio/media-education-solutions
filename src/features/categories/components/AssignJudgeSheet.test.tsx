@@ -195,10 +195,10 @@ describe('AssignJudgeSheet', () => {
     });
   });
 
-  it('shows error toast on API failure', async () => {
+  it('shows mapped error toast for ROLE_CONFLICT', async () => {
     const user = userEvent.setup();
     vi.mocked(categoriesApi.categoriesApi.assignJudge).mockRejectedValue(
-      new Error('API Error')
+      new Error('ROLE_CONFLICT')
     );
 
     const { toast } = await import('@/components/ui');
@@ -219,7 +219,69 @@ describe('AssignJudgeSheet', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('API Error');
+      expect(toast.error).toHaveBeenCalledWith(
+        'This email is already registered with a different account type.'
+      );
+    });
+  });
+
+  it('shows mapped error toast for FORBIDDEN', async () => {
+    const user = userEvent.setup();
+    vi.mocked(categoriesApi.categoriesApi.assignJudge).mockRejectedValue(
+      new Error('FORBIDDEN')
+    );
+
+    const { toast } = await import('@/components/ui');
+
+    renderWithProviders(
+      <AssignJudgeSheet
+        categoryId="cat-1"
+        categoryName="Best Video"
+              />
+    );
+
+    await user.click(screen.getByRole('button', { name: /assign judge/i }));
+
+    const emailInput = screen.getByLabelText(/judge email/i);
+    await user.type(emailInput, 'test@example.com');
+
+    const submitButton = screen.getByRole('button', { name: /^assign$/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "You don't have permission to assign judges."
+      );
+    });
+  });
+
+  it('shows generic fallback toast for unknown error codes', async () => {
+    const user = userEvent.setup();
+    vi.mocked(categoriesApi.categoriesApi.assignJudge).mockRejectedValue(
+      new Error('SOME_UNKNOWN_CODE')
+    );
+
+    const { toast } = await import('@/components/ui');
+
+    renderWithProviders(
+      <AssignJudgeSheet
+        categoryId="cat-1"
+        categoryName="Best Video"
+              />
+    );
+
+    await user.click(screen.getByRole('button', { name: /assign judge/i }));
+
+    const emailInput = screen.getByLabelText(/judge email/i);
+    await user.type(emailInput, 'test@example.com');
+
+    const submitButton = screen.getByRole('button', { name: /^assign$/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        'Something went wrong while assigning the judge. Please try again.'
+      );
     });
   });
 

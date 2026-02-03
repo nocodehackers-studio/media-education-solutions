@@ -257,8 +257,20 @@ export const categoriesApi = {
   },
 
   /**
-   * Assign a judge to a category
-   * If email doesn't exist, creates new judge profile via Edge Function
+   * Assign a judge to a category.
+   * If email doesn't exist, creates new judge profile via Edge Function.
+   *
+   * Uses FunctionsHttpError context extraction (same pattern as useWithdrawSubmission.ts:30-43,
+   * applied here in the API layer because the SDK call lives here — see F4 in tech-spec).
+   *
+   * Error codes thrown (from create-judge edge function):
+   *   UNAUTHORIZED — missing/invalid auth token
+   *   FORBIDDEN — authenticated but not admin
+   *   EMAIL_REQUIRED, EMAIL_INVALID — input validation
+   *   ROLE_CONFLICT — email belongs to a non-judge user
+   *   CREATE_FAILED — auth user creation failed
+   *   JUDGE_ASSIGN_FAILED — category update failed (F2) or unknown edge function error
+   *
    * @param categoryId Category ID to assign judge to
    * @param email Judge's email address
    * @returns Whether the judge was newly created
@@ -280,24 +292,45 @@ export const categoriesApi = {
       const { data, error } = await supabase.functions.invoke('create-judge', {
         body: { email: email.toLowerCase() },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+
+      // Extract error code from FunctionsHttpError response context.
+      // F1: Use clone() because the SDK may have already consumed the body stream.
+      if (error) {
+        let code = '';
+        try {
+          const ctx = (error as unknown as { context?: Response }).context;
+          if (ctx instanceof Response) {
+            const body = await ctx.clone().json();
+            code = body?.error ?? '';
+          }
+        } catch {
+          /* Response parsing failed or body already consumed */
+        }
+        throw new Error(code || 'JUDGE_ASSIGN_FAILED');
+      }
+
+      if (!data?.judgeId) {
+        throw new Error('JUDGE_ASSIGN_FAILED');
+      }
       judgeId = data.judgeId;
       isNewJudge = !data.isExisting;
     }
 
     // 3. Update category with judge assignment
-    // Clear invited_at since this is a new assignment (invite will be sent later by Story 3.2)
-    // Cast needed as Supabase generated types may not include new columns from recent migrations
-    const { error: updateError } = await supabase
-      .from('categories')
-      .update({
-        assigned_judge_id: judgeId,
-        invited_at: null, // Clear any previous invitation timestamp
-      } as Partial<CategoryRow>)
-      .eq('id', categoryId);
+    // F2: Wrap in try/catch so raw PostgrestError never reaches the UI
+    try {
+      const { error: updateError } = await supabase
+        .from('categories')
+        .update({
+          assigned_judge_id: judgeId,
+          invited_at: null,
+        } as Partial<CategoryRow>)
+        .eq('id', categoryId);
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
+    } catch {
+      throw new Error('JUDGE_ASSIGN_FAILED');
+    }
 
     return { isNewJudge };
   },
