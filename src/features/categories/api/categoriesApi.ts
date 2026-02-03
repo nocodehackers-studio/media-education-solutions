@@ -293,18 +293,23 @@ export const categoriesApi = {
         body: { email: email.toLowerCase() },
       });
 
-      // Extract error code from FunctionsHttpError response context.
-      // F1: Use clone() because the SDK may have already consumed the body stream.
+      // Extract error code from FunctionsHttpError response context
+      // (same pattern as useWithdrawSubmission.ts:30-43)
       if (error) {
         let code = '';
         try {
           const ctx = (error as unknown as { context?: Response }).context;
           if (ctx instanceof Response) {
-            const body = await ctx.clone().json();
+            const body = await ctx.json();
+            // Our edge function returns { error: 'CODE' }
+            // Supabase gateway returns { code: 401, message: 'Invalid JWT' }
             code = body?.error ?? '';
+            if (!code && body?.message === 'Invalid JWT') {
+              code = 'UNAUTHORIZED';
+            }
           }
         } catch {
-          /* Response parsing failed or body already consumed */
+          /* Response parsing failed */
         }
         throw new Error(code || 'JUDGE_ASSIGN_FAILED');
       }
