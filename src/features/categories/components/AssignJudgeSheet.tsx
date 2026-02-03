@@ -84,7 +84,8 @@ export function AssignJudgeSheet({
         categoryId,
         email: data.email,
       });
-      handleOpenChange(false);
+      form.reset();
+      setOpen(false);
     } catch {
       // Error toast handled by useAssignJudge onError
     }
