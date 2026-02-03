@@ -241,19 +241,21 @@ export const categoriesApi = {
   async getJudgeByEmail(
     email: string
   ): Promise<{ id: string; email: string } | null> {
+    // Use .limit(1) instead of .single() — .single() returns HTTP 406 when
+    // no rows match, which pollutes the browser console with network errors.
+    // .limit(1) returns an empty array (HTTP 200) for zero matches.
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email')
       .eq('email', email.toLowerCase())
       .eq('role', 'judge')
-      .single();
+      .limit(1);
 
-    // PGRST116 = no rows found - this is expected when judge doesn't exist
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error;
     }
 
-    return data;
+    return data?.[0] ?? null;
   },
 
   /**
@@ -279,7 +281,18 @@ export const categoriesApi = {
     categoryId: string,
     email: string
   ): Promise<{ isNewJudge: boolean }> {
-    // 1. Check if profile exists
+    // Refresh session FIRST — a stale JWT affects both the profiles RLS query
+    // (admin sees 0 rows under anon role, masking existing judges) and the
+    // edge function gateway (401 "Invalid JWT"). Validate the returned session
+    // object, not just the error — refreshSession() can return
+    // { session: null, error: null } when there is nothing to refresh.
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    // 1. Check if profile exists (fresh JWT ensures correct RLS evaluation)
     const existingJudge = await this.getJudgeByEmail(email);
 
     let judgeId: string;
@@ -288,21 +301,18 @@ export const categoriesApi = {
     if (existingJudge) {
       judgeId = existingJudge.id;
     } else {
-      // Refresh session to ensure the JWT is fresh — edge functions validate
-      // the Authorization JWT at the gateway level (unlike REST API which uses
-      // the apikey header). A stale JWT causes 401 "Invalid JWT" from the gateway.
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        throw new Error('UNAUTHORIZED');
-      }
-
-      // 2. Create new judge via Edge Function
+      // 2. Create new judge via Edge Function — pass the freshly-refreshed
+      // access token explicitly. functions.invoke() relies on client-internal
+      // token propagation which can race or use a stale cached value.
+      // Explicit header is deterministic.
       const { data, error } = await supabase.functions.invoke('create-judge', {
         body: { email: email.toLowerCase() },
+        headers: {
+          Authorization: `Bearer ${refreshData.session.access_token}`,
+        },
       });
 
       // Extract error code from FunctionsHttpError response context
-      // (same pattern as useWithdrawSubmission.ts:30-43)
       if (error) {
         let code = '';
         try {
@@ -381,6 +391,13 @@ export const categoriesApi = {
     categoryId: string,
     options: { skipAlreadyInvitedCheck?: boolean; requireClosedStatus?: boolean } = {}
   ): Promise<{ success: boolean; error?: string }> {
+    // Refresh session for fresh JWT — affects RLS queries and edge function gateway
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      return { success: false, error: 'Session expired. Please sign in again.' };
+    }
+
     // Build query — always include invited_at for the duplicate check option
     let query = supabase
       .from('categories')
@@ -465,7 +482,7 @@ export const categoriesApi = {
       ? `${categoryData.profiles.first_name} ${categoryData.profiles.last_name || ''}`.trim()
       : undefined;
 
-    // Call Edge Function to send email
+    // Call Edge Function to send email — pass fresh token explicitly
     const { data, error } = await supabase.functions.invoke(
       'send-judge-invitation',
       {
@@ -478,6 +495,9 @@ export const categoriesApi = {
           contestName: categoryData.divisions.contests.name,
           submissionCount: submissionCount ?? 0,
           categoryDeadline: categoryData.deadline,
+        },
+        headers: {
+          Authorization: `Bearer ${refreshData.session.access_token}`,
         },
       }
     );

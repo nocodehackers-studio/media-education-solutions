@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockInvoke = vi.fn();
 const mockSelect = vi.fn();
 const mockEq = vi.fn();
-const mockSingle = vi.fn();
+const mockLimit = vi.fn();
 const mockUpdateResult = vi.fn();
 const mockRefreshSession = vi.fn();
 
@@ -21,10 +21,9 @@ vi.mock('@/lib/supabase', () => ({
               eq: (...eq2Args: unknown[]) => {
                 mockEq(...eq2Args);
                 return {
-                  single: () => mockSingle(),
+                  limit: () => mockLimit(),
                 };
               },
-              single: () => mockSingle(),
             };
           },
         };
@@ -67,18 +66,20 @@ function mockHttpError(errorCode: string) {
 
 import { categoriesApi } from './categoriesApi';
 
+const MOCK_TOKEN = 'fresh-access-token';
+
 describe('categoriesApi.assignJudge', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: no existing judge found (PGRST116 = no rows)
-    mockSingle.mockResolvedValue({
-      data: null,
-      error: { code: 'PGRST116', message: 'not found' },
-    });
+    // Default: no existing judge found (empty result set from .limit(1))
+    mockLimit.mockResolvedValue({ data: [], error: null });
     // Default: category update succeeds
     mockUpdateResult.mockReturnValue({ error: null });
-    // Default: session refresh succeeds
-    mockRefreshSession.mockResolvedValue({ error: null });
+    // Default: session refresh succeeds with valid session
+    mockRefreshSession.mockResolvedValue({
+      data: { session: { access_token: MOCK_TOKEN } },
+      error: null,
+    });
   });
 
   it('extracts ROLE_CONFLICT error code from FunctionsHttpError', async () => {
@@ -142,9 +143,9 @@ describe('categoriesApi.assignJudge', () => {
   });
 
   it('returns isNewJudge: false when existing judge found', async () => {
-    // Existing judge found
-    mockSingle.mockResolvedValueOnce({
-      data: { id: 'judge-existing', email: 'judge@example.com' },
+    // Existing judge found (array with one element from .limit(1))
+    mockLimit.mockResolvedValueOnce({
+      data: [{ id: 'judge-existing', email: 'judge@example.com' }],
       error: null,
     });
 
@@ -159,6 +160,7 @@ describe('categoriesApi.assignJudge', () => {
 
   it('throws UNAUTHORIZED when session refresh fails', async () => {
     mockRefreshSession.mockResolvedValueOnce({
+      data: { session: null },
       error: new Error('Refresh token expired'),
     });
 
@@ -166,7 +168,24 @@ describe('categoriesApi.assignJudge', () => {
       categoriesApi.assignJudge('cat-1', 'test@example.com')
     ).rejects.toThrow('UNAUTHORIZED');
 
-    // Edge function should NOT be called
+    // Neither profiles query nor edge function should be called
+    expect(mockLimit).not.toHaveBeenCalled();
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('throws UNAUTHORIZED when session refresh returns null session', async () => {
+    // refreshSession() can return { session: null, error: null } — no error
+    // but no valid session either
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
+
+    await expect(
+      categoriesApi.assignJudge('cat-1', 'test@example.com')
+    ).rejects.toThrow('UNAUTHORIZED');
+
+    expect(mockLimit).not.toHaveBeenCalled();
     expect(mockInvoke).not.toHaveBeenCalled();
   });
 
@@ -184,6 +203,30 @@ describe('categoriesApi.assignJudge', () => {
     expect(result.isNewJudge).toBe(true);
     expect(mockInvoke).toHaveBeenCalledWith('create-judge', {
       body: { email: 'newjudge@example.com' },
+      headers: {
+        Authorization: `Bearer ${MOCK_TOKEN}`,
+      },
+    });
+  });
+
+  it('passes fresh access token explicitly to edge function', async () => {
+    const customToken = 'custom-fresh-token';
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: { access_token: customToken } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValueOnce({
+      data: { judgeId: 'judge-new', isExisting: false },
+      error: null,
+    });
+
+    await categoriesApi.assignJudge('cat-1', 'new@example.com');
+
+    expect(mockInvoke).toHaveBeenCalledWith('create-judge', {
+      body: { email: 'new@example.com' },
+      headers: {
+        Authorization: `Bearer ${customToken}`,
+      },
     });
   });
 });
