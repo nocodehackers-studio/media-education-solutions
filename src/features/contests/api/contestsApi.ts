@@ -524,7 +524,7 @@ export const contestsApi = {
    * @returns CDN URL of the uploaded cover image
    */
   async uploadCoverImage(contestId: string, file: File): Promise<string> {
-    // Refresh session for fresh JWT
+    // Refresh session for fresh JWT (same pattern as categoriesApi.assignJudge)
     const { data: refreshData, error: refreshError } =
       await supabase.auth.refreshSession();
     if (refreshError || !refreshData.session) {
@@ -535,28 +535,27 @@ export const contestsApi = {
     formData.append('file', file);
     formData.append('contestId', contestId);
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    const response = await fetch(
-      `${supabaseUrl}/functions/v1/manage-contest-cover`,
+    // Use supabase.functions.invoke with FormData — it handles gateway auth
+    // and passes the explicit Authorization header for the fresh JWT
+    const { data, error } = await supabase.functions.invoke(
+      'manage-contest-cover',
       {
-        method: 'POST',
+        body: formData,
         headers: {
           Authorization: `Bearer ${refreshData.session.access_token}`,
-          apikey: anonKey,
         },
-        body: formData,
       }
     );
 
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || 'Failed to upload cover image');
+    if (error) {
+      throw new Error(error.message || 'Failed to upload cover image');
     }
 
-    return result.coverImageUrl;
+    if (!data?.success) {
+      throw new Error(data?.error || 'Failed to upload cover image');
+    }
+
+    return data.coverImageUrl;
   },
 
   /**
