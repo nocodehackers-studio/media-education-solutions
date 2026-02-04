@@ -1,4 +1,5 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { supabase } from '@/lib/supabase'
 
 export const PROFILE_STORAGE_KEY = 'admin_profile_v1'
@@ -53,6 +54,10 @@ function handleAuthError() {
   window.location.href = '/login'
 }
 
+export const sessionPersister = createSyncStoragePersister({
+  storage: window.sessionStorage,
+})
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
@@ -67,6 +72,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
+      gcTime: 1000 * 60 * 30,
       // F5 fix: short-circuit retries on auth errors
       retry: (failureCount, error) => {
         if (isAuthError(error)) return false

@@ -14,6 +14,5 @@ export function useDivisions(contestId: string) {
     queryKey: ['divisions', contestId],
     queryFn: () => divisionsApi.listByContest(contestId),
     enabled: !!contestId,
-    staleTime: 30_000,
   });
 }

@@ -276,7 +276,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
                 {isEditable ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className="flex flex-col overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>
                   {isEditable ? 'Edit Category' : 'View Category'}
@@ -294,17 +294,20 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
                 readOnly={!isEditable}
               />
               {isEditable && (
-                <>
-                  <Separator className="my-6" />
-                  <div className="space-y-3">
+                <div className="mt-auto pt-10">
+                  <Separator />
+                  <div className="space-y-3 pt-4">
                     <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
                     <DeleteCategoryButton
                       categoryId={category.id}
                       contestId={contestId}
                       categoryName={category.name}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Deleting a category is permanent and cannot be undone. All submissions and judge assignments for this category will also be removed.
+                    </p>
                   </div>
-                </>
+                </div>
               )}
             </SheetContent>
             {editConfirmDialog}

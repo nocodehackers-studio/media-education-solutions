@@ -55,7 +55,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     >
       {/* Logo/Title */}
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">MES Admin</h2>
+        <h2 className="text-lg font-semibold">Vault</h2>
       </div>
 
       {/* Navigation */}

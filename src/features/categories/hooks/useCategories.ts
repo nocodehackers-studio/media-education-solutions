@@ -14,6 +14,5 @@ export function useCategories(contestId: string) {
     queryKey: ['categories', contestId],
     queryFn: () => categoriesApi.listByContest(contestId),
     enabled: !!contestId,
-    staleTime: 30_000,
   });
 }

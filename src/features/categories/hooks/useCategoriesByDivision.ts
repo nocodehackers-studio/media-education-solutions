@@ -14,6 +14,5 @@ export function useCategoriesByDivision(divisionId: string) {
     queryKey: ['categories', 'division', divisionId],
     queryFn: () => categoriesApi.listByDivision(divisionId),
     enabled: !!divisionId,
-    staleTime: 30_000,
   });
 }

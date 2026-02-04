@@ -277,7 +277,7 @@ export function ContestDetailPage() {
             disabled={updateStatus.isPending}
           >
             <SelectTrigger
-              className="w-[140px] font-medium"
+              className="w-[140px] h-8 text-sm font-medium"
               data-testid="status-select"
             >
               <span className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export function ContestDetailPage() {
 
       {/* Edit Contest Sheet */}
       <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Edit Contest</SheetTitle>
           </SheetHeader>
@@ -339,10 +339,15 @@ export function ContestDetailPage() {
               onCancel={() => setEditSheetOpen(false)}
             />
           </div>
-          <Separator className="my-6" />
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
-            <DeleteContestButton contestId={contest.id} />
+          <div className="mt-auto pt-10">
+            <Separator />
+            <div className="space-y-3 pt-4">
+              <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
+              <DeleteContestButton contestId={contest.id} />
+              <p className="text-xs text-muted-foreground">
+                Deleting a contest is permanent and cannot be undone. All associated data including categories, submissions, codes, and judge assignments will be removed.
+              </p>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

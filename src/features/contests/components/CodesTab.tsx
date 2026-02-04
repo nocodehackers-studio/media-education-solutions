@@ -88,9 +88,8 @@ export function CodesTab({ contest }: CodesTabProps) {
         </div>
       </div>
       {allCodes.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground mb-4">No codes yet</p>
-          <AddCodeDialog contestId={contest.id} variant="default" />
+        <div className="py-8 text-center">
+          <p className="text-muted-foreground">No codes yet</p>
         </div>
       ) : (
         <CodeListTable codes={allCodes} />

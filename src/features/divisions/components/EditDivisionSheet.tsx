@@ -121,7 +121,7 @@ export function EditDivisionSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent>
+      <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>Edit Division</SheetTitle>
         </SheetHeader>
@@ -182,43 +182,45 @@ export function EditDivisionSheet({
             </div>
           </form>
         </Form>
-        <Separator className="my-6" />
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                size="sm"
-                disabled={isOnlyDivision}
-              >
-                Delete Division
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete &ldquo;{division.name}&rdquo;?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this division and all its categories. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteDivision}
-                  disabled={deleteDivision.isPending}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        <div className="mt-auto pt-10">
+          <Separator />
+          <div className="space-y-3 pt-4">
+            <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  disabled={isOnlyDivision}
                 >
-                  {deleteDivision.isPending ? 'Deleting...' : 'Delete'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          {isOnlyDivision && (
+                  Delete Division
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete &ldquo;{division.name}&rdquo;?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this division and all its categories. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteDivision}
+                    disabled={deleteDivision.isPending}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleteDivision.isPending ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <p className="text-xs text-muted-foreground">
-              Cannot delete the only division in the contest.
+              {isOnlyDivision
+                ? 'Cannot delete the only division in the contest.'
+                : 'Deleting a division is permanent and cannot be undone. All categories within this division will also be removed.'}
             </p>
-          )}
+          </div>
         </div>
       </SheetContent>
       {confirmDialog}

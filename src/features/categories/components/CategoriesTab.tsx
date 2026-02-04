@@ -79,20 +79,20 @@ function DivisionSection({
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-2">
       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">
+          <button type="button" className="flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer">
             {isOpen ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 shrink-0" />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 shrink-0" />
             )}
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{division.name}</span>
-            <span className="text-sm text-muted-foreground">
+            <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="font-medium truncate">{division.name}</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
               ({categories?.length ?? 0} {categories?.length === 1 ? 'category' : 'categories'})
             </span>
-          </Button>
+          </button>
         </CollapsibleTrigger>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -207,7 +207,7 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
               Cannot add categories to a closed contest
             </p>
           )}
-          <Button size="sm" variant="secondary" onClick={() => setCreateDivisionOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setCreateDivisionOpen(true)}>
             <Plus className="h-3 w-3 mr-1" />
             Add Division
           </Button>

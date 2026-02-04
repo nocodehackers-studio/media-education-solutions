@@ -5,7 +5,7 @@ export { cn } from './utils'
 export { supabase } from './supabase'
 
 // === Query Client ===
-export { queryClient } from './queryClient'
+export { queryClient, sessionPersister } from './queryClient'
 
 // === Error Codes ===
 export { ERROR_CODES, ERROR_MESSAGES, getErrorMessage } from './errorCodes'
