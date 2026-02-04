@@ -37,6 +37,7 @@ export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPag
 export { useCategoryApprovalStatus } from './hooks/useCategoryApprovalStatus';
 export { useEffectiveWinners } from './hooks/useEffectiveWinners';
 export { useContestDetailStats } from './hooks/useContestDetailStats';
+export { useUploadCoverImage, useDeleteCoverImage } from './hooks/useContestCoverImage';
 
 // === API ===
 export { contestsApi } from './api/contestsApi';

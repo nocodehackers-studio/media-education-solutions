@@ -97,33 +97,6 @@ export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFor
 
         <FormField
           control={form.control}
-          name="coverImage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cover Image</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    field.onChange(file);
-                  }}
-                  name={field.name}
-                  ref={field.ref}
-                  onBlur={field.onBlur}
-                />
-              </FormControl>
-              <FormDescription>
-                Optional. Upload will be implemented in a future story.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="contestCode"
           render={({ field }) => (
             <FormItem>

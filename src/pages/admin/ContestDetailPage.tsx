@@ -263,6 +263,14 @@ export function ContestDetailPage() {
         </Link>
       </div>
 
+      {/* Cover Image Hero Banner */}
+      {contest.coverImageUrl && (
+        <div className="relative h-48 md:h-64 -mx-6 -mt-2 overflow-hidden rounded-lg">
+          <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>

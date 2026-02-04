@@ -39,7 +39,6 @@ export const createContestSchema = z.object({
     .optional()
     .or(z.literal('')),
   rules: z.string().optional(),
-  coverImage: z.instanceof(File).optional(),
 });
 
 /**

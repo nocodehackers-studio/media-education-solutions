@@ -77,11 +77,6 @@ export const contestsApi = {
         : `contest-${contestCode.toLowerCase()}`;
 
       // 4. Insert contest
-      // MVP: Use placeholder URL when cover image is provided (Bunny Storage deferred)
-      const coverImageUrl = input.coverImage
-        ? 'https://placehold.co/1200x630/e2e8f0/64748b?text=Contest+Cover'
-        : null;
-
       const { data, error: contestError } = await supabase
         .from('contests')
         .insert({
@@ -90,7 +85,7 @@ export const contestsApi = {
           contest_code: contestCode,
           slug,
           rules: input.rules || null,
-          cover_image_url: coverImageUrl,
+          cover_image_url: null,
           status: 'draft',
         })
         .select()
@@ -520,5 +515,78 @@ export const contestsApi = {
     }
 
     return (data as ContestRow[]).map(transformContestRow);
+  },
+
+  /**
+   * Upload a cover image for a contest via the manage-contest-cover edge function.
+   * @param contestId Contest ID
+   * @param file Image file to upload
+   * @returns CDN URL of the uploaded cover image
+   */
+  async uploadCoverImage(contestId: string, file: File): Promise<string> {
+    // Refresh session for fresh JWT
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contestId', contestId);
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/manage-contest-cover`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${refreshData.session.access_token}`,
+          apikey: anonKey,
+        },
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to upload cover image');
+    }
+
+    return result.coverImageUrl;
+  },
+
+  /**
+   * Delete the cover image for a contest via the manage-contest-cover edge function.
+   * @param contestId Contest ID
+   */
+  async deleteCoverImage(contestId: string): Promise<void> {
+    // Refresh session for fresh JWT
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    const { data, error } = await supabase.functions.invoke(
+      'manage-contest-cover',
+      {
+        body: { contestId, action: 'delete' },
+        headers: {
+          Authorization: `Bearer ${refreshData.session.access_token}`,
+        },
+      }
+    );
+
+    if (error) {
+      throw new Error(error.message || 'Failed to delete cover image');
+    }
+
+    if (data && !data.success) {
+      throw new Error(data.error || 'Failed to delete cover image');
+    }
   },
 };

@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Upload, X, RefreshCw } from 'lucide-react';
 import {
   Button,
   Form,
@@ -14,7 +16,11 @@ import {
 } from '@/components/ui';
 import { updateContestSchema, type UpdateContestInput } from '../types/contest.schemas';
 import { useUpdateContest } from '../hooks/useUpdateContest';
+import { useUploadCoverImage, useDeleteCoverImage } from '../hooks/useContestCoverImage';
 import type { Contest } from '../types/contest.types';
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 interface EditContestFormProps {
   contest: Contest;
@@ -28,6 +34,9 @@ interface EditContestFormProps {
  */
 export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFormProps) {
   const updateContest = useUpdateContest(contest.id);
+  const uploadCover = useUploadCoverImage(contest.id);
+  const deleteCover = useDeleteCoverImage(contest.id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<UpdateContestInput>({
     resolver: zodResolver(updateContestSchema),
@@ -50,9 +59,112 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    // Client-side validation
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Invalid file type. Please use JPG, PNG, WebP, or GIF.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    try {
+      await uploadCover.mutateAsync(file);
+      toast.success('Cover image uploaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload cover image');
+    }
+  };
+
+  const handleRemoveCover = async () => {
+    try {
+      await deleteCover.mutateAsync();
+      toast.success('Cover image removed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove cover image');
+    }
+  };
+
+  const isCoverLoading = uploadCover.isPending || deleteCover.isPending;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Cover Image Section */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Cover Image</label>
+          {contest.coverImageUrl ? (
+            <div className="relative rounded-lg overflow-hidden border">
+              <img
+                src={contest.coverImageUrl}
+                alt=""
+                className="w-full h-40 object-cover"
+              />
+              <div className="absolute bottom-2 right-2 flex gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isCoverLoading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Replace
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={isCoverLoading}
+                  onClick={handleRemoveCover}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Remove
+                </Button>
+              </div>
+              {isCoverLoading && (
+                <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={isCoverLoading}
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCoverLoading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+              ) : (
+                <>
+                  <Upload className="h-5 w-5" />
+                  <span className="text-sm">Click to upload cover image</span>
+                  <span className="text-xs">JPG, PNG, WebP, GIF. Max 5MB.</span>
+                </>
+              )}
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="name"

@@ -27,10 +27,15 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
 
   return (
     <Card
-      className="cursor-pointer transition-shadow hover:shadow-lg"
+      className="cursor-pointer transition-shadow hover:shadow-lg overflow-hidden"
       onClick={() => onClick(contest.id)}
       data-testid="contest-card"
     >
+      {contest.coverImageUrl && (
+        <div className="h-32 overflow-hidden">
+          <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
