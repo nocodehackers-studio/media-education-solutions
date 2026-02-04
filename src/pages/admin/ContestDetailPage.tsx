@@ -253,7 +253,7 @@ export function ContestDetailPage() {
       {/* Breadcrumb / Back Navigation */}
       <div>
         <Link to="/admin/contests">
-          <Button variant="ghost" size="sm">
+          <Button variant="link" size="sm" className="text-muted-foreground px-0">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Contests
           </Button>

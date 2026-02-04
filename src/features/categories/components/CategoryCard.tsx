@@ -46,9 +46,9 @@ interface CategoryCardProps {
 
 // Status badge colors
 const statusColors: Record<CategoryStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  published: 'bg-green-100 text-green-800',
-  closed: 'bg-blue-100 text-blue-800',
+  draft: 'bg-white text-gray-800 border border-gray-200',
+  published: 'bg-green-50 text-green-800',
+  closed: 'bg-blue-50 text-blue-800',
 };
 
 // Type badge config
