@@ -87,6 +87,79 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Get category_id from submission for status checks
+    const { data: submission, error: submissionLookupError } = await supabaseAdmin
+      .from('submissions')
+      .select('category_id')
+      .eq('id', submissionId)
+      .eq('participant_id', participantId)
+      .single()
+
+    if (submissionLookupError || !submission) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'SUBMISSION_NOT_FOUND' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Verify contest and category are accepting submissions
+    const { data: catData, error: catError } = await supabaseAdmin
+      .from('categories')
+      .select('status, divisions!inner(contests!inner(status))')
+      .eq('id', submission.category_id)
+      .single()
+
+    if (catError || !catData) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'CATEGORY_NOT_FOUND' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Extract contest status from the joined data (single() ensures one result)
+    const divisions = (catData as Record<string, unknown>).divisions as Record<string, unknown> | null
+    const contests = divisions?.contests as Record<string, unknown> | null
+    const contestStatus = contests?.status as string | undefined
+
+    if (!contestStatus) {
+      console.warn('Could not resolve contest status from category join')
+      return new Response(
+        JSON.stringify({ success: false, error: 'CONTEST_NOT_FOUND' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (contestStatus !== 'published') {
+      console.warn(`Contest not accepting submissions (status: ${contestStatus})`)
+      return new Response(
+        JSON.stringify({ success: false, error: 'CONTEST_NOT_ACCEPTING' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (catData.status !== 'published') {
+      console.warn(`Category not accepting submissions (status: ${catData.status})`)
+      return new Response(
+        JSON.stringify({ success: false, error: 'CATEGORY_NOT_ACCEPTING' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // F1: Atomic check-and-update — ownership + status validated in WHERE clause
     // F7: Set submitted_at to actual confirmation time
     const { data: updated, error: updateError } = await supabaseAdmin

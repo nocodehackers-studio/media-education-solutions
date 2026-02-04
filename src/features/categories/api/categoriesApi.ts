@@ -265,6 +265,49 @@ export const categoriesApi = {
     return count ?? 0;
   },
 
+  /**
+   * Bulk update category statuses for all categories in a contest matching a given status.
+   * Two-step approach: SELECT matching IDs via join, then UPDATE with .in('id', ids).
+   * Supabase JS .update() cannot filter through joins, hence this pattern.
+   * Note: This is NOT atomic — a failure in Step 2 after Step 1 could leave state inconsistent.
+   * Acceptable for admin-only cascade; categories can be manually corrected if needed.
+   * @param contestId Contest ID to scope categories
+   * @param fromStatus Only update categories currently in this status
+   * @param toStatus New status to set
+   * @returns Array of updated category IDs
+   */
+  async bulkUpdateStatusByContest(
+    contestId: string,
+    fromStatus: CategoryStatus,
+    toStatus: CategoryStatus
+  ): Promise<{ updatedIds: string[] }> {
+    // Step 1: SELECT matching IDs via join
+    const { data: matches, error: selectError } = await supabase
+      .from('categories')
+      .select('id, divisions!inner(contest_id)')
+      .eq('divisions.contest_id', contestId)
+      .eq('status', fromStatus);
+
+    if (selectError) {
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_STATUS_UPDATE_FAILED));
+    }
+
+    const ids = matches?.map((m) => m.id) ?? [];
+    if (ids.length === 0) return { updatedIds: [] };
+
+    // Step 2: UPDATE by IDs
+    const { error: updateError } = await supabase
+      .from('categories')
+      .update({ status: toStatus })
+      .in('id', ids);
+
+    if (updateError) {
+      throw new Error(getErrorMessage(ERROR_CODES.CATEGORY_STATUS_UPDATE_FAILED));
+    }
+
+    return { updatedIds: ids };
+  },
+
   // ==========================================================================
   // Story 3-1: Judge Assignment Methods
   // ==========================================================================

@@ -29,6 +29,7 @@ interface CategoryResponse {
   submissionStatus: 'uploaded' | 'submitted' | null
   submissionId: string | null
   noSubmission?: boolean
+  hasFeedback?: boolean
 }
 
 interface DivisionResponse {
@@ -52,6 +53,7 @@ interface GetCategoriesResponse {
   divisions?: DivisionResponse[]
   contest?: ContestInfoResponse
   contestStatus?: string
+  acceptingSubmissions?: boolean
   submissionsAvailable?: boolean  // F5: Flag if submissions table was accessible
   error?: string
 }
@@ -163,6 +165,22 @@ Deno.serve(async (req) => {
 
     const contestStatus = contest?.status as string | undefined
 
+    // Enforce contest status: draft/deleted are completely inaccessible
+    const allowedStatuses = ['published', 'closed', 'reviewed', 'finished']
+    if (!contestStatus || !allowedStatuses.includes(contestStatus)) {
+      console.warn(`Contest not available: ${contestId} (status: ${contestStatus})`)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'CONTEST_NOT_AVAILABLE',
+        } satisfies GetCategoriesResponse),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Fetch divisions for this contest (include name and display_order for grouping)
     const { data: divisions, error: divisionsError } = await supabaseAdmin
       .from('divisions')
@@ -191,6 +209,7 @@ Deno.serve(async (req) => {
             logoUrl: contest.logo_url ?? null,
           } : undefined,
           contestStatus: contestStatus ?? null,
+          acceptingSubmissions: contestStatus === 'published',
         } satisfies GetCategoriesResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -209,20 +228,24 @@ Deno.serve(async (req) => {
     }
 
     // Check submissions for this participant (table may not exist yet)
-    const submissionMap: Record<string, { status: string; id: string }> = {}
+    const submissionMap: Record<string, { status: string; id: string; hasFeedback: boolean }> = {}
     let submissionsAvailable = true
     try {
       const categoryIds = categories?.map((c) => c.id) || []
       if (categoryIds.length > 0) {
         const { data: submissions } = await supabaseAdmin
           .from('submissions')
-          .select('id, category_id, status')
+          .select('id, category_id, status, feedback, score')
           .eq('participant_id', participantId)
           .in('category_id', categoryIds)
 
         if (submissions) {
           submissions.forEach((s) => {
-            submissionMap[s.category_id] = { status: s.status, id: s.id }
+            submissionMap[s.category_id] = {
+              status: s.status,
+              id: s.id,
+              hasFeedback: s.feedback != null || s.score != null,
+            }
           })
         }
       }
@@ -255,6 +278,8 @@ Deno.serve(async (req) => {
           submissionId: hasCompletedSubmission ? sub.id : null,
           // Story 6-7: Flag categories with no submission when contest is finished
           ...(contestStatus === 'finished' && !hasCompletedSubmission ? { noSubmission: true } : {}),
+          // hasFeedback: true if participant has a submission with feedback or score
+          ...(hasCompletedSubmission && sub.hasFeedback ? { hasFeedback: true } : {}),
         }
       }) || []
 
@@ -293,6 +318,7 @@ Deno.serve(async (req) => {
           logoUrl: contest.logo_url ?? null,
         } : undefined,
         contestStatus: contestStatus ?? null,
+        acceptingSubmissions: contestStatus === 'published',
         submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
       } satisfies GetCategoriesResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

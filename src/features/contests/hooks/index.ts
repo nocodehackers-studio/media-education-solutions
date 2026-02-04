@@ -1,4 +1,5 @@
 // TanStack Query hooks for contests feature
+export { useCascadeContestStatus } from './useCascadeContestStatus';
 export { useContests } from './useContests';
 export { useContest } from './useContest';
 export { useCreateContest } from './useCreateContest';

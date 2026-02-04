@@ -25,6 +25,7 @@ import { useParticipantSession } from '@/contexts'
 interface LocationState {
   category?: ParticipantCategory
   contestFinished?: boolean
+  acceptingSubmissions?: boolean
 }
 
 /**
@@ -52,6 +53,9 @@ export function CategoryDetailPage() {
 
   const contestFinished =
     state?.contestFinished ?? cachedData?.contestStatus === 'finished'
+
+  const acceptingSubmissions =
+    state?.acceptingSubmissions ?? cachedData?.acceptingSubmissions ?? false
 
   const handleBack = () => {
     navigate('/participant/categories')
@@ -85,7 +89,7 @@ export function CategoryDetailPage() {
 
   const handleSubmit = () => {
     navigate(`/participant/submit/${category.id}`, {
-      state: { type: category.type },
+      state: { type: category.type, acceptingSubmissions },
     })
   }
 
@@ -185,6 +189,8 @@ export function CategoryDetailPage() {
             </Button>
           ) : contestFinished ? (
             <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
+          ) : !acceptingSubmissions ? (
+            <p className="text-sm text-muted-foreground">This contest is closed. Submissions are no longer accepted.</p>
           ) : isClosed ? (
             <p className="text-sm text-muted-foreground">This category is no longer accepting submissions.</p>
           ) : category.hasSubmitted ? (

@@ -76,7 +76,7 @@ describe('ParticipantCategoryCard', () => {
       await user.click(screen.getByText('Best Documentary'))
 
       expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
-        state: { category: baseCategory, contestFinished: undefined },
+        state: { category: baseCategory, contestFinished: undefined, acceptingSubmissions: true },
       })
     })
   })
@@ -124,7 +124,7 @@ describe('ParticipantCategoryCard', () => {
       await user.click(screen.getByText('Best Documentary'))
 
       expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
-        state: { category: submittedCategory, contestFinished: undefined },
+        state: { category: submittedCategory, contestFinished: undefined, acceptingSubmissions: true },
       })
     })
   })

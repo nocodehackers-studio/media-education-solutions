@@ -1,5 +1,6 @@
 // Category hooks barrel export
 export { useCategories } from './useCategories';
+export { useCategoriesByContest } from './useCategoriesByContest';
 export { useCategoriesByDivision } from './useCategoriesByDivision';
 // Story 3-4: Judge dashboard hook
 export { useCategoriesByJudge } from './useCategoriesByJudge';

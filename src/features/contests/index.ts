@@ -3,6 +3,8 @@
 // Stories: 2-3-create-contest, 2-4-contest-list-status-management, 2-6-participant-code-management
 
 // === Components ===
+export { CascadeStatusDialog } from './components/CascadeStatusDialog';
+export type { CascadeStatusDialogProps } from './components/CascadeStatusDialog';
 export { ContestCard } from './components/ContestCard';
 export { CreateContestForm } from './components/CreateContestForm';
 export { DeleteContestButton } from './components/DeleteContestButton';
@@ -19,6 +21,7 @@ export { WinnersPreviewDialog } from './components/WinnersPreviewDialog';
 export { AdminWinnersTab } from './components/AdminWinnersTab';
 
 // === Hooks ===
+export { useCascadeContestStatus } from './hooks/useCascadeContestStatus';
 export { useContests } from './hooks/useContests';
 export { useContest } from './hooks/useContest';
 export { useCreateContest } from './hooks/useCreateContest';

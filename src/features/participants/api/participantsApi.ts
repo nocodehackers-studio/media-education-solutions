@@ -12,6 +12,7 @@ export interface ParticipantCategory {
   submissionStatus: 'uploaded' | 'submitted' | null
   submissionId: string | null
   noSubmission?: boolean
+  hasFeedback?: boolean
 }
 
 export interface ContestInfo {
@@ -41,6 +42,7 @@ interface GetCategoriesResponse {
   divisions?: ParticipantDivision[]
   contest?: ContestInfo
   contestStatus?: string
+  acceptingSubmissions?: boolean
   error?: string
 }
 
@@ -49,6 +51,7 @@ export interface ParticipantCategoriesResult {
   divisions: ParticipantDivision[]
   contest: ContestInfo | null
   contestStatus: string | null
+  acceptingSubmissions: boolean
 }
 
 /**
@@ -85,6 +88,7 @@ export const participantsApi = {
       divisions,
       contest: data.contest ?? null,
       contestStatus: data.contestStatus ?? null,
+      acceptingSubmissions: data.acceptingSubmissions ?? false,
     }
   },
 }

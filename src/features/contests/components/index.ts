@@ -1,4 +1,6 @@
 // Components for contests feature
+export { CascadeStatusDialog } from './CascadeStatusDialog';
+export type { CascadeStatusDialogProps } from './CascadeStatusDialog';
 export { ContestCard } from './ContestCard';
 export { CreateContestForm } from './CreateContestForm';
 export { DeleteContestButton } from './DeleteContestButton';

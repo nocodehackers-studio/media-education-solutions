@@ -3,6 +3,7 @@
 // navigation state + edge function fallback via useParticipantCategories.
 import { useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { VideoUploadPage } from './VideoUploadPage'
 import { PhotoUploadPage } from './PhotoUploadPage'
 import { Skeleton } from '@/components/ui'
@@ -15,11 +16,9 @@ export function SubmitPage() {
   const location = useLocation()
   const { session } = useParticipantSession()
 
-  // Primary: read category type from navigation state (passed by ParticipantCategoryCard)
-  const navType = (location.state as { type?: string } | null)?.type as
-    | 'video'
-    | 'photo'
-    | undefined
+  // Primary: read category type and accepting status from navigation state
+  const navState = location.state as { type?: string; acceptingSubmissions?: boolean } | null
+  const navType = navState?.type as 'video' | 'photo' | undefined
 
   console.log('[SubmitPage] Mount', {
     categoryId,
@@ -65,6 +64,16 @@ export function SubmitPage() {
       navigate('/enter', { replace: true })
     }
   }, [session, navigate])
+
+  // Guard: redirect if contest is not accepting submissions
+  // Check nav state first (normal flow), then fall back to cached query data (direct URL access)
+  const acceptingSubmissions = navState?.acceptingSubmissions ?? categoriesData?.acceptingSubmissions
+  useEffect(() => {
+    if (acceptingSubmissions === false) {
+      toast.error('This contest is not currently accepting submissions')
+      navigate('/participant/categories', { replace: true })
+    }
+  }, [acceptingSubmissions, navigate])
 
   if (!session) {
     return null

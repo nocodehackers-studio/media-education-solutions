@@ -25,16 +25,16 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  toast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import {
+  CascadeStatusDialog,
   CodesTab,
   DeleteContestButton,
   EditContestForm,
   AdminWinnersTab,
   useContest,
-  useUpdateContestStatus,
+  useCascadeContestStatus,
   useContestDetailStats,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
@@ -166,26 +166,15 @@ export function ContestDetailPage() {
   const { data: contest, isLoading, error } = useContest(contestId!);
   const [logsSheetOpen, setLogsSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<AdminSubmission | null>(null);
-  const updateStatus = useUpdateContestStatus();
+  const {
+    handleStatusChange,
+    cascadeDialogProps,
+    isUpdating,
+    pendingStatus,
+  } = useCascadeContestStatus(contestId!, contest?.status ?? 'draft');
   const stats = useContestDetailStats(contestId!);
   const { data: submissions, isLoading: submissionsLoading } = useAdminSubmissions(contestId!);
-
-  const handleStatusChange = async (newStatus: ContestStatus) => {
-    if (!contest) return;
-    setPendingStatus(newStatus);
-    try {
-      await updateStatus.mutateAsync({ id: contest.id, status: newStatus });
-      toast.success('Status updated');
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to update status'
-      );
-    } finally {
-      setPendingStatus(null);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -296,7 +285,7 @@ export function ContestDetailPage() {
           <Select
             value={currentStatus}
             onValueChange={(value) => handleStatusChange(value as ContestStatus)}
-            disabled={updateStatus.isPending}
+            disabled={isUpdating}
           >
             <SelectTrigger
               className={cn(
@@ -320,6 +309,9 @@ export function ContestDetailPage() {
           </Select>
         </div>
       </div>
+
+      {/* Cascade status confirmation dialog */}
+      <CascadeStatusDialog {...cascadeDialogProps} />
 
       {/* Mini-dashboard stat cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">

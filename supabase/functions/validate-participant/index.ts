@@ -70,8 +70,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 2. Check contest status - must be 'published' or 'finished' (finished allows feedback viewing)
-    if (!['published', 'finished'].includes(contest.status)) {
+    // 2. Check contest status - allowlist approach (draft/deleted blocked, unknown statuses default to blocked)
+    if (!['published', 'closed', 'reviewed', 'finished'].includes(contest.status)) {
       console.warn(`Contest not accepting: ${contest.id} (status: ${contest.status})`)
       return new Response(
         JSON.stringify({ success: false, error: 'CONTEST_NOT_ACCEPTING' } satisfies ValidationResponse),

@@ -10,28 +10,32 @@ export type { ParticipantCategory } from '../api/participantsApi'
 interface ParticipantCategoryCardProps {
   category: ParticipantCategory
   contestFinished?: boolean
+  acceptingSubmissions?: boolean
 }
 
-export function ParticipantCategoryCard({ category, contestFinished }: ParticipantCategoryCardProps) {
+export function ParticipantCategoryCard({ category, contestFinished, acceptingSubmissions = true }: ParticipantCategoryCardProps) {
   const navigate = useNavigate()
   const isClosed = category.status === 'closed'
   const isDisabled = contestFinished && category.noSubmission
+  const isContestClosed = acceptingSubmissions === false && !contestFinished
   const TypeIcon = category.type === 'video' ? Video : Image
 
   const handleClick = () => {
     if (isDisabled) return
+    if (isContestClosed) return
     navigate(`/participant/category/${category.id}`, {
-      state: { category, contestFinished },
+      state: { category, contestFinished, acceptingSubmissions },
     })
   }
 
   return (
     <Card
       className={cn(
-        'transition-colors cursor-pointer',
-        !isDisabled && 'hover:bg-accent/50',
-        isClosed && !contestFinished && 'opacity-60',
+        'transition-colors',
+        !isDisabled && !isContestClosed && 'cursor-pointer hover:bg-accent/50',
+        isClosed && !contestFinished && !isContestClosed && 'opacity-60',
         isDisabled && 'opacity-50 pointer-events-none',
+        isContestClosed && 'opacity-60',
       )}
       onClick={handleClick}
     >
@@ -45,6 +49,11 @@ export function ParticipantCategoryCard({ category, contestFinished }: Participa
           <div className="shrink-0">
             {isDisabled ? (
               <Badge variant="secondary" className="text-xs">No submission</Badge>
+            ) : isContestClosed ? (
+              <Badge variant="secondary" className="text-xs">
+                <Ban className="h-3 w-3 mr-1" />
+                Contest is Closed
+              </Badge>
             ) : isClosed && !contestFinished ? (
               <Badge variant="secondary" className="text-xs">
                 <Ban className="h-3 w-3 mr-1" />
@@ -75,12 +84,16 @@ export function ParticipantCategoryCard({ category, contestFinished }: Participa
         <div className="flex items-center justify-between">
           {contestFinished ? (
             <span className="text-muted-foreground text-sm">Contest ended</span>
+          ) : isContestClosed ? (
+            <span className="text-muted-foreground text-sm">Submissions closed</span>
           ) : !isClosed ? (
             <DeadlineCountdown deadline={category.deadline} />
           ) : (
             <span className="text-muted-foreground text-sm">Submissions closed</span>
           )}
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          {!isContestClosed && (
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          )}
         </div>
       </CardContent>
     </Card>

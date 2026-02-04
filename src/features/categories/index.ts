@@ -21,6 +21,7 @@ export {
 export {
   useAssignJudge,
   useCategories,
+  useCategoriesByContest,
   useCategoriesByDivision,
   // Story 3-4: Judge dashboard hook
   useCategoriesByJudge,
