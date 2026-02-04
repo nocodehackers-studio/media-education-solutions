@@ -112,7 +112,7 @@ export function SubmissionPreviewPage() {
     )
   }
 
-  const { submission, libraryId } = data
+  const { submission, libraryId, videoReady } = data
   const isConfirmed = submission.status === 'submitted'
   const canConfirm = submission.status === 'uploaded'
   const isLocked = submission.isLocked
@@ -140,7 +140,7 @@ export function SubmissionPreviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <SubmissionPreview submission={submission} libraryId={libraryId} />
+            <SubmissionPreview submission={submission} libraryId={libraryId} videoReady={videoReady} />
           </CardContent>
         </Card>
 

@@ -145,6 +145,29 @@ Deno.serve(async (req) => {
       ? Deno.env.get('BUNNY_STREAM_LIBRARY_ID') ?? null
       : null
 
+    // Check Bunny encoding status for video submissions
+    let videoReady = submission.media_type !== 'video' // photos are always "ready"
+    if (submission.media_type === 'video' && submission.bunny_video_id && BUNNY_STREAM_LIBRARY_ID) {
+      const BUNNY_STREAM_API_KEY = Deno.env.get('BUNNY_STREAM_API_KEY')
+      if (BUNNY_STREAM_API_KEY) {
+        try {
+          const bunnyRes = await fetch(
+            `https://video.bunnycdn.com/library/${BUNNY_STREAM_LIBRARY_ID}/videos/${submission.bunny_video_id}`,
+            { headers: { AccessKey: BUNNY_STREAM_API_KEY } }
+          )
+          if (bunnyRes.ok) {
+            const videoData = await bunnyRes.json()
+            // Bunny status 4 = finished encoding
+            videoReady = videoData.status === 4
+          }
+        } catch (e) {
+          console.warn('Failed to check Bunny video status:', e)
+          // Default to showing iframe if we can't check
+          videoReady = true
+        }
+      }
+    }
+
     const category = submission.categories as unknown as {
       name: string
       type: string
@@ -239,6 +262,7 @@ Deno.serve(async (req) => {
           groupMemberNames: (submission as Record<string, unknown>).group_member_names ?? null,
         },
         libraryId: BUNNY_STREAM_LIBRARY_ID,
+        videoReady,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

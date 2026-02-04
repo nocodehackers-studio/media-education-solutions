@@ -27,6 +27,7 @@ interface GetSubmissionResponse {
   success: boolean
   submission?: SubmissionPreviewData
   libraryId?: string | null
+  videoReady?: boolean
   error?: string
 }
 
@@ -62,8 +63,15 @@ export function useSubmissionPreview({
       return {
         submission: data.submission,
         libraryId: data.libraryId ?? null,
+        videoReady: data.videoReady ?? true,
       }
     },
     enabled: !!submissionId && !!participantId && !!participantCode,
+    // Auto-poll every 30s — the component stops polling once videoReady is true
+    refetchInterval: (query) => {
+      const videoReady = query.state.data?.videoReady
+      if (videoReady === false) return 30_000
+      return false
+    },
   })
 }
