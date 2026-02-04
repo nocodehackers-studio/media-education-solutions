@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const body: UploadRequest = await req.json()
     const {
       contestId,
       categoryId,
@@ -42,7 +43,10 @@ Deno.serve(async (req) => {
       participantCode,
       fileName,
       fileSize,
-    }: UploadRequest = await req.json()
+    } = body
+    console.log('[create-video-upload] Request received', {
+      contestId, categoryId, participantId, fileName, fileSize,
+    })
 
     // Validate required fields
     if (
@@ -320,8 +324,8 @@ Deno.serve(async (req) => {
   }
 })
 
-// F4 Fix: Generate TUS authorization signature for Bunny Stream
-// Uses pipe delimiter to prevent potential value collisions
+// Generate TUS authorization signature for Bunny Stream
+// Format per Bunny docs: SHA256(library_id + api_key + expiration_time + video_id)
 async function generateTusSignature(
   libraryId: string,
   apiKey: string,
@@ -329,9 +333,8 @@ async function generateTusSignature(
   expirationTime: number
 ): Promise<string> {
   const encoder = new TextEncoder()
-  // Use pipe delimiter between values to prevent collision edge cases
   const data = encoder.encode(
-    `${libraryId}|${apiKey}|${expirationTime}|${videoId}`
+    `${libraryId}${apiKey}${expirationTime}${videoId}`
   )
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))

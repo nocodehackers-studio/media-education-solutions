@@ -33,13 +33,24 @@ export function VideoUploadForm({
 }: VideoUploadFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  // Track when completion navigation is in progress to avoid blocking it
+  const completingRef = useRef(false)
+
+  const handleComplete = useCallback(
+    (submissionId: string) => {
+      completingRef.current = true
+      onUploadComplete(submissionId)
+    },
+    [onUploadComplete]
+  )
+
   const { uploadState, startUpload, retryUpload, cancelUpload } =
     useVideoUpload({
       contestId,
       categoryId,
       participantId,
       participantCode,
-      onComplete: onUploadComplete,
+      onComplete: handleComplete,
     })
 
   // F10 Fix: Optimized validation with early returns
@@ -109,8 +120,8 @@ export function VideoUploadForm({
   const isUploading =
     uploadState.status === 'uploading' || uploadState.status === 'processing'
 
-  // Block React Router navigation during upload
-  const blocker = useBlocker(isUploading)
+  // Block React Router navigation during upload (function form evaluates at navigation time)
+  const blocker = useBlocker(() => isUploading && !completingRef.current)
 
   // Show confirmation when blocked
   useEffect(() => {

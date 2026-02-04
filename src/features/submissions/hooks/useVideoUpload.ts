@@ -66,11 +66,14 @@ export function useVideoUpload({
         )
 
         if (error || !data?.success) {
-          const errorCode = data?.error || error?.message || 'UPLOAD_INIT_FAILED'
+          // Extract actual error body from FunctionsHttpError context
+          const errorContext = (error as Record<string, unknown>)?.context as Record<string, unknown> | undefined
+          const errorCode = (errorContext?.error as string) || data?.error || error?.message || 'UPLOAD_INIT_FAILED'
           console.error('[useVideoUpload] create-video-upload failed', {
             errorCode,
             edgeFnError: error?.message ?? null,
             responseData: data,
+            errorContext: errorContext ?? null,
           })
           const errorMessage = getErrorMessage(errorCode)
           setUploadState((prev) => ({

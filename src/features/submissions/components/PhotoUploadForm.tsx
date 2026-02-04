@@ -31,6 +31,16 @@ export function PhotoUploadForm({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
+  // Track when completion navigation is in progress to avoid blocking it
+  const completingRef = useRef(false)
+
+  const handleComplete = useCallback(
+    (submissionId: string) => {
+      completingRef.current = true
+      onUploadComplete(submissionId)
+    },
+    [onUploadComplete]
+  )
 
   const { uploadState, startUpload, retryUpload, cancelUpload, isUploading } =
     usePhotoUpload({
@@ -38,11 +48,11 @@ export function PhotoUploadForm({
       categoryId,
       participantId,
       participantCode,
-      onComplete: onUploadComplete,
+      onComplete: handleComplete,
     })
 
-  // SPA navigation blocking during upload
-  const blocker = useBlocker(isUploading)
+  // SPA navigation blocking during upload (function form evaluates at navigation time)
+  const blocker = useBlocker(() => isUploading && !completingRef.current)
 
   useEffect(() => {
     if (blocker.state === 'blocked') {
