@@ -23,21 +23,20 @@ export function VideoUploadPage() {
   }
 
   const handleBack = () => {
-    navigate('/participant/categories')
+    navigate(`/participant/category/${categoryId}`)
   }
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-5 w-5" />
+        <div className="space-y-1">
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Upload Video</h1>
-            <p className="text-muted-foreground">Submit your video entry</p>
-          </div>
+          <h1 className="text-2xl font-bold">Upload Video</h1>
+          <p className="text-muted-foreground">Submit your video entry</p>
         </div>
 
         {/* Upload Form */}
