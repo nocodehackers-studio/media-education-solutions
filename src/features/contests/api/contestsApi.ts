@@ -358,6 +358,37 @@ export const contestsApi = {
   },
 
   /**
+   * Update a participant code's organization name
+   */
+  async updateParticipantCode(
+    participantId: string,
+    organizationName: string
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('participants')
+      .update({ organization_name: organizationName })
+      .eq('id', participantId);
+
+    if (error) {
+      throw new Error(`Failed to update participant code: ${error.message}`);
+    }
+  },
+
+  /**
+   * Delete a participant code
+   */
+  async deleteParticipantCode(participantId: string): Promise<void> {
+    const { error } = await supabase
+      .from('participants')
+      .delete()
+      .eq('id', participantId);
+
+    if (error) {
+      throw new Error(`Failed to delete participant code: ${error.message}`);
+    }
+  },
+
+  /**
    * Generate new participant codes for a contest (batch)
    * Includes error handling for existing codes fetch and retry logic for conflicts
    * @param contestId Contest ID

@@ -28,6 +28,8 @@ export { useParticipantCodes } from './hooks/useParticipantCodes';
 /** @deprecated Use useGenerateSingleCode instead per Change Proposal 2026-01-21 */
 export { useGenerateCodes } from './hooks/useGenerateCodes';
 export { useGenerateSingleCode } from './hooks/useGenerateSingleCode';
+export { useUpdateParticipantCode } from './hooks/useUpdateParticipantCode';
+export { useDeleteParticipantCode } from './hooks/useDeleteParticipantCode';
 export { useDashboardStats } from './hooks/useDashboardStats';
 export { useRecentContests } from './hooks/useRecentContests';
 export { useActiveContests } from './hooks/useActiveContests';

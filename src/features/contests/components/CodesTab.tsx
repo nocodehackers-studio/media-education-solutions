@@ -92,7 +92,7 @@ export function CodesTab({ contest }: CodesTabProps) {
           <p className="text-muted-foreground">No codes yet</p>
         </div>
       ) : (
-        <CodeListTable codes={allCodes} />
+        <CodeListTable codes={allCodes} contestId={contest.id} />
       )}
     </div>
   );
