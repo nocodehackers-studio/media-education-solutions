@@ -264,15 +264,7 @@ export function ContestDetailPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{contest.name}</h1>
-          <div className="flex items-center gap-3 mt-1">
-            <p className="text-muted-foreground font-mono">{contest.contestCode}</p>
-            <Link to={`/admin/contests/${contest.id}/submissions`}>
-              <Button variant="ghost" size="sm" className="h-7 text-xs">
-                <FileText className="h-3 w-3 mr-1" />
-                View Submissions
-              </Button>
-            </Link>
-          </div>
+          <p className="text-muted-foreground font-mono mt-1">{contest.contestCode}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditSheetOpen(true)}>
