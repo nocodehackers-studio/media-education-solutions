@@ -9,6 +9,7 @@ export function useAdminSubmissions(contestId: string, filters?: AdminSubmission
     queryKey: ['admin', 'submissions', contestId, filters],
     queryFn: () => adminSubmissionsApi.getContestSubmissions(contestId, filters),
     enabled: !!contestId,
+    staleTime: 30_000,
     placeholderData: (previousData) => previousData,
   })
 }

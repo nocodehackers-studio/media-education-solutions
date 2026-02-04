@@ -20,6 +20,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -292,17 +293,22 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
                 onDirtyChange={isEditable ? setIsFormDirty : undefined}
                 readOnly={!isEditable}
               />
+              {isEditable && (
+                <>
+                  <Separator className="my-6" />
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
+                    <DeleteCategoryButton
+                      categoryId={category.id}
+                      contestId={contestId}
+                      categoryName={category.name}
+                    />
+                  </div>
+                </>
+              )}
             </SheetContent>
             {editConfirmDialog}
           </Sheet>
-
-          {isEditable && (
-            <DeleteCategoryButton
-              categoryId={category.id}
-              contestId={contestId}
-              categoryName={category.name}
-            />
-          )}
         </div>
       </div>
 

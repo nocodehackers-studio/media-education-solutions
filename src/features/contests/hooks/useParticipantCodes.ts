@@ -14,5 +14,6 @@ export function useParticipantCodes(
     queryKey: ['participant-codes', contestId, filter],
     queryFn: () => contestsApi.listParticipantCodes(contestId, filter),
     enabled: !!contestId,
+    staleTime: 30_000,
   });
 }

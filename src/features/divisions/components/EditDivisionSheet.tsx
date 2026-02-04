@@ -5,6 +5,15 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Button,
   Form,
   FormControl,
@@ -14,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Separator,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -23,6 +33,7 @@ import {
 import { useConfirmClose } from '@/hooks/useConfirmClose';
 import { updateDivisionSchema, type UpdateDivisionInput } from '../types/division.schemas';
 import { useUpdateDivision } from '../hooks/useUpdateDivision';
+import { useDeleteDivision } from '../hooks/useDeleteDivision';
 import type { Division } from '../types/division.types';
 
 interface EditDivisionSheetProps {
@@ -30,6 +41,7 @@ interface EditDivisionSheetProps {
   contestId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isOnlyDivision?: boolean;
 }
 
 /**
@@ -41,8 +53,22 @@ export function EditDivisionSheet({
   contestId,
   open,
   onOpenChange,
+  isOnlyDivision = false,
 }: EditDivisionSheetProps) {
   const updateDivision = useUpdateDivision();
+  const deleteDivision = useDeleteDivision();
+
+  const handleDeleteDivision = async () => {
+    try {
+      await deleteDivision.mutateAsync({ divisionId: division.id, contestId });
+      toast.success('Division deleted');
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete division'
+      );
+    }
+  };
 
   const form = useForm<UpdateDivisionInput>({
     resolver: zodResolver(updateDivisionSchema),
@@ -156,6 +182,44 @@ export function EditDivisionSheet({
             </div>
           </form>
         </Form>
+        <Separator className="my-6" />
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={isOnlyDivision}
+              >
+                Delete Division
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete &ldquo;{division.name}&rdquo;?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete this division and all its categories. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteDivision}
+                  disabled={deleteDivision.isPending}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleteDivision.isPending ? 'Deleting...' : 'Delete'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {isOnlyDivision && (
+            <p className="text-xs text-muted-foreground">
+              Cannot delete the only division in the contest.
+            </p>
+          )}
+        </div>
       </SheetContent>
       {confirmDialog}
     </Sheet>

@@ -277,13 +277,13 @@ export function ContestDetailPage() {
             disabled={updateStatus.isPending}
           >
             <SelectTrigger
-              className={cn(
-                'w-[140px] rounded-full border-0 font-medium',
-                status.className
-              )}
+              className="w-[140px] font-medium"
               data-testid="status-select"
             >
-              <SelectValue />
+              <span className="flex items-center gap-2">
+                <span className={cn('h-2 w-2 rounded-full shrink-0', status.dotColor)} />
+                <SelectValue />
+              </span>
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (

@@ -3,17 +3,8 @@
 // Story 2-9: Shows categories grouped by division with collapsible sections
 
 import { useState, useCallback } from 'react';
-import { Plus, ChevronDown, ChevronRight, FolderOpen, Pencil, Trash2 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, FolderOpen, Pencil } from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
   Button,
   Collapsible,
   CollapsibleContent,
@@ -23,13 +14,11 @@ import {
   SheetHeader,
   SheetTitle,
   Skeleton,
-  toast,
 } from '@/components/ui';
 import {
   useDivisions,
   CreateDivisionSheet,
   EditDivisionSheet,
-  useDeleteDivision,
   type Division,
 } from '@/features/divisions';
 import { useCategoriesByDivision } from '../hooks/useCategoriesByDivision';
@@ -66,7 +55,6 @@ function DivisionSection({
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const { data: categories, isLoading } = useCategoriesByDivision(division.id);
-  const deleteDivision = useDeleteDivision();
 
   const { guardClose, confirmDialog } = useConfirmClose({
     isDirty: isFormDirty,
@@ -86,17 +74,6 @@ function DivisionSection({
       setCreateOpen(true);
     }
   }, [guardClose]);
-
-  const handleDeleteDivision = async () => {
-    try {
-      await deleteDivision.mutateAsync({ divisionId: division.id, contestId });
-      toast.success('Division deleted');
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete division'
-      );
-    }
-  };
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-2">
@@ -125,37 +102,6 @@ function DivisionSection({
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
-                disabled={isOnlyDivision}
-                aria-label={`Delete ${division.name}`}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete "{division.name}"?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this division and all its categories. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteDivision}
-                  disabled={deleteDivision.isPending}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {deleteDivision.isPending ? 'Deleting...' : 'Delete'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
           {canAddCategory && (
             <Sheet open={createOpen} onOpenChange={handleCreateOpenChange}>
               <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
@@ -187,6 +133,7 @@ function DivisionSection({
         contestId={contestId}
         open={editDivisionOpen}
         onOpenChange={setEditDivisionOpen}
+        isOnlyDivision={isOnlyDivision}
       />
       <CollapsibleContent className="space-y-2">
         {isLoading ? (
@@ -260,7 +207,7 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
               Cannot add categories to a closed contest
             </p>
           )}
-          <Button size="sm" onClick={() => setCreateDivisionOpen(true)}>
+          <Button size="sm" variant="secondary" onClick={() => setCreateDivisionOpen(true)}>
             <Plus className="h-3 w-3 mr-1" />
             Add Division
           </Button>
@@ -274,13 +221,13 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {divisions?.map((division, index) => (
+          {divisions?.map((division) => (
             <DivisionSection
               key={division.id}
               division={division}
               contestId={contest.id}
               canAddCategory={canAddCategory}
-              defaultOpen={index === 0}
+              defaultOpen={false}
               isOnlyDivision={isOnlyDivision}
             />
           ))}

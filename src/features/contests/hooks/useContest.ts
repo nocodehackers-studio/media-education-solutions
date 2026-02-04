@@ -11,5 +11,6 @@ export function useContest(contestId: string) {
     queryKey: ['contest', contestId],
     queryFn: () => contestsApi.getById(contestId),
     enabled: !!contestId,
+    staleTime: 30_000,
   });
 }
