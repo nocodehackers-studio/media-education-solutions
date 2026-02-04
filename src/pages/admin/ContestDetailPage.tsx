@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, BarChart3, Layers, Users, Pencil } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -42,6 +43,11 @@ import {
   NotificationSummary,
   NotificationLogsTable,
 } from '@/features/notifications';
+import {
+  useAdminSubmissions,
+  formatSubmissionDate,
+  SUBMISSION_STATUS_VARIANT,
+} from '@/features/submissions';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string; dotColor: string }> = {
@@ -160,6 +166,7 @@ export function ContestDetailPage() {
   const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
   const updateStatus = useUpdateContestStatus();
   const stats = useContestDetailStats(contestId!);
+  const { data: submissions, isLoading: submissionsLoading } = useAdminSubmissions(contestId!);
 
   const handleStatusChange = async (newStatus: ContestStatus) => {
     if (!contest) return;
@@ -407,6 +414,64 @@ export function ContestDetailPage() {
             )}
           </TabsContent>
         </Tabs>
+      </Card>
+
+      {/* Latest Submissions */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle>Latest Submissions</CardTitle>
+          <Link to={`/admin/contests/${contest.id}/submissions`}>
+            <Button variant="outline" size="sm">
+              View All Submissions
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {submissionsLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : !submissions || submissions.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-muted-foreground">No submissions yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4 font-medium">Code</th>
+                    <th className="pb-2 pr-4 font-medium">Participant</th>
+                    <th className="pb-2 pr-4 font-medium hidden md:table-cell">Category</th>
+                    <th className="pb-2 pr-4 font-medium hidden sm:table-cell">Media</th>
+                    <th className="pb-2 pr-4 font-medium hidden lg:table-cell">Submitted</th>
+                    <th className="pb-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissions.slice(0, 10).map((s) => (
+                    <tr key={s.id} className="border-b last:border-0">
+                      <td className="py-2 pr-4 font-mono text-xs">{s.participantCode}</td>
+                      <td className="py-2 pr-4">{s.participantName || '—'}</td>
+                      <td className="py-2 pr-4 hidden md:table-cell">{s.categoryName}</td>
+                      <td className="py-2 pr-4 hidden sm:table-cell capitalize">{s.mediaType}</td>
+                      <td className="py-2 pr-4 hidden lg:table-cell text-muted-foreground">
+                        {formatSubmissionDate(s.submittedAt)}
+                      </td>
+                      <td className="py-2">
+                        <Badge variant={SUBMISSION_STATUS_VARIANT[s.status] ?? 'secondary'}>
+                          {s.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
       {/* Notification Logs Sheet */}
