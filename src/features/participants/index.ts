@@ -8,6 +8,7 @@ export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
 export { DeadlineCountdown } from './components/DeadlineCountdown'
 export { ParticipantCategoryCard } from './components/ParticipantCategoryCard'
 export { ParticipantFeedbackSection } from './components/ParticipantFeedbackSection'
+export { ParticipantUserMenu } from './components/ParticipantUserMenu'
 export type { ParticipantCategory, ParticipantDivision, ContestInfo } from './api/participantsApi'
 
 // === Hooks ===

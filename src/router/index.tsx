@@ -81,6 +81,11 @@ const SubmissionPreviewPage = lazy(() =>
     default: m.SubmissionPreviewPage,
   }))
 )
+const ParticipantSubmissionsPage = lazy(() =>
+  import('@/pages/participant/ParticipantSubmissionsPage').then((m) => ({
+    default: m.ParticipantSubmissionsPage,
+  }))
+)
 const CategoryDetailPage = lazy(() =>
   import('@/pages/participant/CategoryDetailPage').then((m) => ({
     default: m.CategoryDetailPage,
@@ -305,6 +310,16 @@ const router = createBrowserRouter([
       <ParticipantRoute>
         <PageLazyRoute>
           <ParticipantCategoriesPage />
+        </PageLazyRoute>
+      </ParticipantRoute>
+    ),
+  },
+  {
+    path: '/participant/submissions',
+    element: (
+      <ParticipantRoute>
+        <PageLazyRoute>
+          <ParticipantSubmissionsPage />
         </PageLazyRoute>
       </ParticipantRoute>
     ),

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  LogOut,
   RefreshCw,
   Info,
   ChevronRight,
@@ -20,12 +19,15 @@ import {
 } from '@/components/ui'
 import {
   ParticipantCategoryCard,
+  ParticipantUserMenu,
   SessionTimeoutWarning,
   useParticipantCategories,
   type ParticipantDivision,
   type ContestInfo,
 } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
+
+const DIVISION_STORAGE_KEY = 'participant_selected_division'
 
 /**
  * Participant categories page — redesigned as a two-step flow.
@@ -53,14 +55,39 @@ export function ParticipantCategoriesPage() {
   const contest = data?.contest
   const contestFinished = data?.contestStatus === 'finished'
 
-  // Auto-select when there's only one division
+  // Restore division from sessionStorage, or auto-select single division
   useEffect(() => {
-    if (divisions && divisions.length === 1 && !selectedDivision) {
+    if (!divisions || selectedDivision) return
+
+    const savedId = sessionStorage.getItem(DIVISION_STORAGE_KEY)
+    if (savedId) {
+      const found = divisions.find((d) => d.id === savedId)
+      if (found) {
+        setSelectedDivision(found)
+        return
+      }
+      // Stale value — clean up
+      sessionStorage.removeItem(DIVISION_STORAGE_KEY)
+    }
+
+    // Auto-select when there's only one division
+    if (divisions.length === 1) {
       setSelectedDivision(divisions[0])
     }
   }, [divisions, selectedDivision])
 
+  const handleSelectDivision = (division: ParticipantDivision) => {
+    sessionStorage.setItem(DIVISION_STORAGE_KEY, division.id)
+    setSelectedDivision(division)
+  }
+
+  const handleBack = () => {
+    sessionStorage.removeItem(DIVISION_STORAGE_KEY)
+    setSelectedDivision(null)
+  }
+
   const handleLogout = () => {
+    sessionStorage.removeItem(DIVISION_STORAGE_KEY)
     endSession()
     navigate('/enter', { replace: true })
   }
@@ -118,8 +145,7 @@ export function ParticipantCategoriesPage() {
             divisions={divisions || []}
             rulesOpen={rulesOpen}
             onRulesOpenChange={setRulesOpen}
-            onSelectDivision={setSelectedDivision}
-            onLogout={handleLogout}
+            onSelectDivision={handleSelectDivision}
           />
         </div>
       ) : (
@@ -127,7 +153,7 @@ export function ParticipantCategoriesPage() {
           <Step2CategoryList
             division={selectedDivision}
             contestFinished={contestFinished}
-            onBack={() => setSelectedDivision(null)}
+            onBack={handleBack}
           />
         </div>
       )}
@@ -151,7 +177,6 @@ interface Step1Props {
   rulesOpen: boolean
   onRulesOpenChange: (open: boolean) => void
   onSelectDivision: (d: ParticipantDivision) => void
-  onLogout: () => void
 }
 
 function Step1ContestLanding({
@@ -162,18 +187,22 @@ function Step1ContestLanding({
   rulesOpen,
   onRulesOpenChange,
   onSelectDivision,
-  onLogout,
 }: Step1Props) {
   return (
     <>
-      {/* Cover image (no gradient) */}
-      {contest?.coverImageUrl && (
-        <div className="h-48 sm:h-64 overflow-hidden">
+      {/* Cover image with overlay user menu */}
+      {contest?.coverImageUrl ? (
+        <div className="relative h-48 sm:h-64 overflow-hidden">
           <img
             src={contest.coverImageUrl}
             alt={contestName}
             className="w-full h-full object-cover"
           />
+          <ParticipantUserMenu overlay />
+        </div>
+      ) : (
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 flex justify-end">
+          <ParticipantUserMenu />
         </div>
       )}
 
@@ -189,13 +218,9 @@ function Step1ContestLanding({
           </div>
         )}
 
-        {/* Header row */}
-        <div className={`flex items-start justify-between gap-4 mb-4${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
+        {/* Title */}
+        <div className={`mb-4${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
           <h1 className="text-3xl sm:text-4xl font-bold">{contestName}</h1>
-          <Button variant="outline" size="sm" onClick={onLogout} className="shrink-0 mt-1">
-            <LogOut className="h-4 w-4 mr-2" />
-            Exit
-          </Button>
         </div>
 
         {/* Contest description */}
@@ -288,7 +313,7 @@ interface Step2Props {
 function Step2CategoryList({ division, contestFinished, onBack }: Step2Props) {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
-      {/* Header with back */}
+      {/* Header with back + user menu */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -298,6 +323,9 @@ function Step2CategoryList({ division, contestFinished, onBack }: Step2Props) {
         <Badge variant="secondary" className="text-xs">
           {division.categories.length}
         </Badge>
+        <div className="ml-auto">
+          <ParticipantUserMenu />
+        </div>
       </div>
 
       {/* Finished contest banner */}
