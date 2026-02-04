@@ -61,11 +61,18 @@ export function AdminSubmissionDetail({
                 <dt className="text-muted-foreground">Code</dt>
                 <dd className="font-mono">{submission.participantCode}</dd>
 
-                <dt className="text-muted-foreground">Name</dt>
-                <dd>{submission.participantName ?? '—'}</dd>
+                <dt className="text-muted-foreground">Student/Group Name</dt>
+                <dd>{submission.studentName ?? '—'}</dd>
 
                 <dt className="text-muted-foreground">Institution</dt>
                 <dd>{submission.organizationName ?? '—'}</dd>
+
+                {submission.groupMemberNames && (
+                  <>
+                    <dt className="text-muted-foreground">Group Members</dt>
+                    <dd>{submission.groupMemberNames}</dd>
+                  </>
+                )}
 
                 <dt className="text-muted-foreground">TLC Name</dt>
                 <dd>{submission.tlcName ?? '—'}</dd>

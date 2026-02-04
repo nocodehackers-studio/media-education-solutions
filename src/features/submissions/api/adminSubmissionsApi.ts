@@ -16,7 +16,8 @@ export const adminSubmissionsApi = {
       .select(`
         id, media_type, media_url, bunny_video_id, thumbnail_url,
         status, submitted_at, created_at, disqualified_at, restored_at,
-        participants!inner(id, code, name, organization_name, tlc_name, tlc_email),
+        student_name, tlc_name, tlc_email, group_member_names,
+        participants!inner(id, code, organization_name),
         categories!inner(
           id, name, type, assigned_judge_id,
           divisions!inner(contest_id),

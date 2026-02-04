@@ -1,14 +1,5 @@
 import { supabase } from '@/lib/supabase'
 
-export interface ParticipantData {
-  id: string
-  name: string | null
-  organizationName: string | null
-  tlcName: string | null
-  tlcEmail: string | null
-  status: string
-}
-
 export interface ParticipantCategory {
   id: string
   name: string
@@ -22,16 +13,10 @@ export interface ParticipantCategory {
   noSubmission?: boolean
 }
 
-interface GetParticipantParams {
+interface GetCategoriesParams {
   participantId: string
   participantCode: string
   contestId: string
-}
-
-interface GetParticipantResponse {
-  success: boolean
-  participant?: ParticipantData
-  error?: string
 }
 
 interface GetCategoriesResponse {
@@ -51,27 +36,11 @@ export interface ParticipantCategoriesResult {
  */
 export const participantsApi = {
   /**
-   * Fetch participant data by ID with code verification
-   */
-  async getParticipant(params: GetParticipantParams): Promise<ParticipantData | null> {
-    const { data, error } = await supabase.functions.invoke<GetParticipantResponse>(
-      'get-participant',
-      { body: params }
-    )
-
-    if (error || !data?.success || !data.participant) {
-      return null
-    }
-
-    return data.participant
-  },
-
-  /**
    * Fetch categories for a contest with participant's submission status
    * Story 4-3: Returns only published/closed categories (draft hidden)
    * Story 6-7: Also returns contestStatus for finished contest behavior
    */
-  async getCategories(params: GetParticipantParams): Promise<ParticipantCategoriesResult> {
+  async getCategories(params: GetCategoriesParams): Promise<ParticipantCategoriesResult> {
     const { data, error } = await supabase.functions.invoke<GetCategoriesResponse>(
       'get-participant-categories',
       { body: params }

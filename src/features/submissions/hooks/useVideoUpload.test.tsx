@@ -80,7 +80,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       expect(result.current.uploadState.status).toBe('uploading')
@@ -104,7 +104,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       expect(supabase.functions.invoke).toHaveBeenCalledWith(
@@ -117,6 +117,10 @@ describe('useVideoUpload', () => {
             participantCode: 'ABC123',
             fileName: 'test.mp4',
             fileSize: file.size,
+            studentName: 'Test',
+            tlcName: 'Teacher',
+            tlcEmail: 'test@test.com',
+            groupMemberNames: undefined,
           },
         }
       )
@@ -132,7 +136,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       await waitFor(() => {
@@ -160,7 +164,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       expect(tus.Upload).toHaveBeenCalledWith(
@@ -196,7 +200,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       act(() => {
@@ -224,7 +228,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       // Should be in error state
@@ -276,7 +280,7 @@ describe('useVideoUpload', () => {
       const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
       await act(async () => {
-        await result.current.startUpload(file)
+        await result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       await waitFor(() => {

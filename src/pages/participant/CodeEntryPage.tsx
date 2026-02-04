@@ -37,7 +37,7 @@ export function CodeEntryPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!contextLoading && isAuthenticated) {
-      navigate('/participant/info', { replace: true })
+      navigate('/participant/categories', { replace: true })
     }
   }, [isAuthenticated, contextLoading, navigate])
 
@@ -45,8 +45,8 @@ export function CodeEntryPage() {
     setIsSubmitting(true)
     try {
       await enterContest(data.contestCode, data.participantCode)
-      toast.success('Welcome! Please complete your information.')
-      navigate('/participant/info', { replace: true })
+      toast.success('Welcome! Choose a category to submit your work.')
+      navigate('/participant/categories', { replace: true })
     } catch (error) {
       const errorCode = error instanceof Error ? error.message : 'Unknown error'
 

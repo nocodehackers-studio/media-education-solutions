@@ -1,16 +1,23 @@
 // Story 4-5: Photo upload form with drag-and-drop and image preview
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useBlocker } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Image } from 'lucide-react'
 import { toast } from 'sonner'
-import { Card, CardContent, Button } from '@/components/ui'
+import { Card, CardContent, Button, Form } from '@/components/ui'
 import { UploadProgress } from './UploadProgress'
+import { SubmissionInfoFields } from './SubmissionInfoFields'
 import { usePhotoUpload } from '../hooks/usePhotoUpload'
 import {
   PHOTO_ACCEPT,
   PHOTO_MIME_TYPES,
   MAX_PHOTO_SIZE,
 } from '../types/submission.types'
+import {
+  submissionInfoSchema,
+  type SubmissionInfoFormData,
+} from '../types/submissionInfo.schema'
 import { cn } from '@/lib/utils'
 
 interface PhotoUploadFormProps {
@@ -33,6 +40,17 @@ export function PhotoUploadForm({
   const [preview, setPreview] = useState<string | null>(null)
   // Track when completion navigation is in progress to avoid blocking it
   const completingRef = useRef(false)
+
+  const form = useForm<SubmissionInfoFormData>({
+    resolver: zodResolver(submissionInfoSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      studentName: '',
+      tlcName: '',
+      tlcEmail: '',
+      groupMemberNames: '',
+    },
+  })
 
   const handleComplete = useCallback(
     (submissionId: string) => {
@@ -115,18 +133,23 @@ export function PhotoUploadForm({
         return
       }
 
-      // QA Fix #5: Revoke previous object URL before creating new one
-      if (preview) {
-        URL.revokeObjectURL(preview)
-      }
+      // Validate info fields before starting upload
+      form.handleSubmit((info) => {
+        // QA Fix #5: Revoke previous object URL before creating new one
+        if (preview) {
+          URL.revokeObjectURL(preview)
+        }
 
-      // Create preview
-      const objectUrl = URL.createObjectURL(file)
-      setPreview(objectUrl)
+        // Create preview
+        const objectUrl = URL.createObjectURL(file)
+        setPreview(objectUrl)
 
-      startUpload(file)
+        startUpload(file, info)
+      }, () => {
+        toast.error('Please fill in your information before uploading.')
+      })()
     },
-    [startUpload, preview]
+    [preview, form, startUpload]
   )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +184,16 @@ export function PhotoUploadForm({
 
   return (
     <div className="space-y-6">
+      {/* Submission info fields */}
+      <Form {...form}>
+        <div className="space-y-4">
+          <SubmissionInfoFields
+            control={form.control}
+            disabled={isUploading || uploadState.status === 'complete'}
+          />
+        </div>
+      </Form>
+
       {/* File picker / drop zone */}
       {uploadState.status === 'idle' && (
         <Card

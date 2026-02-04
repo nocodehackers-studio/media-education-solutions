@@ -56,10 +56,7 @@ export interface ParticipantRow {
   contest_id: string;
   code: string;
   status: ParticipantStatus;
-  name: string | null;
   organization_name: string | null;
-  tlc_name: string | null;
-  tlc_email: string | null;
   created_at: string;
 }
 
@@ -71,10 +68,7 @@ export interface Participant {
   contestId: string;
   code: string;
   status: ParticipantStatus;
-  name: string | null;
   organizationName: string | null;
-  tlcName: string | null;
-  tlcEmail: string | null;
   createdAt: string;
 }
 
@@ -97,10 +91,7 @@ export function transformParticipant(row: ParticipantRow): Participant {
     contestId: row.contest_id,
     code: row.code,
     status: row.status,
-    name: row.name,
     organizationName: row.organization_name,
-    tlcName: row.tlc_name,
-    tlcEmail: row.tlc_email,
     createdAt: row.created_at,
   };
 }

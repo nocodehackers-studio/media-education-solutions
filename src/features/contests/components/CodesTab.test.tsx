@@ -53,16 +53,12 @@ const mockContest: Contest = {
 const createMockParticipant = (
   code: string,
   status: 'unused' | 'used',
-  name: string | null = null
 ): Participant => ({
   id: `id-${code}`,
   contestId: 'contest-123',
   code,
   status,
-  name,
   organizationName: null,
-  tlcName: null,
-  tlcEmail: null,
   createdAt: '2026-01-13T00:00:00Z',
 });
 
@@ -116,7 +112,7 @@ describe('CodesTab', () => {
   it('displays code list when codes exist (AC1)', async () => {
     const codes = [
       createMockParticipant('12345678', 'unused'),
-      createMockParticipant('87654321', 'used', 'John'),
+      createMockParticipant('87654321', 'used'),
     ];
     vi.mocked(contestsApi.listParticipantCodes).mockResolvedValue(codes);
 
@@ -133,7 +129,7 @@ describe('CodesTab', () => {
     const codes = [
       createMockParticipant('11111111', 'unused'),
       createMockParticipant('22222222', 'unused'),
-      createMockParticipant('33333333', 'used', 'Alice'),
+      createMockParticipant('33333333', 'used'),
     ];
     vi.mocked(contestsApi.listParticipantCodes).mockResolvedValue(codes);
 

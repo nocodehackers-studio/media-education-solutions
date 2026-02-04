@@ -29,13 +29,14 @@ export interface AdminSubmissionRow {
   created_at: string
   disqualified_at: string | null
   restored_at: string | null
+  student_name: string | null
+  tlc_name: string | null
+  tlc_email: string | null
+  group_member_names: string | null
   participants: {
     id: string
     code: string
-    name: string | null
     organization_name: string | null
-    tlc_name: string | null
-    tlc_email: string | null
   }
   categories: {
     id: string
@@ -80,10 +81,11 @@ export interface AdminSubmission {
   restoredAt: string | null
   participantId: string
   participantCode: string
-  participantName: string | null
+  studentName: string | null
   organizationName: string | null
   tlcName: string | null
   tlcEmail: string | null
+  groupMemberNames: string | null
   categoryId: string
   categoryName: string
   categoryType: MediaType
@@ -158,10 +160,11 @@ export function transformAdminSubmission(row: AdminSubmissionRow): AdminSubmissi
     restoredAt: row.restored_at ?? null,
     participantId: row.participants.id,
     participantCode: row.participants.code,
-    participantName: row.participants.name,
+    studentName: row.student_name,
     organizationName: row.participants.organization_name,
-    tlcName: row.participants.tlc_name,
-    tlcEmail: row.participants.tlc_email,
+    tlcName: row.tlc_name,
+    tlcEmail: row.tlc_email,
+    groupMemberNames: row.group_member_names,
     categoryId: row.categories.id,
     categoryName: row.categories.name,
     categoryType: row.categories.type,

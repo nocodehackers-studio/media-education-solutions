@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
       .select(`
         id, media_type, media_url, bunny_video_id, thumbnail_url,
         status, submitted_at, category_id,
+        student_name, tlc_name, tlc_email, group_member_names,
         categories ( name, type, deadline, status )
       `)
       .eq('id', submissionId)
@@ -232,6 +233,10 @@ Deno.serve(async (req) => {
           isLocked,
           contestStatus: contestStatus ?? null,
           review,
+          studentName: (submission as Record<string, unknown>).student_name ?? null,
+          tlcName: (submission as Record<string, unknown>).tlc_name ?? null,
+          tlcEmail: (submission as Record<string, unknown>).tlc_email ?? null,
+          groupMemberNames: (submission as Record<string, unknown>).group_member_names ?? null,
         },
         libraryId: BUNNY_STREAM_LIBRARY_ID,
       }),

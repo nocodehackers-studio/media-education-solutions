@@ -122,7 +122,6 @@ describe('VideoUploadPage', () => {
         updateActivity: vi.fn(),
         extendSession: vi.fn(),
         clearExpired: vi.fn(),
-        updateParticipantInfo: vi.fn(),
       })
 
       renderWithRouter()

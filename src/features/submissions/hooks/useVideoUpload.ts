@@ -5,6 +5,7 @@ import { useState, useCallback, useRef } from 'react'
 import * as tus from 'tus-js-client'
 import { supabase } from '@/lib/supabase'
 import type { UploadState } from '../types/submission.types'
+import type { SubmissionInfoFormData } from '../types/submissionInfo.schema'
 
 interface UseVideoUploadParams {
   contestId: string
@@ -31,6 +32,7 @@ export function useVideoUpload({
 
   const uploadRef = useRef<tus.Upload | null>(null)
   const fileRef = useRef<File | null>(null)
+  const infoRef = useRef<SubmissionInfoFormData | null>(null)
   const submissionIdRef = useRef<string | null>(null)
   const lastProgressTimeRef = useRef<number>(0)
   const lastUploadedRef = useRef<number>(0)
@@ -38,8 +40,9 @@ export function useVideoUpload({
   const speedSamplesRef = useRef<number[]>([])
 
   const startUpload = useCallback(
-    async (file: File) => {
+    async (file: File, info: SubmissionInfoFormData) => {
       fileRef.current = file
+      infoRef.current = info
 
       setUploadState({
         status: 'uploading',
@@ -61,6 +64,10 @@ export function useVideoUpload({
               participantCode,
               fileName: file.name,
               fileSize: file.size,
+              studentName: info.studentName,
+              tlcName: info.tlcName,
+              tlcEmail: info.tlcEmail,
+              groupMemberNames: info.groupMemberNames || undefined,
             },
           }
         )
@@ -214,8 +221,8 @@ export function useVideoUpload({
   )
 
   const retryUpload = useCallback(() => {
-    if (fileRef.current) {
-      startUpload(fileRef.current)
+    if (fileRef.current && infoRef.current) {
+      startUpload(fileRef.current, infoRef.current)
     }
   }, [startUpload])
 

@@ -15,6 +15,10 @@ export interface Submission {
   submittedAt: string
   createdAt: string
   updatedAt: string
+  studentName: string | null
+  tlcName: string | null
+  tlcEmail: string | null
+  groupMemberNames: string | null
 }
 
 export interface UploadState {

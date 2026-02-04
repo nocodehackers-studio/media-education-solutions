@@ -6,6 +6,7 @@ export {
   UploadProgress,
   VideoUploadForm,
   PhotoUploadForm,
+  SubmissionInfoFields,
   SubmissionPreview,
   SubmissionPreviewSkeleton,
   PhotoLightbox,
@@ -56,6 +57,11 @@ export {
 } from './types/adminSubmission.types'
 
 export type { SubmissionPreviewData } from './hooks/useSubmissionPreview'
+
+export {
+  submissionInfoSchema,
+  type SubmissionInfoFormData,
+} from './types/submissionInfo.schema'
 
 export {
   VIDEO_FORMATS,

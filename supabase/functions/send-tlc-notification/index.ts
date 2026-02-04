@@ -101,14 +101,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get all participants with T/L/C emails for this contest
-    const { data: participants } = await supabaseAdmin
-      .from('participants')
-      .select('tlc_email, tlc_name')
-      .eq('contest_id', contestId)
+    // Get all submissions with T/L/C emails for this contest (via category→division→contest join)
+    const { data: submissionsWithTlc } = await supabaseAdmin
+      .from('submissions')
+      .select('tlc_email, tlc_name, categories!inner(divisions!inner(contest_id))')
+      .eq('categories.divisions.contest_id', contestId)
+      .eq('status', 'submitted')
       .not('tlc_email', 'is', null);
 
-    if (!participants || participants.length === 0) {
+    if (!submissionsWithTlc || submissionsWithTlc.length === 0) {
       return new Response(
         JSON.stringify({ success: true, sent: 0, message: 'No T/L/C emails found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -117,11 +118,11 @@ Deno.serve(async (req) => {
 
     // Deduplicate by email (case-insensitive), skip invalid emails (F2)
     const uniqueEmails = new Map<string, string>(); // email -> name
-    for (const p of participants) {
-      const email = p.tlc_email!.toLowerCase().trim();
+    for (const s of submissionsWithTlc) {
+      const email = (s.tlc_email as string).toLowerCase().trim();
       if (!isValidEmail(email)) continue; // F2: skip malformed emails
       if (!uniqueEmails.has(email)) {
-        uniqueEmails.set(email, p.tlc_name || '');
+        uniqueEmails.set(email, (s.tlc_name as string) || '');
       }
     }
 

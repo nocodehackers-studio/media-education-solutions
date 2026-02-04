@@ -16,13 +16,14 @@ function makeBaseRow(overrides: Partial<AdminSubmissionRow> = {}): AdminSubmissi
     created_at: '2026-01-30T10:00:00Z',
     disqualified_at: null,
     restored_at: null,
+    student_name: 'Alice',
+    tlc_name: 'Teacher',
+    tlc_email: 'teacher@test.com',
+    group_member_names: null,
     participants: {
       id: 'p-1',
       code: 'ABC12345',
-      name: 'Alice',
       organization_name: 'School',
-      tlc_name: 'Teacher',
-      tlc_email: 'teacher@test.com',
     },
     categories: {
       id: 'cat-1',

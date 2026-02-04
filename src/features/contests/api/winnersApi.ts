@@ -210,7 +210,7 @@ export const winnersApi = {
     // 4. Fetch submission details with participant info
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: submissions, error: subError } = await (supabase.from as any)('submissions')
-      .select('id, media_url, thumbnail_url, media_type, status, participant_id, participants!inner(name, organization_name)')
+      .select('id, media_url, thumbnail_url, media_type, status, participant_id, student_name, participants!inner(organization_name)')
       .in('id', Array.from(submissionIds));
 
     if (subError) throw new Error(`Failed to fetch submissions: ${subError.message}`);
@@ -257,7 +257,7 @@ export const winnersApi = {
         winners.push({
           rank: ranking.rank as number,
           submissionId: effectiveId,
-          participantName: (participant?.name as string) || 'Unknown',
+          participantName: (sub.student_name as string) || 'Unknown',
           institution: (participant?.organization_name as string) || '',
           categoryName: cat.name as string,
           mediaType: sub.media_type as string,

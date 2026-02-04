@@ -113,7 +113,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       expect(result.current.uploadState.status).toBe('uploading')
@@ -126,7 +126,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -165,7 +165,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -190,7 +190,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -215,7 +215,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -240,7 +240,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -267,7 +267,7 @@ describe('usePhotoUpload', () => {
       })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -287,7 +287,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -311,7 +311,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr = MockXMLHttpRequest.getLastInstance()
@@ -330,7 +330,7 @@ describe('usePhotoUpload', () => {
       const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
       act(() => {
-        result.current.startUpload(file)
+        result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
       })
 
       const xhr1 = MockXMLHttpRequest.getLastInstance()
@@ -399,7 +399,7 @@ describe('usePhotoUpload', () => {
         const file = new File(['photo'], 'test.jpg', { type: 'image/jpeg' })
 
         act(() => {
-          result.current.startUpload(file)
+          result.current.startUpload(file, { studentName: 'Test', tlcName: 'Teacher', tlcEmail: 'test@test.com' })
         })
 
         const xhr = MockXMLHttpRequest.getLastInstance()

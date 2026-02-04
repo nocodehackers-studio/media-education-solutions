@@ -458,7 +458,7 @@ export function ContestDetailPage() {
                       onClick={() => setSelectedSubmission(s)}
                     >
                       <td className="py-2 pr-4 font-mono text-xs">{s.participantCode}</td>
-                      <td className="py-2 pr-4">{s.participantName || '—'}</td>
+                      <td className="py-2 pr-4">{s.studentName || '—'}</td>
                       <td className="py-2 pr-4 hidden md:table-cell">{s.categoryName}</td>
                       <td className="py-2 pr-4 hidden sm:table-cell capitalize">{s.mediaType}</td>
                       <td className="py-2 pr-4 hidden lg:table-cell text-muted-foreground">

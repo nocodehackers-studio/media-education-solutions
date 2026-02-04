@@ -290,9 +290,9 @@ export function AdminCategoryRankings({ categoryId, contestId }: AdminCategoryRa
                         submission={sub}
                         isRanked={rankedIds.has(sub.id)}
                       />
-                      {adminSub?.participantName && (
+                      {adminSub?.studentName && (
                         <span className="absolute top-1 right-10 text-xs text-muted-foreground">
-                          {adminSub.participantName}
+                          {adminSub.studentName}
                         </span>
                       )}
                     </div>
@@ -406,8 +406,8 @@ export function AdminCategoryRankings({ categoryId, contestId }: AdminCategoryRa
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm">{sub.participantCode}</span>
-                    {sub.participantName && (
-                      <span className="text-sm text-muted-foreground">{sub.participantName}</span>
+                    {sub.studentName && (
+                      <span className="text-sm text-muted-foreground">{sub.studentName}</span>
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground">

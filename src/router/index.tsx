@@ -66,11 +66,6 @@ const PublicWinnersPage = lazy(() =>
 const CodeEntryPage = lazy(() =>
   import('@/pages/participant/CodeEntryPage').then((m) => ({ default: m.CodeEntryPage }))
 )
-const ParticipantInfoPage = lazy(() =>
-  import('@/pages/participant/ParticipantInfoPage').then((m) => ({
-    default: m.ParticipantInfoPage,
-  }))
-)
 const ParticipantCategoriesPage = lazy(() =>
   import('@/pages/participant/ParticipantCategoriesPage').then((m) => ({
     default: m.ParticipantCategoriesPage,
@@ -292,17 +287,12 @@ const router = createBrowserRouter([
   },
   {
     path: '/participant',
-    element: <Navigate to="/participant/info" replace />,
+    element: <Navigate to="/participant/categories" replace />,
   },
   {
+    // Backward compat: redirect old info page bookmarks to categories
     path: '/participant/info',
-    element: (
-      <ParticipantRoute>
-        <PageLazyRoute>
-          <ParticipantInfoPage />
-        </PageLazyRoute>
-      </ParticipantRoute>
-    ),
+    element: <Navigate to="/participant/categories" replace />,
   },
   {
     path: '/participant/categories',

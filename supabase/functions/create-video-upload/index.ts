@@ -17,6 +17,10 @@ interface UploadRequest {
   participantCode: string
   fileName: string
   fileSize: number
+  studentName: string
+  tlcName: string
+  tlcEmail: string
+  groupMemberNames?: string
 }
 
 Deno.serve(async (req) => {
@@ -43,6 +47,10 @@ Deno.serve(async (req) => {
       participantCode,
       fileName,
       fileSize,
+      studentName,
+      tlcName,
+      tlcEmail,
+      groupMemberNames,
     } = body
     console.log('[create-video-upload] Request received', {
       contestId, categoryId, participantId, fileName, fileSize,
@@ -54,10 +62,24 @@ Deno.serve(async (req) => {
       !categoryId ||
       !participantId ||
       !participantCode ||
-      !fileName
+      !fileName ||
+      !studentName ||
+      !tlcName ||
+      !tlcEmail
     ) {
       return new Response(
         JSON.stringify({ success: false, error: 'MISSING_REQUIRED_FIELDS' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tlcEmail)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'INVALID_EMAIL' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -208,6 +230,10 @@ Deno.serve(async (req) => {
           bunny_video_id: null,
           media_url: null,
           thumbnail_url: null,
+          student_name: studentName,
+          tlc_name: tlcName,
+          tlc_email: tlcEmail,
+          group_member_names: groupMemberNames || null,
         })
         .eq('id', submissionId)
 
@@ -231,6 +257,10 @@ Deno.serve(async (req) => {
           media_type: 'video',
           status: 'uploading',
           submitted_at: new Date().toISOString(),
+          student_name: studentName,
+          tlc_name: tlcName,
+          tlc_email: tlcEmail,
+          group_member_names: groupMemberNames || null,
         })
         .select('id')
         .single()

@@ -126,7 +126,7 @@ export function AdminSubmissionsTable({
               <TableCell className="font-mono text-sm">
                 {submission.participantCode}
               </TableCell>
-              <TableCell>{submission.participantName ?? '—'}</TableCell>
+              <TableCell>{submission.studentName ?? '—'}</TableCell>
               <TableCell className="hidden md:table-cell">
                 {submission.organizationName ?? '—'}
               </TableCell>

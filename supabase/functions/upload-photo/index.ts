@@ -33,11 +33,26 @@ Deno.serve(async (req) => {
     const categoryId = formData.get('categoryId') as string | null
     const participantId = formData.get('participantId') as string | null
     const participantCode = formData.get('participantCode') as string | null
+    const studentName = formData.get('studentName') as string | null
+    const tlcName = formData.get('tlcName') as string | null
+    const tlcEmail = formData.get('tlcEmail') as string | null
+    const groupMemberNames = formData.get('groupMemberNames') as string | null
 
     // Validate required fields
-    if (!file || !contestId || !categoryId || !participantId || !participantCode) {
+    if (!file || !contestId || !categoryId || !participantId || !participantCode || !studentName || !tlcName || !tlcEmail) {
       return new Response(
         JSON.stringify({ success: false, error: 'MISSING_REQUIRED_FIELDS' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tlcEmail)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'INVALID_EMAIL' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -208,6 +223,10 @@ Deno.serve(async (req) => {
           submitted_at: new Date().toISOString(),
           media_url: null,
           thumbnail_url: null,
+          student_name: studentName,
+          tlc_name: tlcName,
+          tlc_email: tlcEmail,
+          group_member_names: groupMemberNames || null,
         })
         .eq('id', submissionId)
 
@@ -231,6 +250,10 @@ Deno.serve(async (req) => {
           media_type: 'photo',
           status: 'uploading',
           submitted_at: new Date().toISOString(),
+          student_name: studentName,
+          tlc_name: tlcName,
+          tlc_email: tlcEmail,
+          group_member_names: groupMemberNames || null,
         })
         .select('id')
         .single()

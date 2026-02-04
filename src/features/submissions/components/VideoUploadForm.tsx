@@ -3,10 +3,13 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useBlocker } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Upload } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button, Card, CardContent } from '@/components/ui'
+import { Button, Card, CardContent, Form } from '@/components/ui'
 import { UploadProgress } from './UploadProgress'
+import { SubmissionInfoFields } from './SubmissionInfoFields'
 import { useVideoUpload } from '../hooks/useVideoUpload'
 import {
   VIDEO_ACCEPT,
@@ -14,6 +17,10 @@ import {
   MAX_VIDEO_SIZE,
   VIDEO_FORMATS,
 } from '../types/submission.types'
+import {
+  submissionInfoSchema,
+  type SubmissionInfoFormData,
+} from '../types/submissionInfo.schema'
 import { cn } from '@/lib/utils'
 
 interface VideoUploadFormProps {
@@ -35,6 +42,17 @@ export function VideoUploadForm({
   const [isDragging, setIsDragging] = useState(false)
   // Track when completion navigation is in progress to avoid blocking it
   const completingRef = useRef(false)
+
+  const form = useForm<SubmissionInfoFormData>({
+    resolver: zodResolver(submissionInfoSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      studentName: '',
+      tlcName: '',
+      tlcEmail: '',
+      groupMemberNames: '',
+    },
+  })
 
   const handleComplete = useCallback(
     (submissionId: string) => {
@@ -80,9 +98,15 @@ export function VideoUploadForm({
         toast.error(error)
         return
       }
-      startUpload(file)
+
+      // Validate info fields before starting upload
+      form.handleSubmit((info) => {
+        startUpload(file, info)
+      }, () => {
+        toast.error('Please fill in your information before uploading.')
+      })()
     },
-    [startUpload]
+    [form, startUpload]
   )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +178,16 @@ export function VideoUploadForm({
 
   return (
     <div className="space-y-6">
+      {/* Submission info fields */}
+      <Form {...form}>
+        <div className="space-y-4">
+          <SubmissionInfoFields
+            control={form.control}
+            disabled={isUploading || uploadState.status === 'complete'}
+          />
+        </div>
+      </Form>
+
       {/* File picker / drop zone */}
       {uploadState.status === 'idle' && (
         <Card

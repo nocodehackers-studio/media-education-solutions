@@ -2,6 +2,7 @@
 // QA Fix: No Bunny credentials exposed to client
 import { useState, useCallback, useRef } from 'react'
 import type { UploadState } from '../types/submission.types'
+import type { SubmissionInfoFormData } from '../types/submissionInfo.schema'
 
 interface UsePhotoUploadParams {
   contestId: string
@@ -27,12 +28,14 @@ export function usePhotoUpload({
   })
 
   const fileRef = useRef<File | null>(null)
+  const infoRef = useRef<SubmissionInfoFormData | null>(null)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
   const speedSamplesRef = useRef<number[]>([])
 
   const startUpload = useCallback(
-    async (file: File) => {
+    async (file: File, info: SubmissionInfoFormData) => {
       fileRef.current = file
+      infoRef.current = info
       speedSamplesRef.current = []
 
       setUploadState({
@@ -51,6 +54,12 @@ export function usePhotoUpload({
         formData.append('categoryId', categoryId)
         formData.append('participantId', participantId)
         formData.append('participantCode', participantCode)
+        formData.append('studentName', info.studentName)
+        formData.append('tlcName', info.tlcName)
+        formData.append('tlcEmail', info.tlcEmail)
+        if (info.groupMemberNames) {
+          formData.append('groupMemberNames', info.groupMemberNames)
+        }
 
         // Get Supabase anon key and URL for Edge Function call
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -201,8 +210,8 @@ export function usePhotoUpload({
   )
 
   const retryUpload = useCallback(() => {
-    if (fileRef.current) {
-      startUpload(fileRef.current)
+    if (fileRef.current && infoRef.current) {
+      startUpload(fileRef.current, infoRef.current)
     }
   }, [startUpload])
 

@@ -259,11 +259,10 @@ export const contestsApi = {
     contestId: string,
     filter?: 'all' | 'used' | 'unused'
   ): Promise<Participant[]> {
-    // Select columns needed for display (id, code, organization_name, status, name for used codes)
-    // Avoids fetching tlc_name, tlc_email unnecessarily
+    // Select columns needed for display (codes represent institutions, not individuals)
     let query = supabase
       .from('participants')
-      .select('id, contest_id, code, status, name, organization_name, created_at')
+      .select('id, contest_id, code, status, organization_name, created_at')
       .eq('contest_id', contestId)
       .order('created_at', { ascending: false });
 
@@ -277,16 +276,12 @@ export const contestsApi = {
     if (error) {
       throw new Error(`Failed to fetch participant codes: ${error.message}`);
     }
-    // Map partial rows to full Participant objects (missing fields will be null)
     return (data || []).map((row) => ({
       id: row.id,
       contestId: row.contest_id,
       code: row.code,
       status: row.status as 'unused' | 'used',
-      name: row.name,
       organizationName: row.organization_name,
-      tlcName: null,
-      tlcEmail: null,
       createdAt: row.created_at,
     }));
   },

@@ -21,7 +21,6 @@ interface ValidationResponse {
   contestId?: string
   contestName?: string
   participantData?: {
-    name: string | null
     organizationName: string | null
     status: string
   }
@@ -83,7 +82,7 @@ Deno.serve(async (req) => {
     // 3. Find participant by code within this contest
     const { data: participant, error: participantError } = await supabaseAdmin
       .from('participants')
-      .select('id, code, status, name, organization_name')
+      .select('id, code, status, organization_name')
       .eq('contest_id', contest.id)
       .eq('code', normalizedParticipantCode)
       .single()
@@ -107,7 +106,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 5. Success - return participant and contest data
+    // 5. Mark participant code as used (idempotent for already-used codes)
+    if (participant.status === 'unused') {
+      await supabaseAdmin
+        .from('participants')
+        .update({ status: 'used' })
+        .eq('id', participant.id)
+    }
+
+    // 6. Success - return participant and contest data
     console.log(`Participant ${participant.id} validated for contest ${contest.id}`)
     const response: ValidationResponse = {
       success: true,
@@ -115,7 +122,6 @@ Deno.serve(async (req) => {
       contestId: contest.id,
       contestName: contest.name,
       participantData: {
-        name: participant.name,
         organizationName: participant.organization_name,
         status: participant.status,
       },

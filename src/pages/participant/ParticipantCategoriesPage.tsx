@@ -92,7 +92,7 @@ export function ParticipantCategoriesPage() {
               {session?.contestName || 'Contest'}
             </h1>
             <p className="text-muted-foreground">
-              Welcome, {session?.name || 'Participant'}
+              Welcome, Participant
             </p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
