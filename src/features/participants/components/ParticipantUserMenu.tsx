@@ -10,12 +10,7 @@ import { useParticipantSession } from '@/contexts'
 
 const DIVISION_STORAGE_KEY = 'participant_selected_division'
 
-interface ParticipantUserMenuProps {
-  /** When true, positions absolutely over a cover image (top-right with z-index) */
-  overlay?: boolean
-}
-
-export function ParticipantUserMenu({ overlay }: ParticipantUserMenuProps) {
+export function ParticipantUserMenu() {
   const navigate = useNavigate()
   const { session, endSession } = useParticipantSession()
 
@@ -63,14 +58,6 @@ export function ParticipantUserMenu({ overlay }: ParticipantUserMenuProps) {
       </PopoverContent>
     </Popover>
   )
-
-  if (overlay) {
-    return (
-      <div className="absolute top-4 right-4 z-10">
-        {trigger}
-      </div>
-    )
-  }
 
   return trigger
 }

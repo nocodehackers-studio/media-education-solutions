@@ -190,19 +190,14 @@ function Step1ContestLanding({
 }: Step1Props) {
   return (
     <>
-      {/* Cover image with overlay user menu */}
-      {contest?.coverImageUrl ? (
-        <div className="relative h-48 sm:h-64 overflow-hidden">
+      {/* Cover image */}
+      {contest?.coverImageUrl && (
+        <div className="h-48 sm:h-64 overflow-hidden">
           <img
             src={contest.coverImageUrl}
             alt={contestName}
             className="w-full h-full object-cover"
           />
-          <ParticipantUserMenu overlay />
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 flex justify-end">
-          <ParticipantUserMenu />
         </div>
       )}
 
@@ -218,9 +213,13 @@ function Step1ContestLanding({
           </div>
         )}
 
-        {/* Title */}
-        <div className={`mb-4${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
+        {/* Title row with user menu */}
+        <div className={`flex items-start justify-between gap-4 mb-4${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
           <h1 className="text-3xl sm:text-4xl font-bold">{contestName}</h1>
+          <div className="shrink-0 text-right mt-1">
+            <p className="text-xs text-muted-foreground mb-1">Logged in as</p>
+            <ParticipantUserMenu />
+          </div>
         </div>
 
         {/* Contest description */}
