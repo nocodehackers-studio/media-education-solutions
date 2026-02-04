@@ -9,6 +9,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+console.log('[manage-contest-cover] Module loaded');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -26,8 +28,13 @@ class EdgeError extends Error {
 }
 
 Deno.serve(async (req) => {
+  console.log('[manage-contest-cover] Request received:', req.method, req.url);
+  console.log('[manage-contest-cover] Content-Type:', req.headers.get('Content-Type'));
+  console.log('[manage-contest-cover] Authorization present:', !!req.headers.get('Authorization'));
+
   // CORS preflight
   if (req.method === 'OPTIONS') {
+    console.log('[manage-contest-cover] CORS preflight');
     return new Response('ok', { headers: corsHeaders });
   }
 
@@ -40,34 +47,40 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('[manage-contest-cover] === START ===');
+    console.log('[manage-contest-cover] === START POST ===');
 
     // --- Auth: verify caller is admin ---
     const authHeader = req.headers.get('Authorization');
+    console.log('[manage-contest-cover] Auth header:', authHeader ? authHeader.slice(0, 30) + '...' : 'MISSING');
     if (!authHeader) {
       throw new EdgeError('UNAUTHORIZED', 401);
     }
 
+    console.log('[manage-contest-cover] Creating supabase client...');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    console.log('[manage-contest-cover] Calling getUser...');
     const {
       data: { user },
       error: authError,
     } = await supabaseClient.auth.getUser();
+    console.log('[manage-contest-cover] getUser result:', { userId: user?.id, authError: authError?.message ?? null });
     if (authError || !user) {
       throw new EdgeError('UNAUTHORIZED', 401);
     }
 
+    console.log('[manage-contest-cover] Checking admin role...');
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
+    console.log('[manage-contest-cover] Profile check:', { role: profile?.role, profileError: profileError?.message ?? null });
     if (profileError || profile?.role !== 'admin') {
       throw new EdgeError('FORBIDDEN', 403);
     }
@@ -92,9 +105,11 @@ Deno.serve(async (req) => {
 
     // --- Route by Content-Type ---
     const contentType = req.headers.get('Content-Type') || '';
+    console.log('[manage-contest-cover] Routing by Content-Type:', contentType);
 
     if (contentType.includes('multipart/form-data')) {
       // ========== UPLOAD FLOW ==========
+      console.log('[manage-contest-cover] Parsing FormData...');
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
       const contestId = formData.get('contestId') as string | null;

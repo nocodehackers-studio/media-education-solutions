@@ -524,9 +524,17 @@ export const contestsApi = {
    * @returns CDN URL of the uploaded cover image
    */
   async uploadCoverImage(contestId: string, file: File): Promise<string> {
-    // Refresh session for fresh JWT (same pattern as categoriesApi.assignJudge)
+    console.log('[uploadCoverImage] Start', { contestId, fileName: file.name, fileSize: file.size, fileType: file.type });
+
+    // Refresh session for fresh JWT
     const { data: refreshData, error: refreshError } =
       await supabase.auth.refreshSession();
+    console.log('[uploadCoverImage] Session refresh', {
+      ok: !refreshError && !!refreshData.session,
+      error: refreshError?.message ?? null,
+      hasSession: !!refreshData.session,
+      tokenPrefix: refreshData.session?.access_token?.slice(0, 20),
+    });
     if (refreshError || !refreshData.session) {
       throw new Error('UNAUTHORIZED');
     }
@@ -535,27 +543,54 @@ export const contestsApi = {
     formData.append('file', file);
     formData.append('contestId', contestId);
 
-    // Use supabase.functions.invoke with FormData — it handles gateway auth
-    // and passes the explicit Authorization header for the fresh JWT
-    const { data, error } = await supabase.functions.invoke(
-      'manage-contest-cover',
-      {
-        body: formData,
+    // Use raw fetch matching the working upload-photo pattern (usePhotoUpload.ts)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = `${supabaseUrl}/functions/v1/manage-contest-cover`;
+    const token = refreshData.session.access_token;
+
+    console.log('[uploadCoverImage] Calling edge function', {
+      url,
+      hasAnonKey: !!anonKey,
+      tokenPrefix: token.slice(0, 20),
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${refreshData.session.access_token}`,
+          Authorization: `Bearer ${token}`,
+          apikey: anonKey,
         },
+        body: formData,
+      });
+
+      console.log('[uploadCoverImage] Response', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
+      const text = await response.text();
+      console.log('[uploadCoverImage] Response body', text.slice(0, 500));
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        throw new Error(`Non-JSON response (${response.status}): ${text.slice(0, 200)}`);
       }
-    );
 
-    if (error) {
-      throw new Error(error.message || 'Failed to upload cover image');
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Upload failed (${response.status})`);
+      }
+
+      console.log('[uploadCoverImage] Success', { coverImageUrl: result.coverImageUrl });
+      return result.coverImageUrl;
+    } catch (err) {
+      console.error('[uploadCoverImage] Fetch error', err);
+      throw err;
     }
-
-    if (!data?.success) {
-      throw new Error(data?.error || 'Failed to upload cover image');
-    }
-
-    return data.coverImageUrl;
   },
 
   /**
@@ -563,29 +598,60 @@ export const contestsApi = {
    * @param contestId Contest ID
    */
   async deleteCoverImage(contestId: string): Promise<void> {
+    console.log('[deleteCoverImage] Start', { contestId });
+
     // Refresh session for fresh JWT
     const { data: refreshData, error: refreshError } =
       await supabase.auth.refreshSession();
+    console.log('[deleteCoverImage] Session refresh', {
+      ok: !refreshError && !!refreshData.session,
+      error: refreshError?.message ?? null,
+    });
     if (refreshError || !refreshData.session) {
       throw new Error('UNAUTHORIZED');
     }
 
-    const { data, error } = await supabase.functions.invoke(
-      'manage-contest-cover',
-      {
-        body: { contestId, action: 'delete' },
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = `${supabaseUrl}/functions/v1/manage-contest-cover`;
+    const token = refreshData.session.access_token;
+
+    console.log('[deleteCoverImage] Calling edge function', { url });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${refreshData.session.access_token}`,
+          Authorization: `Bearer ${token}`,
+          apikey: anonKey,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ contestId, action: 'delete' }),
+      });
+
+      console.log('[deleteCoverImage] Response', {
+        status: response.status,
+        statusText: response.statusText,
+      });
+
+      const text = await response.text();
+      console.log('[deleteCoverImage] Response body', text.slice(0, 500));
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        throw new Error(`Non-JSON response (${response.status}): ${text.slice(0, 200)}`);
       }
-    );
 
-    if (error) {
-      throw new Error(error.message || 'Failed to delete cover image');
-    }
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Delete failed (${response.status})`);
+      }
 
-    if (data && !data.success) {
-      throw new Error(data.error || 'Failed to delete cover image');
+      console.log('[deleteCoverImage] Success');
+    } catch (err) {
+      console.error('[deleteCoverImage] Fetch error', err);
+      throw err;
     }
   },
 };
