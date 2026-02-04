@@ -36,7 +36,6 @@ import {
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
 import { CategoriesTab, JudgesTab } from '@/features/categories';
-import { DivisionList } from '@/features/divisions';
 import {
   NotificationSummary,
   NotificationLogsTable,
@@ -323,8 +322,7 @@ export function ContestDetailPage() {
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="divisions">Divisions</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="categories">Divisions & Categories</TabsTrigger>
           <TabsTrigger value="codes">Codes</TabsTrigger>
           <TabsTrigger value="judges">Judges</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -335,10 +333,6 @@ export function ContestDetailPage() {
 
         <TabsContent value="details" className="mt-6">
           <ContestDetailsTab contest={contest} />
-        </TabsContent>
-
-        <TabsContent value="divisions" className="mt-6">
-          <DivisionList contestId={contest.id} />
         </TabsContent>
 
         <TabsContent value="categories" className="mt-6">

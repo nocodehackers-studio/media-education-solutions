@@ -1,8 +1,8 @@
 // CategoryCard - Story 2.5, Story 3-1
-// Display a category with status badge, type badge, judge info, and actions
+// Display a category as a compact row with status badge, type badge, judge info, and actions
 
 import { useState, useEffect, useCallback } from 'react';
-import { Video, Camera, UserMinus, Send, Loader2 } from 'lucide-react';
+import { Video, Camera, UserMinus, Send, Loader2, Pencil, Eye } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,12 +15,6 @@ import {
   AlertDialogTrigger,
   Badge,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
   Select,
   SelectContent,
   SelectItem,
@@ -78,7 +72,7 @@ function formatDeadline(dateString: string): string {
 }
 
 /**
- * Card component displaying a single category
+ * Compact row component displaying a single category
  * Includes status dropdown, edit/delete actions (draft only)
  */
 export function CategoryCard({ category, contestId }: CategoryCardProps) {
@@ -229,147 +223,30 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
   const TypeIcon = typeConfig[category.type].icon;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{category.name}</CardTitle>
-          <div className="flex gap-2">
-            <Badge className={typeConfig[category.type].className}>
-              <TypeIcon className="h-3 w-3 mr-1" />
-              {category.type}
-            </Badge>
-            <Badge className={statusColors[optimisticStatus]}>
-              {optimisticStatus}
-            </Badge>
-          </div>
-        </div>
-        <CardDescription>
-          Deadline: {formatDeadline(category.deadline)}
-          {deadlinePassed && (
-            <span className="text-red-500 ml-2">(Passed)</span>
-          )}
-        </CardDescription>
-      </CardHeader>
+    <div className="flex flex-col gap-2 p-3 border rounded-lg">
+      {/* Row 1: Name, badges, and actions */}
+      <div className="flex items-center gap-2">
+        <span className="font-medium truncate">{category.name}</span>
+        <Badge className={typeConfig[category.type].className} variant="secondary">
+          <TypeIcon className="h-3 w-3 mr-1" />
+          {category.type}
+        </Badge>
+        <Badge className={statusColors[optimisticStatus]} variant="secondary">
+          {optimisticStatus}
+        </Badge>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {formatDeadline(category.deadline)}
+          {deadlinePassed && <span className="text-red-500 ml-1">(Passed)</span>}
+        </span>
 
-      {category.description && (
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{category.description}</p>
-        </CardContent>
-      )}
-
-      {/* Story 3-1: Judge Assignment Section */}
-      <CardContent className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Judge:</span>
-          {category.assignedJudge ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {category.assignedJudge.email}
-              </span>
-              {/* F18: Invitation status indicator */}
-              {optimisticStatus === 'closed' && !category.invitedAt && (
-                <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
-                  Not invited
-                </Badge>
-              )}
-              {/* Story 7-2: Send/Resend Invite with confirmation dialog */}
-              {canSendInvite && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2"
-                      disabled={resendInvitation.isPending || resendCooldown}
-                      title={isResend ? 'Resend invitation email' : 'Send invitation email'}
-                      aria-label={isResend ? 'Resend invitation email' : 'Send invitation email'}
-                    >
-                      {resendInvitation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{isResend ? 'Resend Invitation' : 'Send Invitation'}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will send {isResend ? 'a new' : 'an'} invitation email to{' '}
-                        <strong>{category.assignedJudge?.email}</strong> and
-                        generate a login link.{isResend && ' Any previous invitation link will no longer work.'}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSendInvite}>
-                        {isResend ? 'Resend' : 'Send'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {/* AC5: Remove Judge with confirmation */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-destructive hover:text-destructive"
-                    disabled={removeJudge.isPending}
-                  >
-                    <UserMinus className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Remove Judge</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to remove{' '}
-                      <strong>{category.assignedJudge.email}</strong> from this
-                      category? Any existing reviews will remain in the database.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={async () => {
-                        try {
-                          await removeJudge.mutateAsync(category.id);
-                          toast.success('Judge removed');
-                        } catch (error) {
-                          toast.error(
-                            error instanceof Error
-                              ? error.message
-                              : 'Failed to remove judge'
-                          );
-                        }
-                      }}
-                    >
-                      Remove
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          ) : (
-            <AssignJudgeSheet
-              categoryId={category.id}
-              categoryName={category.name}
-            />
-          )}
-        </div>
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-2">
-        <div className="flex w-full justify-between">
-          <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1 ml-auto shrink-0">
+          <div className="flex flex-col gap-0.5">
             <Select
               value={optimisticStatus}
               onValueChange={(value) => handleStatusChange(value as CategoryStatus)}
               disabled={updateStatus.isPending || isLoadingCount}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[110px] h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -381,55 +258,160 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
               </SelectContent>
             </Select>
             {draftRestrictionReason && optimisticStatus !== 'draft' && (
-              <p className="text-xs text-muted-foreground">{draftRestrictionReason}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">{draftRestrictionReason}</p>
             )}
           </div>
 
-          <div className="flex gap-2">
-            {/* Story 2-9: Duplicate category to other divisions */}
-            <DuplicateCategoryDialog
-              categoryId={category.id}
-              categoryName={category.name}
-              contestId={contestId}
-              currentDivisionId={category.divisionId}
-            />
-            {/* AC3: View button for published/closed (read-only form), Edit+Delete for draft */}
-            <Sheet open={editOpen} onOpenChange={handleEditOpenChange}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {isEditable ? 'Edit' : 'View'}
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>
-                    {isEditable ? 'Edit Category' : 'View Category'}
-                  </SheetTitle>
-                </SheetHeader>
-                <EditCategoryForm
-                  key={formKey}
-                  category={category}
-                  contestId={contestId}
-                  onSuccess={() => {
-                    setIsFormDirty(false);
-                    setEditOpen(false);
-                  }}
-                  onDirtyChange={isEditable ? setIsFormDirty : undefined}
-                  readOnly={!isEditable}
-                />
-              </SheetContent>
-              {editConfirmDialog}
-            </Sheet>
-            {isEditable && (
-              <DeleteCategoryButton
-                categoryId={category.id}
+          <DuplicateCategoryDialog
+            categoryId={category.id}
+            categoryName={category.name}
+            contestId={contestId}
+            currentDivisionId={category.divisionId}
+          />
+
+          <Sheet open={editOpen} onOpenChange={handleEditOpenChange}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={isEditable ? 'Edit category' : 'View category'}>
+                {isEditable ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>
+                  {isEditable ? 'Edit Category' : 'View Category'}
+                </SheetTitle>
+              </SheetHeader>
+              <EditCategoryForm
+                key={formKey}
+                category={category}
                 contestId={contestId}
-                categoryName={category.name}
+                onSuccess={() => {
+                  setIsFormDirty(false);
+                  setEditOpen(false);
+                }}
+                onDirtyChange={isEditable ? setIsFormDirty : undefined}
+                readOnly={!isEditable}
               />
-            )}
-          </div>
+            </SheetContent>
+            {editConfirmDialog}
+          </Sheet>
+
+          {isEditable && (
+            <DeleteCategoryButton
+              categoryId={category.id}
+              contestId={contestId}
+              categoryName={category.name}
+            />
+          )}
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+
+      {/* Row 2: Description (optional) */}
+      {category.description && (
+        <p className="text-xs text-muted-foreground truncate">{category.description}</p>
+      )}
+
+      {/* Row 3: Judge info */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-xs font-medium text-muted-foreground">Judge:</span>
+        {category.assignedJudge ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {category.assignedJudge.email}
+            </span>
+            {/* F18: Invitation status indicator */}
+            {optimisticStatus === 'closed' && !category.invitedAt && (
+              <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
+                Not invited
+              </Badge>
+            )}
+            {/* Story 7-2: Send/Resend Invite with confirmation dialog */}
+            {canSendInvite && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    disabled={resendInvitation.isPending || resendCooldown}
+                    title={isResend ? 'Resend invitation email' : 'Send invitation email'}
+                    aria-label={isResend ? 'Resend invitation email' : 'Send invitation email'}
+                  >
+                    {resendInvitation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{isResend ? 'Resend Invitation' : 'Send Invitation'}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will send {isResend ? 'a new' : 'an'} invitation email to{' '}
+                      <strong>{category.assignedJudge?.email}</strong> and
+                      generate a login link.{isResend && ' Any previous invitation link will no longer work.'}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSendInvite}>
+                      {isResend ? 'Resend' : 'Send'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {/* AC5: Remove Judge with confirmation */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-destructive hover:text-destructive"
+                  disabled={removeJudge.isPending}
+                >
+                  <UserMinus className="h-3.5 w-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove Judge</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to remove{' '}
+                    <strong>{category.assignedJudge.email}</strong> from this
+                    category? Any existing reviews will remain in the database.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      try {
+                        await removeJudge.mutateAsync(category.id);
+                        toast.success('Judge removed');
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error
+                            ? error.message
+                            : 'Failed to remove judge'
+                        );
+                      }
+                    }}
+                  >
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ) : (
+          <AssignJudgeSheet
+            categoryId={category.id}
+            categoryName={category.name}
+          />
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 // DeleteCategoryButton - Story 2.5
 // Delete button with confirmation dialog for categories
 
+import { Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,11 +49,13 @@ export function DeleteCategoryButton({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
-          variant="destructive"
-          size="sm"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive"
           data-testid="delete-category-button"
+          aria-label={`Delete ${categoryName}`}
         >
-          Delete
+          <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

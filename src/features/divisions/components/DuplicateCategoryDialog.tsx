@@ -101,9 +101,8 @@ export function DuplicateCategoryDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Copy className="h-4 w-4 mr-1" />
-          Duplicate
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Duplicate ${categoryName}`}>
+          <Copy className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
