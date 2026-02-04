@@ -44,6 +44,12 @@ export const adminSubmissionsApi = {
     const { data, error } = await query
 
     if (error) {
+      console.error('[adminSubmissionsApi] getContestSubmissions failed', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
       throw new Error(`Failed to fetch submissions: ${error.message}`)
     }
 

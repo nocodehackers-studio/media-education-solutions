@@ -83,8 +83,9 @@ export function AdminSubmissionsPage() {
         </div>
       ) : error ? (
         <Card>
-          <CardContent className="flex items-center justify-center py-12">
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-2">
             <p className="text-destructive">Failed to load submissions</p>
+            <p className="text-xs text-muted-foreground">{error.message}</p>
           </CardContent>
         </Card>
       ) : (
