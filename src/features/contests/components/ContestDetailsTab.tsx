@@ -67,14 +67,6 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
               </h3>
               <p className="mt-1 font-mono text-lg">{contest.contestCode}</p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                T/L/C Notifications
-              </h3>
-              <p className="mt-1">
-                {contest.notifyTlc ? 'Enabled' : 'Disabled'}
-              </p>
-            </div>
           </div>
         )}
         <div className="mt-8 pt-6 border-t">

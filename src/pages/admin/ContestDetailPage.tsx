@@ -149,12 +149,6 @@ export function ContestDetailPage() {
           <p className="text-muted-foreground font-mono">{contest.contestCode}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to={`/admin/contests/${contest.id}/submissions`}>
-            <Button variant="outline" size="sm">
-              <FileText className="h-4 w-4 mr-2" />
-              View Submissions
-            </Button>
-          </Link>
           <Select
             value={pendingStatus ?? contest.status}
             onValueChange={(value) => handleStatusChange(value as ContestStatus)}
@@ -171,6 +165,12 @@ export function ContestDetailPage() {
               ))}
             </SelectContent>
           </Select>
+          <Link to={`/admin/contests/${contest.id}/submissions`}>
+            <Button variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              View Submissions
+            </Button>
+          </Link>
         </div>
       </div>
 

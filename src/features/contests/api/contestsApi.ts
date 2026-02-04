@@ -27,7 +27,7 @@ function transformContestRow(row: ContestRow): Contest {
     winnersPagePassword: row.winners_page_password,
     winnersPageEnabled: row.winners_page_enabled ?? false,
     winnersPageGeneratedAt: row.winners_page_generated_at ?? null,
-    notifyTlc: row.notify_tlc ?? false,
+    notifyTlc: row.notify_tlc ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -92,6 +92,7 @@ export const contestsApi = {
           rules: input.rules || null,
           cover_image_url: coverImageUrl,
           status: 'draft',
+          notify_tlc: true,
         })
         .select()
         .single();
