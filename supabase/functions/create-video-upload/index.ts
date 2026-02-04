@@ -260,7 +260,6 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           title: fileName,
-          collectionId: contestId, // Organize by contest
         }),
       }
     )
