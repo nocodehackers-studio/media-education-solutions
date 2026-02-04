@@ -47,7 +47,9 @@ import {
   useAdminSubmissions,
   formatSubmissionDate,
   SUBMISSION_STATUS_VARIANT,
+  AdminSubmissionDetail,
 } from '@/features/submissions';
+import type { AdminSubmission } from '@/features/submissions';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string; dotColor: string }> = {
@@ -164,6 +166,7 @@ export function ContestDetailPage() {
   const [logsSheetOpen, setLogsSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<AdminSubmission | null>(null);
   const updateStatus = useUpdateContestStatus();
   const stats = useContestDetailStats(contestId!);
   const { data: submissions, isLoading: submissionsLoading } = useAdminSubmissions(contestId!);
@@ -449,7 +452,11 @@ export function ContestDetailPage() {
                 </thead>
                 <tbody>
                   {submissions.slice(0, 10).map((s) => (
-                    <tr key={s.id} className="border-b last:border-0">
+                    <tr
+                      key={s.id}
+                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setSelectedSubmission(s)}
+                    >
                       <td className="py-2 pr-4 font-mono text-xs">{s.participantCode}</td>
                       <td className="py-2 pr-4">{s.participantName || '—'}</td>
                       <td className="py-2 pr-4 hidden md:table-cell">{s.categoryName}</td>
@@ -482,6 +489,15 @@ export function ContestDetailPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Submission Detail Sheet */}
+      <AdminSubmissionDetail
+        submission={selectedSubmission}
+        open={selectedSubmission !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedSubmission(null);
+        }}
+      />
     </div>
   );
 }
