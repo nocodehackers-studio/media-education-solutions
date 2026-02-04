@@ -2,11 +2,6 @@
 // Main tab content for judge progress in ContestDetailPage
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Skeleton,
 } from '@/components/ui';
 import { useCategories } from '../hooks/useCategories';
@@ -25,59 +20,44 @@ export function JudgesTab({ contestId }: JudgesTabProps) {
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-destructive">Failed to load judge data</p>
-        </CardContent>
-      </Card>
+      <div className="py-8 text-center">
+        <p className="text-destructive">Failed to load judge data</p>
+      </div>
     );
   }
 
   if (!categories || categories.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Judge Assignments</CardTitle>
-          <CardDescription>
-            Track judging progress across all categories
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="py-8 text-center">
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Track judging progress across all categories
+        </p>
+        <div className="py-8 text-center">
           <p className="text-muted-foreground">No categories in this contest yet</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Judge Assignments</CardTitle>
-        <CardDescription>
-          Track judging progress across all categories
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <JudgesTable categories={categories} contestId={contestId} />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Track judging progress across all categories
+      </p>
+      <JudgesTable categories={categories} contestId={contestId} />
+    </div>
   );
 }
 
 function JudgesTabSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-4 w-64 mt-2" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-64" />
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    </div>
   );
 }

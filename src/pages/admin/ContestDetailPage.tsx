@@ -381,12 +381,9 @@ export function ContestDetailPage() {
           <TabsContent value="notifications" className="mt-0 p-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Email Notifications</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Summary of notifications sent for this contest
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Summary of notifications sent for this contest
+                </p>
                 <Button
                   variant="outline"
                   onClick={() => setLogsSheetOpen(true)}
@@ -402,13 +399,11 @@ export function ContestDetailPage() {
             {contest.status === 'finished' ? (
               <AdminWinnersTab contest={contest} />
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">
-                    Winners management will be available once the contest is finished.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground">
+                  Winners management will be available once the contest is finished.
+                </p>
+              </div>
             )}
           </TabsContent>
         </Tabs>

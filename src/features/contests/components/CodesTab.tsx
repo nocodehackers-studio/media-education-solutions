@@ -1,9 +1,5 @@
 import { useState } from 'react';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Select,
   SelectContent,
   SelectItem,
@@ -33,40 +29,33 @@ export function CodesTab({ contest }: CodesTabProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-6 w-40" />
             <Skeleton className="h-4 w-32" />
           </div>
           <div className="flex gap-2">
             <Skeleton className="h-10 w-[120px]" />
             <Skeleton className="h-10 w-36" />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-destructive">
-            <p className="mb-2">Failed to load participant codes</p>
-            <p className="text-sm text-muted-foreground">
-              {error instanceof Error ? error.message : 'An error occurred'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="py-8 text-center text-destructive">
+        <p className="mb-2">Failed to load participant codes</p>
+        <p className="text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : 'An error occurred'}
+        </p>
+      </div>
     );
   }
 
@@ -75,15 +64,12 @@ export function CodesTab({ contest }: CodesTabProps) {
   const unusedCount = allCodes.filter((c) => c.status === 'unused').length;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Participant Codes</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {allCodes.length} total &bull; {usedCount} used &bull; {unusedCount}{' '}
-            unused
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {allCodes.length} total &bull; {usedCount} used &bull; {unusedCount}{' '}
+          unused
+        </p>
         <div className="flex gap-2">
           <Select
             value={filter}
@@ -100,17 +86,15 @@ export function CodesTab({ contest }: CodesTabProps) {
           </Select>
           <AddCodeDialog contestId={contest.id} variant="default" />
         </div>
-      </CardHeader>
-      <CardContent>
-        {allCodes.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">No codes yet</p>
-            <AddCodeDialog contestId={contest.id} variant="default" />
-          </div>
-        ) : (
-          <CodeListTable codes={allCodes} />
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      {allCodes.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">No codes yet</p>
+          <AddCodeDialog contestId={contest.id} variant="default" />
+        </div>
+      ) : (
+        <CodeListTable codes={allCodes} />
+      )}
+    </div>
   );
 }

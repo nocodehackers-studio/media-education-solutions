@@ -15,11 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -236,44 +231,29 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
 
   if (divisionsLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Divisions & Categories</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
     );
   }
 
   if (divisionsError) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Divisions & Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-destructive">
-            Failed to load divisions. Please try again.
-          </p>
-        </CardContent>
-      </Card>
+      <p className="text-destructive">
+        Failed to load divisions. Please try again.
+      </p>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div>
-          <CardTitle>Divisions & Categories</CardTitle>
-          <CardDescription>
-            Manage divisions and submission categories
-          </CardDescription>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Manage divisions and submission categories
+        </p>
         <div className="flex items-center gap-2">
           {!canAddCategory && (
             <p className="text-sm text-muted-foreground">
@@ -285,34 +265,32 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
             Add Division
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        {divisions?.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              No divisions found. Create a division to get started.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {divisions?.map((division, index) => (
-              <DivisionSection
-                key={division.id}
-                division={division}
-                contestId={contest.id}
-                canAddCategory={canAddCategory}
-                defaultOpen={index === 0}
-                isOnlyDivision={isOnlyDivision}
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
+      </div>
+      {divisions?.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            No divisions found. Create a division to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {divisions?.map((division, index) => (
+            <DivisionSection
+              key={division.id}
+              division={division}
+              contestId={contest.id}
+              canAddCategory={canAddCategory}
+              defaultOpen={index === 0}
+              isOnlyDivision={isOnlyDivision}
+            />
+          ))}
+        </div>
+      )}
       <CreateDivisionSheet
         contestId={contest.id}
         open={createDivisionOpen}
         onOpenChange={setCreateDivisionOpen}
       />
-    </Card>
+    </div>
   );
 }
