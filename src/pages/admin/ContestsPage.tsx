@@ -76,9 +76,9 @@ export function ContestsPage() {
   }
 
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       {/* Active Contests Section */}
-      <div className="min-h-screen space-y-6">
+      <div className="flex-1 space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -158,7 +158,7 @@ export function ContestsPage() {
 
       {/* Recently Deleted Section */}
       {deletedContests && deletedContests.length > 0 && (
-        <div className="mt-[160px]">
+        <div className="mt-auto pt-[160px]">
           <DeletedContestsList contests={deletedContests} />
         </div>
       )}
