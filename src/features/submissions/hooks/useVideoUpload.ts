@@ -67,6 +67,11 @@ export function useVideoUpload({
 
         if (error || !data?.success) {
           const errorCode = data?.error || error?.message || 'UPLOAD_INIT_FAILED'
+          console.error('[useVideoUpload] create-video-upload failed', {
+            errorCode,
+            edgeFnError: error?.message ?? null,
+            responseData: data,
+          })
           const errorMessage = getErrorMessage(errorCode)
           setUploadState((prev) => ({
             ...prev,
@@ -163,6 +168,10 @@ export function useVideoUpload({
               })
 
             if (finalizeError || !finalizeData?.success) {
+              console.error('[useVideoUpload] finalize-upload failed', {
+                edgeFnError: finalizeError?.message ?? null,
+                responseData: finalizeData,
+              })
               setUploadState((prev) => ({
                 ...prev,
                 status: 'error',

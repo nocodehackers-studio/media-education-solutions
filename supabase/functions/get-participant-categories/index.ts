@@ -206,10 +206,15 @@ Deno.serve(async (req) => {
     }
 
     // Transform to response format
+    // Note: Submissions with status 'uploading' are incomplete (upload failed or in progress).
+    // Treat them as if no submission exists so the participant can retry via "Submit" button.
     const result: CategoryResponse[] =
       categories?.map((cat) => {
         const sub = submissionMap[cat.id]
-        const subStatus = sub?.status as 'uploaded' | 'submitted' | undefined
+        const hasCompletedSubmission = !!sub && sub.status !== 'uploading'
+        const subStatus = hasCompletedSubmission
+          ? (sub.status as 'uploaded' | 'submitted')
+          : undefined
         return {
           id: cat.id,
           name: cat.name,
@@ -217,11 +222,11 @@ Deno.serve(async (req) => {
           deadline: cat.deadline,
           status: cat.status as 'published' | 'closed',
           description: cat.description,
-          hasSubmitted: !!sub,
+          hasSubmitted: hasCompletedSubmission,
           submissionStatus: subStatus ?? null,
-          submissionId: sub?.id ?? null,
+          submissionId: hasCompletedSubmission ? sub.id : null,
           // Story 6-7: Flag categories with no submission when contest is finished
-          ...(contestStatus === 'finished' && !sub ? { noSubmission: true } : {}),
+          ...(contestStatus === 'finished' && !hasCompletedSubmission ? { noSubmission: true } : {}),
         }
       }) || []
 

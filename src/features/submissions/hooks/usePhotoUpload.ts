@@ -103,6 +103,9 @@ export function usePhotoUpload({
             try {
               const response = JSON.parse(xhr.responseText)
               if (response.success) {
+                console.log('[usePhotoUpload] Upload succeeded', {
+                  submissionId: response.submissionId,
+                })
                 setUploadState((prev) => ({
                   ...prev,
                   status: 'complete',
@@ -110,6 +113,10 @@ export function usePhotoUpload({
                 }))
                 onComplete(response.submissionId)
               } else {
+                console.error('[usePhotoUpload] Edge function returned error', {
+                  errorCode: response.error,
+                  status: xhr.status,
+                })
                 const errorMessage = getErrorMessage(response.error)
                 setUploadState((prev) => ({
                   ...prev,
@@ -118,6 +125,10 @@ export function usePhotoUpload({
                 }))
               }
             } catch {
+              console.error('[usePhotoUpload] Failed to parse response', {
+                status: xhr.status,
+                responseText: xhr.responseText?.slice(0, 500),
+              })
               setUploadState((prev) => ({
                 ...prev,
                 status: 'error',
@@ -125,15 +136,22 @@ export function usePhotoUpload({
               }))
             }
           } else {
+            let errorCode = 'UNKNOWN'
             let errorMessage = 'Upload failed. Please try again.'
             try {
               const response = JSON.parse(xhr.responseText)
               if (response.error) {
+                errorCode = response.error
                 errorMessage = getErrorMessage(response.error)
               }
             } catch {
               // Use default error message
             }
+            console.error('[usePhotoUpload] HTTP error from edge function', {
+              status: xhr.status,
+              errorCode,
+              responseText: xhr.responseText?.slice(0, 500),
+            })
             setUploadState((prev) => ({
               ...prev,
               status: 'error',
@@ -143,6 +161,7 @@ export function usePhotoUpload({
         })
 
         xhr.addEventListener('error', () => {
+          console.error('[usePhotoUpload] Network error (XHR onerror)')
           setUploadState((prev) => ({
             ...prev,
             status: 'error',
