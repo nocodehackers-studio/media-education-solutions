@@ -1,10 +1,11 @@
 /**
  * manage-contest-cover Edge Function
  *
- * Handles upload and deletion of contest cover images via Bunny Storage.
+ * Handles upload and deletion of contest cover images and logos via Bunny Storage.
  * Admin-only. Routes by Content-Type:
- *   - multipart/form-data -> UPLOAD (file + contestId)
- *   - application/json    -> DELETE ({ contestId, action: "delete" })
+ *   - multipart/form-data -> UPLOAD (file + contestId + type?)
+ *   - application/json    -> DELETE ({ contestId, action: "delete", type? })
+ * `type` defaults to "cover". Pass "logo" for logo operations.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -113,10 +114,16 @@ Deno.serve(async (req) => {
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
       const contestId = formData.get('contestId') as string | null;
+      const type = (formData.get('type') as string | null) || 'cover';
 
       if (!file || !contestId) {
         throw new EdgeError('MISSING_REQUIRED_FIELDS', 400);
       }
+
+      const isLogo = type === 'logo';
+      const storagePrefix = isLogo ? 'logos' : 'covers';
+      const dbColumn = isLogo ? 'logo_url' : 'cover_image_url';
+      const responseKey = isLogo ? 'logoUrl' : 'coverImageUrl';
 
       // Validate file size (5MB max)
       const MAX_SIZE = 5 * 1024 * 1024;
@@ -133,7 +140,7 @@ Deno.serve(async (req) => {
       // Verify contest exists
       const { data: contest, error: contestError } = await supabaseAdmin
         .from('contests')
-        .select('id, cover_image_url')
+        .select('id, cover_image_url, logo_url')
         .eq('id', contestId)
         .single();
 
@@ -141,11 +148,12 @@ Deno.serve(async (req) => {
         throw new EdgeError('CONTEST_NOT_FOUND', 404);
       }
 
-      // Delete old cover image from Bunny if exists
-      if (contest.cover_image_url) {
+      // Delete old image from Bunny if exists
+      const oldUrl = isLogo ? contest.logo_url : contest.cover_image_url;
+      if (oldUrl) {
         try {
           const cdnPrefix = `https://${BUNNY_STORAGE_ZONE}.b-cdn.net/`;
-          const oldStoragePath = contest.cover_image_url.replace(cdnPrefix, '');
+          const oldStoragePath = oldUrl.replace(cdnPrefix, '');
           const deleteResp = await fetch(
             `https://${BUNNY_STORAGE_HOSTNAME}/${BUNNY_STORAGE_ZONE}/${oldStoragePath}`,
             {
@@ -154,10 +162,10 @@ Deno.serve(async (req) => {
             }
           );
           console.log(
-            `Deleted old cover: path=${oldStoragePath}, status=${deleteResp.status}`
+            `Deleted old ${type}: path=${oldStoragePath}, status=${deleteResp.status}`
           );
         } catch (e) {
-          console.error('Failed to delete old cover:', e);
+          console.error(`Failed to delete old ${type}:`, e);
           // Continue — don't block the new upload
         }
       }
@@ -165,7 +173,7 @@ Deno.serve(async (req) => {
       // Build storage path
       const timestamp = Date.now();
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const storagePath = `covers/${contestId}/${timestamp}_${safeFileName}`;
+      const storagePath = `${storagePrefix}/${contestId}/${timestamp}_${safeFileName}`;
 
       // Upload to Bunny Storage
       const uploadUrl = `https://${BUNNY_STORAGE_HOSTNAME}/${BUNNY_STORAGE_ZONE}/${storagePath}`;
@@ -190,7 +198,7 @@ Deno.serve(async (req) => {
       // Update contest record
       const { error: updateError } = await supabaseAdmin
         .from('contests')
-        .update({ cover_image_url: cdnUrl })
+        .update({ [dbColumn]: cdnUrl })
         .eq('id', contestId);
 
       if (updateError) {
@@ -199,19 +207,20 @@ Deno.serve(async (req) => {
       }
 
       console.log(
-        `[manage-contest-cover] Upload success: contest=${contestId}, path=${storagePath}`
+        `[manage-contest-cover] Upload success: type=${type}, contest=${contestId}, path=${storagePath}`
       );
 
       return new Response(
-        JSON.stringify({ success: true, coverImageUrl: cdnUrl }),
+        JSON.stringify({ success: true, [responseKey]: cdnUrl }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
       // ========== DELETE FLOW ==========
       let contestId: string | undefined;
       let action: string | undefined;
+      let type: string | undefined;
       try {
-        ({ contestId, action } = await req.json());
+        ({ contestId, action, type } = await req.json());
       } catch {
         throw new EdgeError('INVALID_REQUEST_BODY', 400);
       }
@@ -220,10 +229,14 @@ Deno.serve(async (req) => {
         throw new EdgeError('INVALID_REQUEST_BODY', 400);
       }
 
+      type = type || 'cover';
+      const isLogo = type === 'logo';
+      const dbColumn = isLogo ? 'logo_url' : 'cover_image_url';
+
       // Fetch contest
       const { data: contest, error: contestError } = await supabaseAdmin
         .from('contests')
-        .select('id, cover_image_url')
+        .select('id, cover_image_url, logo_url')
         .eq('id', contestId)
         .single();
 
@@ -231,14 +244,15 @@ Deno.serve(async (req) => {
         throw new EdgeError('CONTEST_NOT_FOUND', 404);
       }
 
-      if (!contest.cover_image_url) {
-        throw new EdgeError('NO_COVER_IMAGE', 400);
+      const oldUrl = isLogo ? contest.logo_url : contest.cover_image_url;
+      if (!oldUrl) {
+        throw new EdgeError(isLogo ? 'NO_LOGO' : 'NO_COVER_IMAGE', 400);
       }
 
       // Delete from Bunny Storage
       try {
         const cdnPrefix = `https://${BUNNY_STORAGE_ZONE}.b-cdn.net/`;
-        const oldStoragePath = contest.cover_image_url.replace(cdnPrefix, '');
+        const oldStoragePath = oldUrl.replace(cdnPrefix, '');
         const deleteResp = await fetch(
           `https://${BUNNY_STORAGE_HOSTNAME}/${BUNNY_STORAGE_ZONE}/${oldStoragePath}`,
           {
@@ -247,17 +261,17 @@ Deno.serve(async (req) => {
           }
         );
         console.log(
-          `Deleted cover: path=${oldStoragePath}, status=${deleteResp.status}`
+          `Deleted ${type}: path=${oldStoragePath}, status=${deleteResp.status}`
         );
       } catch (e) {
-        console.error('Failed to delete cover from Bunny:', e);
+        console.error(`Failed to delete ${type} from Bunny:`, e);
         // Continue — still clear DB reference
       }
 
       // Clear DB reference
       const { error: updateError } = await supabaseAdmin
         .from('contests')
-        .update({ cover_image_url: null })
+        .update({ [dbColumn]: null })
         .eq('id', contestId);
 
       if (updateError) {
@@ -266,7 +280,7 @@ Deno.serve(async (req) => {
       }
 
       console.log(
-        `[manage-contest-cover] Delete success: contest=${contestId}`
+        `[manage-contest-cover] Delete success: type=${type}, contest=${contestId}`
       );
 
       return new Response(JSON.stringify({ success: true }), {

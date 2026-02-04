@@ -26,6 +26,7 @@ const mockContest: Contest = {
   contestCode: 'ABC123',
   rules: null,
   coverImageUrl: null,
+  logoUrl: null,
   status: 'published',
   winnersPagePassword: null,
   winnersPageEnabled: false,

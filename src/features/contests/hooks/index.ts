@@ -18,4 +18,4 @@ export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPag
 export { useCategoryApprovalStatus } from './useCategoryApprovalStatus';
 export { useEffectiveWinners } from './useEffectiveWinners';
 export { useContestDetailStats } from './useContestDetailStats';
-export { useUploadCoverImage, useDeleteCoverImage } from './useContestCoverImage';
+export { useUploadCoverImage, useDeleteCoverImage, useUploadLogo, useDeleteLogo } from './useContestCoverImage';

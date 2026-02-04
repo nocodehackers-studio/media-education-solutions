@@ -23,6 +23,7 @@ function transformContestRow(row: ContestRow): Contest {
     contestCode: row.contest_code,
     rules: row.rules,
     coverImageUrl: row.cover_image_url,
+    logoUrl: row.logo_url,
     status: row.status,
     winnersPagePassword: row.winners_page_password,
     winnersPageEnabled: row.winners_page_enabled ?? false,
@@ -86,6 +87,7 @@ export const contestsApi = {
           slug,
           rules: input.rules || null,
           cover_image_url: null,
+          logo_url: null,
           status: 'draft',
         })
         .select()
@@ -590,6 +592,92 @@ export const contestsApi = {
     } catch (err) {
       console.error('[uploadCoverImage] Fetch error', err);
       throw err;
+    }
+  },
+
+  /**
+   * Upload a logo for a contest via the manage-contest-cover edge function.
+   * @param contestId Contest ID
+   * @param file Image file to upload
+   * @returns CDN URL of the uploaded logo
+   */
+  async uploadLogo(contestId: string, file: File): Promise<string> {
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contestId', contestId);
+    formData.append('type', 'logo');
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = `${supabaseUrl}/functions/v1/manage-contest-cover`;
+    const token = refreshData.session.access_token;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: anonKey,
+      },
+      body: formData,
+    });
+
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new Error(`Non-JSON response (${response.status}): ${text.slice(0, 200)}`);
+    }
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || `Upload failed (${response.status})`);
+    }
+
+    return result.logoUrl;
+  },
+
+  /**
+   * Delete the logo for a contest via the manage-contest-cover edge function.
+   * @param contestId Contest ID
+   */
+  async deleteLogo(contestId: string): Promise<void> {
+    const { data: refreshData, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshData.session) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = `${supabaseUrl}/functions/v1/manage-contest-cover`;
+    const token = refreshData.session.access_token;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: anonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ contestId, action: 'delete', type: 'logo' }),
+    });
+
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new Error(`Non-JSON response (${response.status}): ${text.slice(0, 200)}`);
+    }
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || `Delete failed (${response.status})`);
     }
   },
 

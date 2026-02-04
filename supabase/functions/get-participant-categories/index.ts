@@ -43,6 +43,7 @@ interface ContestInfoResponse {
   description: string | null
   rules: string | null
   coverImageUrl: string | null
+  logoUrl: string | null
 }
 
 interface GetCategoriesResponse {
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
     // Story 6-7: Fetch contest status + contest info for participant landing
     const { data: contest, error: contestStatusError } = await supabaseAdmin
       .from('contests')
-      .select('status, name, description, rules, cover_image_url')
+      .select('status, name, description, rules, cover_image_url, logo_url')
       .eq('id', contestId)
       .single()
 
@@ -187,6 +188,7 @@ Deno.serve(async (req) => {
             description: contest.description ?? null,
             rules: contest.rules ?? null,
             coverImageUrl: contest.cover_image_url ?? null,
+            logoUrl: contest.logo_url ?? null,
           } : undefined,
           contestStatus: contestStatus ?? null,
         } satisfies GetCategoriesResponse),

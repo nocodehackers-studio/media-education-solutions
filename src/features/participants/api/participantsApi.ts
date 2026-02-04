@@ -19,6 +19,7 @@ export interface ContestInfo {
   description: string | null
   rules: string | null
   coverImageUrl: string | null
+  logoUrl: string | null
 }
 
 export interface ParticipantDivision {

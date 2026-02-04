@@ -32,3 +32,35 @@ export function useDeleteCoverImage(contestId: string) {
     },
   });
 }
+
+/**
+ * Mutation hook for uploading a contest logo.
+ * Invalidates contest queries on success so UI reflects the new logo.
+ */
+export function useUploadLogo(contestId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => contestsApi.uploadLogo(contestId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contests'] });
+      queryClient.invalidateQueries({ queryKey: ['contest', contestId] });
+    },
+  });
+}
+
+/**
+ * Mutation hook for deleting a contest logo.
+ * Invalidates contest queries on success so UI reflects the removal.
+ */
+export function useDeleteLogo(contestId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => contestsApi.deleteLogo(contestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contests'] });
+      queryClient.invalidateQueries({ queryKey: ['contest', contestId] });
+    },
+  });
+}

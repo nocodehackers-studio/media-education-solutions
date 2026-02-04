@@ -263,11 +263,21 @@ export function ContestDetailPage() {
         </Link>
       </div>
 
-      {/* Cover Image Hero Banner */}
+      {/* Cover Image (no gradient) */}
       {contest.coverImageUrl && (
-        <div className="relative h-48 md:h-64 -mx-6 -mt-2 overflow-hidden rounded-lg">
+        <div className="h-48 md:h-64 -mx-6 -mt-2 overflow-hidden rounded-lg">
           <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        </div>
+      )}
+
+      {/* Logo */}
+      {contest.logoUrl && (
+        <div className={contest.coverImageUrl ? '-mt-10' : ''}>
+          <img
+            src={contest.logoUrl}
+            alt=""
+            className="w-20 h-20 rounded-xl border-4 border-background bg-background object-cover"
+          />
         </div>
       )}
 

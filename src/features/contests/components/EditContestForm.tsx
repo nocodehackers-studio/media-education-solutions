@@ -16,7 +16,7 @@ import {
 } from '@/components/ui';
 import { updateContestSchema, type UpdateContestInput } from '../types/contest.schemas';
 import { useUpdateContest } from '../hooks/useUpdateContest';
-import { useUploadCoverImage, useDeleteCoverImage } from '../hooks/useContestCoverImage';
+import { useUploadCoverImage, useDeleteCoverImage, useUploadLogo, useDeleteLogo } from '../hooks/useContestCoverImage';
 import type { Contest } from '../types/contest.types';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -36,7 +36,10 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
   const updateContest = useUpdateContest(contest.id);
   const uploadCover = useUploadCoverImage(contest.id);
   const deleteCover = useDeleteCoverImage(contest.id);
+  const uploadLogo = useUploadLogo(contest.id);
+  const deleteLogo = useDeleteLogo(contest.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<UpdateContestInput>({
     resolver: zodResolver(updateContestSchema),
@@ -95,7 +98,42 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
     }
   };
 
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (logoInputRef.current) {
+      logoInputRef.current.value = '';
+    }
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Invalid file type. Please use JPG, PNG, WebP, or GIF.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    try {
+      await uploadLogo.mutateAsync(file);
+      toast.success('Logo uploaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo');
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    try {
+      await deleteLogo.mutateAsync();
+      toast.success('Logo removed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove logo');
+    }
+  };
+
   const isCoverLoading = uploadCover.isPending || deleteCover.isPending;
+  const isLogoLoading = uploadLogo.isPending || deleteLogo.isPending;
 
   return (
     <Form {...form}>
@@ -162,6 +200,69 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
             accept="image/jpeg,image/png,image/webp,image/gif"
             className="hidden"
             onChange={handleFileSelect}
+          />
+        </div>
+
+        {/* Logo Section */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Logo</label>
+          {contest.logoUrl ? (
+            <div className="flex items-center gap-3">
+              <div className="relative w-20 h-20 rounded-xl overflow-hidden border shrink-0">
+                <img
+                  src={contest.logoUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                {isLogoLoading && (
+                  <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isLogoLoading}
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Replace
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={isLogoLoading}
+                  onClick={handleRemoveLogo}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={isLogoLoading}
+              onClick={() => logoInputRef.current?.click()}
+              className="w-20 h-20 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLogoLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+              ) : (
+                <Upload className="h-5 w-5" />
+              )}
+            </button>
+          )}
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleLogoSelect}
           />
         </div>
 

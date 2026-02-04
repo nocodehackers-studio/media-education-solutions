@@ -38,6 +38,7 @@ const baseContest: Contest = {
   contestCode: 'ABC123',
   rules: null,
   coverImageUrl: null,
+  logoUrl: null,
   status: 'reviewed',
   winnersPagePassword: null,
   winnersPageEnabled: false,

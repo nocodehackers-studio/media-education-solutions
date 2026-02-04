@@ -38,7 +38,12 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
       )}
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
+          <div className="flex items-center gap-2 min-w-0">
+            {contest.logoUrl && (
+              <img src={contest.logoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+            )}
+            <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
+          </div>
           <Badge className={status.className} variant="secondary">
             {status.label}
           </Badge>

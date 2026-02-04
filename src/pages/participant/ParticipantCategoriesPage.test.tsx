@@ -91,6 +91,7 @@ const baseContest: ContestInfo = {
   description: 'A great contest for media students',
   rules: 'All entries must be original.',
   coverImageUrl: null,
+  logoUrl: null,
 }
 
 describe('ParticipantCategoriesPage', () => {
