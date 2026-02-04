@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { Badge, Button, Card, CardContent } from '@/components/ui'
 import {
-  ParticipantUserMenu,
   useParticipantCategories,
   type ParticipantCategory,
 } from '@/features/participants'
@@ -41,20 +40,15 @@ export function ParticipantSubmissionsPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/participant/categories')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">My Submissions</h1>
-          <div className="ml-auto">
-            <ParticipantUserMenu />
-          </div>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/participant/categories')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">My Submissions</h1>
 
         {submissions.length === 0 ? (
           <Card>
