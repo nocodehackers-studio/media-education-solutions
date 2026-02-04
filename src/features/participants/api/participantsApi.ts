@@ -13,6 +13,13 @@ export interface ParticipantCategory {
   noSubmission?: boolean
 }
 
+export interface ParticipantDivision {
+  id: string
+  name: string
+  displayOrder: number
+  categories: ParticipantCategory[]
+}
+
 interface GetCategoriesParams {
   participantId: string
   participantCode: string
@@ -22,12 +29,14 @@ interface GetCategoriesParams {
 interface GetCategoriesResponse {
   success: boolean
   categories?: ParticipantCategory[]
+  divisions?: ParticipantDivision[]
   contestStatus?: string
   error?: string
 }
 
 export interface ParticipantCategoriesResult {
   categories: ParticipantCategory[]
+  divisions: ParticipantDivision[]
   contestStatus: string | null
 }
 
@@ -50,8 +59,19 @@ export const participantsApi = {
       throw new Error(data?.error || error?.message || 'Failed to fetch categories')
     }
 
+    const categories = data.categories || []
+
+    // Parse divisions from response, falling back to wrapping flat categories
+    // in a single unnamed division for backward compat
+    const divisions: ParticipantDivision[] = data.divisions?.length
+      ? data.divisions
+      : categories.length > 0
+        ? [{ id: 'default', name: 'Categories', displayOrder: 0, categories }]
+        : []
+
     return {
-      categories: data.categories || [],
+      categories,
+      divisions,
       contestStatus: data.contestStatus ?? null,
     }
   },

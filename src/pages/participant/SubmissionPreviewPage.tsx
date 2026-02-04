@@ -1,32 +1,23 @@
 // Story 4-6/4-7: Submission preview page
 // Shows uploaded media, allows confirm, replace, or withdraw
-// Story 4-7: Added Replace/Withdraw for submitted status, deadline lock state
-// Story 6-7: Added feedback section when contest is finished
+// WS6: Added submission details card, integrated EditSubmissionInfoSheet
 
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Lock } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Lock, Pencil, User, Mail, Users } from 'lucide-react'
 import {
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui'
 import {
   SubmissionPreview,
   SubmissionPreviewSkeleton,
+  EditSubmissionInfoSheet,
   useSubmissionPreview,
   useConfirmSubmission,
-  useWithdrawSubmission,
 } from '@/features/submissions'
 import { ParticipantFeedbackSection } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
@@ -35,6 +26,7 @@ export function SubmissionPreviewPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const navigate = useNavigate()
   const { session } = useParticipantSession()
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
 
   const { data, isLoading, error } = useSubmissionPreview({
     submissionId,
@@ -43,7 +35,6 @@ export function SubmissionPreviewPage() {
   })
 
   const confirmMutation = useConfirmSubmission()
-  const withdrawMutation = useWithdrawSubmission()
 
   const handleConfirm = () => {
     if (!submissionId || !session) return
@@ -58,15 +49,6 @@ export function SubmissionPreviewPage() {
     if (data?.submission.categoryId) {
       navigate(`/participant/submit/${data.submission.categoryId}`)
     }
-  }
-
-  const handleWithdraw = () => {
-    if (!submissionId || !session || withdrawMutation.isPending) return
-    withdrawMutation.mutate({
-      submissionId,
-      participantId: session.participantId,
-      participantCode: session.code,
-    })
   }
 
   const handleBack = () => {
@@ -144,6 +126,67 @@ export function SubmissionPreviewPage() {
           </CardContent>
         </Card>
 
+        {/* Submission Details Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Submission Details</CardTitle>
+              {!contestFinished && !isLocked && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditSheetOpen(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-start gap-3">
+              <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="text-sm font-medium">{submission.studentName || 'Not provided'}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-sm text-muted-foreground">Teacher/Leader/Coach</p>
+                <p className="text-sm font-medium">{submission.tlcName || 'Not provided'}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Mail className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-sm text-muted-foreground">TLC Email</p>
+                <p className="text-sm font-medium">{submission.tlcEmail || 'Not provided'}</p>
+              </div>
+            </div>
+            {submission.groupMemberNames && (
+              <div className="flex items-start gap-3">
+                <Users className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Group Members</p>
+                  <p className="text-sm font-medium">{submission.groupMemberNames}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2 pt-1">
+              {isConfirmed ? (
+                <div className="flex items-center gap-1.5 text-green-600 text-sm font-medium">
+                  <CheckCircle className="h-4 w-4" />
+                  Submitted
+                </div>
+              ) : canConfirm ? (
+                <span className="text-sm text-amber-600 font-medium">Pending confirmation</span>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Story 6-7: Feedback section when contest is finished */}
         {contestFinished && (
           <>
@@ -186,14 +229,6 @@ export function SubmissionPreviewPage() {
               </Button>
             )}
 
-            {/* Submitted badge */}
-            {isConfirmed && (
-              <div className="flex items-center gap-2 text-green-600 font-medium">
-                <CheckCircle className="h-5 w-5" />
-                Submitted
-              </div>
-            )}
-
             {/* Replace button (uploaded or submitted, not locked) */}
             {(canConfirm || isConfirmed) && (
               <Button variant="outline" onClick={handleReplace}>
@@ -201,35 +236,29 @@ export function SubmissionPreviewPage() {
               </Button>
             )}
 
-            {/* Withdraw button with confirmation dialog */}
+            {/* Edit Details button */}
             {(canConfirm || isConfirmed) && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Withdraw</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Withdraw submission?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will remove your submission. You can submit again before the deadline.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleWithdraw}
-                      disabled={withdrawMutation.isPending}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      {withdrawMutation.isPending ? 'Withdrawing...' : 'Withdraw'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button variant="outline" onClick={() => setEditSheetOpen(true)}>
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit Details
+              </Button>
             )}
           </div>
         )}
       </div>
+
+      {/* Edit Submission Info Sheet (includes withdraw in danger zone) */}
+      {submissionId && session && (
+        <EditSubmissionInfoSheet
+          open={editSheetOpen}
+          onOpenChange={setEditSheetOpen}
+          submission={submission}
+          participantId={session.participantId}
+          participantCode={session.code}
+          submissionId={submissionId}
+          isLocked={isLocked}
+        />
+      )}
     </div>
   )
 }

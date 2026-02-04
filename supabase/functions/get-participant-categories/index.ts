@@ -30,9 +30,17 @@ interface CategoryResponse {
   noSubmission?: boolean
 }
 
+interface DivisionResponse {
+  id: string
+  name: string
+  displayOrder: number
+  categories: CategoryResponse[]
+}
+
 interface GetCategoriesResponse {
   success: boolean
   categories?: CategoryResponse[]
+  divisions?: DivisionResponse[]
   contestStatus?: string
   submissionsAvailable?: boolean  // F5: Flag if submissions table was accessible
   error?: string
@@ -145,11 +153,12 @@ Deno.serve(async (req) => {
 
     const contestStatus = contest?.status as string | undefined
 
-    // Fetch divisions for this contest
+    // Fetch divisions for this contest (include name and display_order for grouping)
     const { data: divisions, error: divisionsError } = await supabaseAdmin
       .from('divisions')
-      .select('id')
+      .select('id, name, display_order')
       .eq('contest_id', contestId)
+      .order('display_order', { ascending: true })
 
     if (divisionsError) {
       throw divisionsError
@@ -163,6 +172,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: true,
           categories: [],
+          divisions: [],
           contestStatus: contestStatus ?? null,
         } satisfies GetCategoriesResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -230,14 +240,33 @@ Deno.serve(async (req) => {
         }
       }) || []
 
+    // Group categories by division, ordered by division display_order
+    const divisionMap = new Map<string, CategoryResponse[]>()
+    for (const cat of result) {
+      const rawCat = categories?.find((c) => c.id === cat.id)
+      const divId = rawCat?.division_id as string
+      if (!divisionMap.has(divId)) {
+        divisionMap.set(divId, [])
+      }
+      divisionMap.get(divId)!.push(cat)
+    }
+
+    const divisionsResponse: DivisionResponse[] = (divisions ?? []).map((div) => ({
+      id: div.id,
+      name: div.name,
+      displayOrder: div.display_order,
+      categories: divisionMap.get(div.id) || [],
+    })).filter((d) => d.categories.length > 0)
+
     console.log(
-      `Fetched ${result.length} categories for participant ${participantId}`
+      `Fetched ${result.length} categories in ${divisionsResponse.length} divisions for participant ${participantId}`
     )
 
     return new Response(
       JSON.stringify({
         success: true,
         categories: result,
+        divisions: divisionsResponse,
         contestStatus: contestStatus ?? null,
         submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
       } satisfies GetCategoriesResponse),

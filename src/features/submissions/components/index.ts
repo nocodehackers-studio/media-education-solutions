@@ -5,6 +5,7 @@ export { PhotoUploadForm } from './PhotoUploadForm'
 export { SubmissionInfoFields } from './SubmissionInfoFields'
 export { SubmissionPreview, SubmissionPreviewSkeleton } from './SubmissionPreview'
 export { PhotoLightbox } from './PhotoLightbox'
+export { EditSubmissionInfoSheet } from './EditSubmissionInfoSheet'
 
 // Story 6-1/6-2/6-3: Admin submission components
 export { AdminSubmissionFilters } from './AdminSubmissionFilters'

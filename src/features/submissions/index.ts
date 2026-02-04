@@ -18,6 +18,7 @@ export {
   AdminCategoryRankings,
   DisqualifyConfirmDialog,
   RestoreConfirmDialog,
+  EditSubmissionInfoSheet,
 } from './components'
 
 // === Hooks ===
@@ -32,6 +33,7 @@ export {
   useOverrideRankings,
   useDisqualifySubmission,
   useRestoreSubmission,
+  useUpdateSubmissionInfo,
 } from './hooks'
 
 // === Types ===

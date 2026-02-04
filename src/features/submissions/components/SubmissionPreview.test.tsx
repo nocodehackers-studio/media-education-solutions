@@ -30,6 +30,10 @@ describe('SubmissionPreview', () => {
     isLocked: false,
     contestStatus: null,
     review: null,
+    studentName: null,
+    tlcName: null,
+    tlcEmail: null,
+    groupMemberNames: null,
   }
 
   const photoSubmission: SubmissionPreviewData = {

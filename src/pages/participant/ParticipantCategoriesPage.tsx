@@ -1,23 +1,95 @@
 // Story 4-3: Participant categories page with submission status
 // Story 6-7: Added finished contest behavior with feedback banner and disabled categories
+// WS5: Division grouping with collapsible sections
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, RefreshCw, Info } from 'lucide-react';
+import { LogOut, RefreshCw, Info, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 import {
+  Badge,
   Button,
   Card,
   CardContent,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Skeleton,
 } from '@/components/ui';
 import {
   ParticipantCategoryCard,
   SessionTimeoutWarning,
   useParticipantCategories,
+  type ParticipantDivision,
 } from '@/features/participants';
 import { useParticipantSession } from '@/contexts';
+
+interface DivisionSectionProps {
+  division: ParticipantDivision;
+  contestFinished: boolean;
+  collapsible: boolean;
+}
+
+function DivisionSection({ division, contestFinished, collapsible }: DivisionSectionProps) {
+  const [isOpen, setIsOpen] = useState(true);
+
+  if (!collapsible) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 pl-1">
+          <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{division.name}</span>
+          <Badge variant="secondary" className="text-xs">
+            {division.categories.length}
+          </Badge>
+        </div>
+        <div className="space-y-3 border-l-2 border-muted pl-4">
+          {division.categories.map((category) => (
+            <ParticipantCategoryCard
+              key={category.id}
+              category={category}
+              contestFinished={contestFinished}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-2 w-full text-left p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+        >
+          {isOpen ? (
+            <ChevronDown className="h-4 w-4 shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          )}
+          <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="font-medium">{division.name}</span>
+          <Badge variant="secondary" className="text-xs">
+            {division.categories.length}
+          </Badge>
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 border-l-2 border-muted pl-4">
+        {division.categories.map((category) => (
+          <ParticipantCategoryCard
+            key={category.id}
+            category={category}
+            contestFinished={contestFinished}
+          />
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 /**
  * Participant categories page - displays available categories for submission.
  * Shows category cards with deadline countdowns and submission status.
+ * Categories are grouped by division with collapsible sections.
  */
 export function ParticipantCategoriesPage() {
   const navigate = useNavigate();
@@ -34,8 +106,9 @@ export function ParticipantCategoriesPage() {
     participantCode: session?.code || '',
   });
 
-  const categories = data?.categories;
+  const divisions = data?.divisions;
   const contestFinished = data?.contestStatus === 'finished';
+  const hasMultipleDivisions = (divisions?.length ?? 0) > 1;
 
   const handleLogout = () => {
     endSession();
@@ -109,13 +182,13 @@ export function ParticipantCategoriesPage() {
           </div>
         )}
 
-        {/* Categories List */}
+        {/* Categories List — grouped by division */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
             {contestFinished ? 'Your Submissions' : 'Available Categories'}
           </h2>
 
-          {categories?.length === 0 ? (
+          {!divisions || divisions.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
@@ -126,13 +199,16 @@ export function ParticipantCategoriesPage() {
               </CardContent>
             </Card>
           ) : (
-            categories?.map((category) => (
-              <ParticipantCategoryCard
-                key={category.id}
-                category={category}
-                contestFinished={contestFinished}
-              />
-            ))
+            <div className="space-y-6">
+              {divisions.map((division) => (
+                <DivisionSection
+                  key={division.id}
+                  division={division}
+                  contestFinished={contestFinished}
+                  collapsible={hasMultipleDivisions}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>

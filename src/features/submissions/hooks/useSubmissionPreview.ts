@@ -21,6 +21,10 @@ export interface SubmissionPreviewData {
   isLocked: boolean
   contestStatus: string | null
   review: ParticipantFeedback | null
+  studentName: string | null
+  tlcName: string | null
+  tlcEmail: string | null
+  groupMemberNames: string | null
 }
 
 interface GetSubmissionResponse {
