@@ -1,6 +1,7 @@
 /**
  * ParticipantCategoryCard Unit Tests
  * Tests category display states: published, closed, submitted
+ * Redesigned: Cards are fully clickable, navigate to category detail page
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -25,15 +26,16 @@ const baseCategory: ParticipantCategory = {
   deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   status: 'published',
   description: 'Submit your best documentary',
+  rules: null,
   hasSubmitted: false,
   submissionStatus: null,
   submissionId: null,
 }
 
-function renderCard(category: ParticipantCategory) {
+function renderCard(category: ParticipantCategory, contestFinished?: boolean) {
   return render(
     <BrowserRouter>
-      <ParticipantCategoryCard category={category} />
+      <ParticipantCategoryCard category={category} contestFinished={contestFinished} />
     </BrowserRouter>
   )
 }
@@ -54,49 +56,40 @@ describe('ParticipantCategoryCard', () => {
       expect(screen.getByText('Submit your best documentary')).toBeInTheDocument()
     })
 
-    it('displays video badge for video type', () => {
-      renderCard(baseCategory)
-      expect(screen.getByText('Video')).toBeInTheDocument()
-    })
-
-    it('displays photo badge for photo type', () => {
-      renderCard({ ...baseCategory, type: 'photo' })
-      expect(screen.getByText('Photo')).toBeInTheDocument()
+    it('renders without description', () => {
+      renderCard({ ...baseCategory, description: null })
+      expect(screen.getByText('Best Documentary')).toBeInTheDocument()
+      expect(screen.queryByText('Submit your best documentary')).not.toBeInTheDocument()
     })
   })
 
-  describe('published category (AC2)', () => {
-    it('shows Submit button for published category without submission', () => {
-      renderCard(baseCategory)
-      expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
-    })
-
+  describe('published category', () => {
     it('shows countdown timer', () => {
       renderCard(baseCategory)
       expect(screen.getByText(/due/i)).toBeInTheDocument()
     })
 
-    it('navigates to submit page on Submit click', async () => {
+    it('navigates to category detail on click', async () => {
       const user = userEvent.setup()
       renderCard(baseCategory)
 
-      await user.click(screen.getByRole('button', { name: /submit/i }))
+      await user.click(screen.getByText('Best Documentary'))
 
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/submit/cat-123')
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
+        state: { category: baseCategory, contestFinished: undefined },
+      })
     })
   })
 
-  describe('closed category (AC4)', () => {
+  describe('closed category', () => {
     const closedCategory: ParticipantCategory = {
       ...baseCategory,
       status: 'closed',
     }
 
-    it('shows Closed button (disabled)', () => {
+    it('shows Closed badge', () => {
       renderCard(closedCategory)
-      const button = screen.getByRole('button', { name: /closed/i })
-      expect(button).toBeInTheDocument()
-      expect(button).toBeDisabled()
+      expect(screen.getByText('Closed')).toBeInTheDocument()
     })
 
     it('shows "Submissions closed" text', () => {
@@ -111,7 +104,7 @@ describe('ParticipantCategoryCard', () => {
     })
   })
 
-  describe('submitted category (AC5)', () => {
+  describe('submitted category', () => {
     const submittedCategory: ParticipantCategory = {
       ...baseCategory,
       hasSubmitted: true,
@@ -121,22 +114,18 @@ describe('ParticipantCategoryCard', () => {
 
     it('shows Submitted badge', () => {
       renderCard(submittedCategory)
-      expect(screen.getByText(/submitted/i)).toBeInTheDocument()
+      expect(screen.getByText('Submitted')).toBeInTheDocument()
     })
 
-    it('shows View/Edit button instead of Submit', () => {
-      renderCard(submittedCategory)
-      expect(screen.queryByRole('button', { name: /^submit$/i })).not.toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /view\/edit/i })).toBeInTheDocument()
-    })
-
-    it('navigates to preview page on View/Edit click', async () => {
+    it('navigates to category detail on click', async () => {
       const user = userEvent.setup()
       renderCard(submittedCategory)
 
-      await user.click(screen.getByRole('button', { name: /view\/edit/i }))
+      await user.click(screen.getByText('Best Documentary'))
 
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-456')
+      expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
+        state: { category: submittedCategory, contestFinished: undefined },
+      })
     })
   })
 
@@ -150,54 +139,25 @@ describe('ParticipantCategoryCard', () => {
 
     it('shows Pending badge', () => {
       renderCard(uploadedCategory)
-      expect(screen.getByText(/pending/i)).toBeInTheDocument()
-    })
-
-    it('navigates to preview page on View/Edit click', async () => {
-      const user = userEvent.setup()
-      renderCard(uploadedCategory)
-
-      await user.click(screen.getByRole('button', { name: /view\/edit/i }))
-
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-789')
+      expect(screen.getByText('Pending')).toBeInTheDocument()
     })
   })
 
-  describe('closed + submitted category', () => {
-    const closedSubmittedCategory: ParticipantCategory = {
+  describe('finished contest with no submission', () => {
+    const noSubmission: ParticipantCategory = {
       ...baseCategory,
-      status: 'closed',
-      hasSubmitted: true,
-      submissionStatus: 'submitted',
-      submissionId: 'sub-456',
+      noSubmission: true,
     }
 
-    it('shows View button (not View/Edit) when closed but has submission', () => {
-      renderCard(closedSubmittedCategory)
-      expect(screen.getByRole('button', { name: /^view$/i })).toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /view\/edit/i })).not.toBeInTheDocument()
+    it('shows No submission badge', () => {
+      renderCard(noSubmission, true)
+      expect(screen.getByText('No submission')).toBeInTheDocument()
     })
 
-    it('still shows Submitted badge', () => {
-      renderCard(closedSubmittedCategory)
-      expect(screen.getByText(/submitted/i)).toBeInTheDocument()
-    })
-
-    it('navigates to preview page on View click', async () => {
-      const user = userEvent.setup()
-      renderCard(closedSubmittedCategory)
-
-      await user.click(screen.getByRole('button', { name: /^view$/i }))
-
-      expect(mockNavigate).toHaveBeenCalledWith('/participant/preview/sub-456')
-    })
-  })
-
-  describe('without description', () => {
-    it('renders without description', () => {
-      renderCard({ ...baseCategory, description: null })
-      expect(screen.getByText('Best Documentary')).toBeInTheDocument()
-      expect(screen.queryByText('Submit your best documentary')).not.toBeInTheDocument()
+    it('has disabled styling', () => {
+      const { container } = renderCard(noSubmission, true)
+      const card = container.querySelector('[class*="pointer-events-none"]')
+      expect(card).toBeInTheDocument()
     })
   })
 })

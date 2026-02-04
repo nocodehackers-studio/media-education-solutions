@@ -81,6 +81,11 @@ const SubmissionPreviewPage = lazy(() =>
     default: m.SubmissionPreviewPage,
   }))
 )
+const CategoryDetailPage = lazy(() =>
+  import('@/pages/participant/CategoryDetailPage').then((m) => ({
+    default: m.CategoryDetailPage,
+  }))
+)
 
 /**
  * F3 fix: Two fallback variants for different route contexts.
@@ -300,6 +305,16 @@ const router = createBrowserRouter([
       <ParticipantRoute>
         <PageLazyRoute>
           <ParticipantCategoriesPage />
+        </PageLazyRoute>
+      </ParticipantRoute>
+    ),
+  },
+  {
+    path: '/participant/category/:categoryId',
+    element: (
+      <ParticipantRoute>
+        <PageLazyRoute>
+          <CategoryDetailPage />
         </PageLazyRoute>
       </ParticipantRoute>
     ),

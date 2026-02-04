@@ -1,9 +1,13 @@
-// Story 4-3: Participant categories page with submission status
-// Story 6-7: Added finished contest behavior with feedback banner and disabled categories
-// WS5: Division grouping with collapsible sections
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, RefreshCw, Info, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  LogOut,
+  RefreshCw,
+  Info,
+  ChevronRight,
+  ChevronDown,
+  ArrowLeft,
+} from 'lucide-react'
 import {
   Badge,
   Button,
@@ -13,87 +17,26 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
   Skeleton,
-} from '@/components/ui';
+} from '@/components/ui'
 import {
   ParticipantCategoryCard,
   SessionTimeoutWarning,
   useParticipantCategories,
   type ParticipantDivision,
-} from '@/features/participants';
-import { useParticipantSession } from '@/contexts';
-
-interface DivisionSectionProps {
-  division: ParticipantDivision;
-  contestFinished: boolean;
-  collapsible: boolean;
-}
-
-function DivisionSection({ division, contestFinished, collapsible }: DivisionSectionProps) {
-  const [isOpen, setIsOpen] = useState(true);
-
-  if (!collapsible) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 pl-1">
-          <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{division.name}</span>
-          <Badge variant="secondary" className="text-xs">
-            {division.categories.length}
-          </Badge>
-        </div>
-        <div className="space-y-3 border-l-2 border-muted pl-4">
-          {division.categories.map((category) => (
-            <ParticipantCategoryCard
-              key={category.id}
-              category={category}
-              contestFinished={contestFinished}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-2 w-full text-left p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-        >
-          {isOpen ? (
-            <ChevronDown className="h-4 w-4 shrink-0" />
-          ) : (
-            <ChevronRight className="h-4 w-4 shrink-0" />
-          )}
-          <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium">{division.name}</span>
-          <Badge variant="secondary" className="text-xs">
-            {division.categories.length}
-          </Badge>
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-3 border-l-2 border-muted pl-4">
-        {division.categories.map((category) => (
-          <ParticipantCategoryCard
-            key={category.id}
-            category={category}
-            contestFinished={contestFinished}
-          />
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
+  type ContestInfo,
+} from '@/features/participants'
+import { useParticipantSession } from '@/contexts'
 
 /**
- * Participant categories page - displays available categories for submission.
- * Shows category cards with deadline countdowns and submission status.
- * Categories are grouped by division with collapsible sections.
+ * Participant categories page — redesigned as a two-step flow.
+ * Step 1: Contest landing with hero image, description, rules, and division selection.
+ * Step 2: Category list for the selected division.
  */
 export function ParticipantCategoriesPage() {
-  const navigate = useNavigate();
-  const { session, showWarning, endSession, extendSession } = useParticipantSession();
+  const navigate = useNavigate()
+  const { session, showWarning, endSession, extendSession } = useParticipantSession()
+  const [selectedDivision, setSelectedDivision] = useState<ParticipantDivision | null>(null)
+  const [rulesOpen, setRulesOpen] = useState(false)
 
   const {
     data,
@@ -104,39 +47,46 @@ export function ParticipantCategoriesPage() {
     contestId: session?.contestId || '',
     participantId: session?.participantId || '',
     participantCode: session?.code || '',
-  });
+  })
 
-  const divisions = data?.divisions;
-  const contestFinished = data?.contestStatus === 'finished';
-  const hasMultipleDivisions = (divisions?.length ?? 0) > 1;
+  const divisions = data?.divisions
+  const contest = data?.contest
+  const contestFinished = data?.contestStatus === 'finished'
+
+  // Auto-select when there's only one division
+  useEffect(() => {
+    if (divisions && divisions.length === 1 && !selectedDivision) {
+      setSelectedDivision(divisions[0])
+    }
+  }, [divisions, selectedDivision])
 
   const handleLogout = () => {
-    endSession();
-    navigate('/enter', { replace: true });
-  };
-
-  // F11: Handle null session (ParticipantRoute should redirect, but guard anyway)
-  if (!session) {
-    return null;
+    endSession()
+    navigate('/enter', { replace: true })
   }
 
-  // Loading state
+  if (!session) {
+    return null
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-4 sm:p-6">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 w-full" />
+      <div className="min-h-screen bg-background">
+        <Skeleton className="h-48 w-full" />
+        <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-6 -mt-12">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
         </div>
       </div>
-    );
+    )
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -152,43 +102,140 @@ export function ParticipantCategoriesPage() {
           </Card>
         </div>
       </div>
-    );
+    )
   }
 
+  const contestName = contest?.name || session?.contestName || 'Contest'
+
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">
-              {session?.contestName || 'Contest'}
-            </h1>
-            <p className="text-muted-foreground">
-              Welcome, Participant
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
+    <div className="min-h-screen bg-background">
+      {selectedDivision === null ? (
+        <div key="step1" className="animate-in fade-in duration-200">
+          <Step1ContestLanding
+            contest={contest}
+            contestName={contestName}
+            contestFinished={contestFinished}
+            divisions={divisions || []}
+            rulesOpen={rulesOpen}
+            onRulesOpenChange={setRulesOpen}
+            onSelectDivision={setSelectedDivision}
+            onLogout={handleLogout}
+          />
+        </div>
+      ) : (
+        <div key="step2" className="animate-in fade-in slide-in-from-right-4 duration-200">
+          <Step2CategoryList
+            division={selectedDivision}
+            contestFinished={contestFinished}
+            onBack={() => setSelectedDivision(null)}
+          />
+        </div>
+      )}
+
+      <SessionTimeoutWarning
+        open={showWarning}
+        onExtend={extendSession}
+        onLogout={handleLogout}
+      />
+    </div>
+  )
+}
+
+// ── Step 1: Contest Landing + Division Selection ──
+
+interface Step1Props {
+  contest: ContestInfo | null | undefined
+  contestName: string
+  contestFinished: boolean
+  divisions: ParticipantDivision[]
+  rulesOpen: boolean
+  onRulesOpenChange: (open: boolean) => void
+  onSelectDivision: (d: ParticipantDivision) => void
+  onLogout: () => void
+}
+
+function Step1ContestLanding({
+  contest,
+  contestName,
+  contestFinished,
+  divisions,
+  rulesOpen,
+  onRulesOpenChange,
+  onSelectDivision,
+  onLogout,
+}: Step1Props) {
+  return (
+    <>
+      {/* Hero image */}
+      {contest?.coverImageUrl && (
+        <div className="relative h-48 sm:h-64 overflow-hidden">
+          <img
+            src={contest.coverImageUrl}
+            alt={contestName}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
+        </div>
+      )}
+
+      <div
+        className={
+          contest?.coverImageUrl
+            ? 'relative z-10 -mt-12 max-w-2xl mx-auto px-4 sm:px-6 pb-8'
+            : 'max-w-2xl mx-auto p-4 sm:p-6'
+        }
+      >
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold">{contestName}</h1>
+          <Button variant="outline" size="sm" onClick={onLogout} className="shrink-0 mt-1">
             <LogOut className="h-4 w-4 mr-2" />
             Exit
           </Button>
         </div>
 
-        {/* Story 6-7: Finished contest banner */}
+        {/* Contest description */}
+        {contest?.description && (
+          <p className="text-muted-foreground mb-4">{contest.description}</p>
+        )}
+
+        {/* Contest rules (collapsible) */}
+        {contest?.rules && (
+          <Collapsible open={rulesOpen} onOpenChange={onRulesOpenChange} className="mb-6">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {rulesOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                Contest Rules
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 text-sm text-muted-foreground whitespace-pre-line pl-6">
+              {contest.rules}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Finished contest banner */}
         {contestFinished && (
-          <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
+          <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg mb-6">
             <Info className="h-5 w-5 flex-shrink-0" />
             <p>This contest has ended. View your feedback below.</p>
           </div>
         )}
 
-        {/* Categories List — grouped by division */}
+        {/* Division selection */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
-            {contestFinished ? 'Your Submissions' : 'Available Categories'}
+            {contestFinished ? 'Your Submissions' : 'Choose Your Division'}
           </h2>
 
-          {!divisions || divisions.length === 0 ? (
+          {divisions.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
@@ -199,26 +246,74 @@ export function ParticipantCategoriesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {divisions.map((division) => (
-                <DivisionSection
+                <Card
                   key={division.id}
-                  division={division}
-                  contestFinished={contestFinished}
-                  collapsible={hasMultipleDivisions}
-                />
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => onSelectDivision(division)}
+                >
+                  <CardContent className="py-4 px-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">{division.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {division.categories.length}{' '}
+                        {division.categories.length === 1 ? 'category' : 'categories'}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
         </div>
       </div>
+    </>
+  )
+}
 
-      {/* Session timeout warning */}
-      <SessionTimeoutWarning
-        open={showWarning}
-        onExtend={extendSession}
-        onLogout={handleLogout}
-      />
+// ── Step 2: Categories for Selected Division ──
+
+interface Step2Props {
+  division: ParticipantDivision
+  contestFinished: boolean
+  onBack: () => void
+}
+
+function Step2CategoryList({ division, contestFinished, onBack }: Step2Props) {
+  return (
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
+      {/* Header with back */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">{division.name}</h1>
+        <Badge variant="secondary" className="text-xs">
+          {division.categories.length}
+        </Badge>
+      </div>
+
+      {/* Finished contest banner */}
+      {contestFinished && (
+        <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
+          <Info className="h-5 w-5 flex-shrink-0" />
+          <p>This contest has ended. View your feedback below.</p>
+        </div>
+      )}
+
+      {/* Category cards */}
+      <div className="space-y-3">
+        {division.categories.map((category) => (
+          <ParticipantCategoryCard
+            key={category.id}
+            category={category}
+            contestFinished={contestFinished}
+          />
+        ))}
+      </div>
     </div>
-  );
+  )
 }

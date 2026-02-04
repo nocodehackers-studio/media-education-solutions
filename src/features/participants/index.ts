@@ -8,7 +8,7 @@ export { SessionTimeoutWarning } from './components/SessionTimeoutWarning'
 export { DeadlineCountdown } from './components/DeadlineCountdown'
 export { ParticipantCategoryCard } from './components/ParticipantCategoryCard'
 export { ParticipantFeedbackSection } from './components/ParticipantFeedbackSection'
-export type { ParticipantCategory, ParticipantDivision } from './api/participantsApi'
+export type { ParticipantCategory, ParticipantDivision, ContestInfo } from './api/participantsApi'
 
 // === Hooks ===
 // useParticipantSession is exported from @/contexts (not here)

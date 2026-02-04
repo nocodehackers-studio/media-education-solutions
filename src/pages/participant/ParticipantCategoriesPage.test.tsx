@@ -1,13 +1,14 @@
 /**
  * ParticipantCategoriesPage Unit Tests
  * Tests loading, error, empty, and success states
+ * Redesigned: Two-step flow with contest landing and division selection
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { ParticipantCategoriesPage } from './ParticipantCategoriesPage'
-import { type ParticipantCategory } from '@/features/participants'
+import { type ParticipantCategory, type ParticipantDivision, type ContestInfo } from '@/features/participants'
 
 // Mock useNavigate
 const mockNavigate = vi.fn()
@@ -29,10 +30,8 @@ const mockSession = {
   contestCode: 'CNT001',
   contestName: 'Best Media Contest',
   lastActivity: Date.now(),
-  name: 'John Doe',
 }
 
-// F11: Make session configurable for null session test
 let currentMockSession: typeof mockSession | null = mockSession
 
 vi.mock('@/contexts', () => ({
@@ -47,7 +46,12 @@ vi.mock('@/contexts', () => ({
 // Mock useParticipantCategories
 const mockRefetch = vi.fn()
 let mockCategoriesData: {
-  data: { categories: ParticipantCategory[]; contestStatus: string | null } | undefined
+  data: {
+    categories: ParticipantCategory[]
+    divisions: ParticipantDivision[]
+    contest: ContestInfo | null
+    contestStatus: string | null
+  } | undefined
   isLoading: boolean
   error: Error | null
   refetch: () => void
@@ -69,13 +73,33 @@ function renderPage() {
   )
 }
 
+const baseCategory: ParticipantCategory = {
+  id: 'cat-1',
+  name: 'Best Video',
+  type: 'video',
+  deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  status: 'published',
+  description: 'Submit your best video',
+  rules: null,
+  hasSubmitted: false,
+  submissionStatus: null,
+  submissionId: null,
+}
+
+const baseContest: ContestInfo = {
+  name: 'Best Media Contest',
+  description: 'A great contest for media students',
+  rules: 'All entries must be original.',
+  coverImageUrl: null,
+}
+
 describe('ParticipantCategoriesPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear()
     mockEndSession.mockClear()
     mockExtendSession.mockClear()
     mockRefetch.mockClear()
-    currentMockSession = mockSession // Reset to valid session
+    currentMockSession = mockSession
   })
 
   describe('loading state', () => {
@@ -128,7 +152,7 @@ describe('ParticipantCategoriesPage', () => {
   describe('empty state', () => {
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: [], contestStatus: null },
+        data: { categories: [], divisions: [], contest: baseContest, contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -143,55 +167,45 @@ describe('ParticipantCategoriesPage', () => {
     })
   })
 
-  describe('success state', () => {
-    const categories: ParticipantCategory[] = [
+  describe('step 1 — contest landing', () => {
+    const divisions: ParticipantDivision[] = [
+      { id: 'd-1', name: 'Elementary', displayOrder: 0, categories: [baseCategory] },
       {
-        id: 'cat-1',
-        name: 'Best Video',
-        type: 'video',
-        deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        status: 'published',
-        description: 'Submit your best video',
-        hasSubmitted: false,
-        submissionStatus: null,
-        submissionId: null,
-      },
-      {
-        id: 'cat-2',
-        name: 'Best Photo',
-        type: 'photo',
-        deadline: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        status: 'closed',
-        description: null,
-        hasSubmitted: true,
-        submissionStatus: 'submitted',
-        submissionId: 'sub-001',
+        id: 'd-2',
+        name: 'Middle School',
+        displayOrder: 1,
+        categories: [{ ...baseCategory, id: 'cat-2', name: 'Best Photo', type: 'photo' }],
       },
     ]
 
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories, contestStatus: null },
+        data: {
+          categories: [baseCategory, { ...baseCategory, id: 'cat-2', name: 'Best Photo', type: 'photo' }],
+          divisions,
+          contest: baseContest,
+          contestStatus: null,
+        },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
       }
     })
 
-    it('displays contest name in header', () => {
+    it('displays contest name', () => {
       renderPage()
       expect(screen.getByText('Best Media Contest')).toBeInTheDocument()
     })
 
-    it('displays participant name in header', () => {
+    it('displays contest description', () => {
       renderPage()
-      expect(screen.getByText(/welcome, john doe/i)).toBeInTheDocument()
+      expect(screen.getByText('A great contest for media students')).toBeInTheDocument()
     })
 
-    it('renders category cards', () => {
+    it('shows division cards', () => {
       renderPage()
-      expect(screen.getByText('Best Video')).toBeInTheDocument()
-      expect(screen.getByText('Best Photo')).toBeInTheDocument()
+      expect(screen.getByText('Elementary')).toBeInTheDocument()
+      expect(screen.getByText('Middle School')).toBeInTheDocument()
     })
 
     it('shows exit button', () => {
@@ -200,10 +214,37 @@ describe('ParticipantCategoriesPage', () => {
     })
   })
 
+  describe('single division auto-select', () => {
+    const singleDivision: ParticipantDivision[] = [
+      { id: 'd-1', name: 'All Categories', displayOrder: 0, categories: [baseCategory] },
+    ]
+
+    beforeEach(() => {
+      mockCategoriesData = {
+        data: {
+          categories: [baseCategory],
+          divisions: singleDivision,
+          contest: baseContest,
+          contestStatus: null,
+        },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      }
+    })
+
+    it('auto-selects single division and shows categories', () => {
+      renderPage()
+      // Should see category list (step 2), not division selection
+      expect(screen.getByText('Best Video')).toBeInTheDocument()
+      expect(screen.getByText('All Categories')).toBeInTheDocument()
+    })
+  })
+
   describe('logout', () => {
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: [], contestStatus: null },
+        data: { categories: [], divisions: [], contest: baseContest, contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -221,37 +262,25 @@ describe('ParticipantCategoriesPage', () => {
     })
   })
 
-  // Story 6-7: Finished contest behavior
   describe('finished contest', () => {
     const finishedCategories: ParticipantCategory[] = [
       {
-        id: 'cat-1',
-        name: 'Best Video',
-        type: 'video',
-        deadline: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        ...baseCategory,
         status: 'closed',
-        description: null,
         hasSubmitted: true,
         submissionStatus: 'submitted',
         submissionId: 'sub-001',
-      },
-      {
-        id: 'cat-2',
-        name: 'Best Photo',
-        type: 'photo',
-        deadline: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        status: 'closed',
-        description: null,
-        hasSubmitted: false,
-        submissionStatus: null,
-        submissionId: null,
-        noSubmission: true,
       },
     ]
 
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: finishedCategories, contestStatus: 'finished' },
+        data: {
+          categories: finishedCategories,
+          divisions: [{ id: 'd-1', name: 'All', displayOrder: 0, categories: finishedCategories }],
+          contest: baseContest,
+          contestStatus: 'finished',
+        },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -264,32 +293,13 @@ describe('ParticipantCategoriesPage', () => {
         screen.getByText(/this contest has ended/i)
       ).toBeInTheDocument()
     })
-
-    it('shows "Your Submissions" heading instead of "Available Categories"', () => {
-      renderPage()
-      expect(screen.getByText('Your Submissions')).toBeInTheDocument()
-      expect(screen.queryByText('Available Categories')).not.toBeInTheDocument()
-    })
-
-    it('renders "View Feedback" button for submitted categories', () => {
-      renderPage()
-      expect(screen.getByText('View Feedback')).toBeInTheDocument()
-    })
-
-    it('renders disabled "No submission" for categories without submission', () => {
-      renderPage()
-      const noSubButtons = screen.getAllByRole('button', { name: /no submission/i })
-      expect(noSubButtons.length).toBeGreaterThan(0)
-      expect(noSubButtons[0]).toBeDisabled()
-    })
   })
 
-  // F11: Test null session handling
   describe('null session', () => {
     beforeEach(() => {
       currentMockSession = null
       mockCategoriesData = {
-        data: { categories: [], contestStatus: null },
+        data: { categories: [], divisions: [], contest: null, contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,

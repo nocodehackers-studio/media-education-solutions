@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui'
+import { useConfirmClose } from '@/hooks/useConfirmClose'
 import { SubmissionInfoFields } from './SubmissionInfoFields'
 import {
   submissionInfoSchema,
@@ -61,6 +62,19 @@ export function EditSubmissionInfoSheet({
     },
   })
 
+  const { guardClose, confirmDialog } = useConfirmClose({
+    isDirty: form.formState.isDirty,
+    onConfirmDiscard: () => form.reset(),
+  })
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      guardClose(() => onOpenChange(false))
+    } else {
+      onOpenChange(true)
+    }
+  }
+
   const handleSave = (data: SubmissionInfoFormData) => {
     updateMutation.mutate(
       {
@@ -90,7 +104,8 @@ export function EditSubmissionInfoSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Edit Submission Details</SheetTitle>
@@ -162,5 +177,7 @@ export function EditSubmissionInfoSheet({
         </div>
       </SheetContent>
     </Sheet>
+    {confirmDialog}
+    </>
   )
 }

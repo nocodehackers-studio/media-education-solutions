@@ -24,6 +24,7 @@ interface CategoryResponse {
   deadline: string
   status: 'published' | 'closed'
   description: string | null
+  rules: string | null
   hasSubmitted: boolean
   submissionStatus: 'uploaded' | 'submitted' | null
   submissionId: string | null
@@ -37,10 +38,18 @@ interface DivisionResponse {
   categories: CategoryResponse[]
 }
 
+interface ContestInfoResponse {
+  name: string
+  description: string | null
+  rules: string | null
+  coverImageUrl: string | null
+}
+
 interface GetCategoriesResponse {
   success: boolean
   categories?: CategoryResponse[]
   divisions?: DivisionResponse[]
+  contest?: ContestInfoResponse
   contestStatus?: string
   submissionsAvailable?: boolean  // F5: Flag if submissions table was accessible
   error?: string
@@ -140,10 +149,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Story 6-7: Fetch contest status
+    // Story 6-7: Fetch contest status + contest info for participant landing
     const { data: contest, error: contestStatusError } = await supabaseAdmin
       .from('contests')
-      .select('status')
+      .select('status, name, description, rules, cover_image_url')
       .eq('id', contestId)
       .single()
 
@@ -173,6 +182,12 @@ Deno.serve(async (req) => {
           success: true,
           categories: [],
           divisions: [],
+          contest: contest ? {
+            name: contest.name,
+            description: contest.description ?? null,
+            rules: contest.rules ?? null,
+            coverImageUrl: contest.cover_image_url ?? null,
+          } : undefined,
           contestStatus: contestStatus ?? null,
         } satisfies GetCategoriesResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -182,7 +197,7 @@ Deno.serve(async (req) => {
     // Fetch categories (published/closed only - AC3: hide draft)
     const { data: categories, error: categoriesError } = await supabaseAdmin
       .from('categories')
-      .select('id, name, type, deadline, status, description, division_id')
+      .select('id, name, type, deadline, status, description, rules, division_id')
       .in('division_id', divisionIds)
       .in('status', ['published', 'closed'])
       .order('deadline', { ascending: true })
@@ -232,6 +247,7 @@ Deno.serve(async (req) => {
           deadline: cat.deadline,
           status: cat.status as 'published' | 'closed',
           description: cat.description,
+          rules: cat.rules ?? null,
           hasSubmitted: hasCompletedSubmission,
           submissionStatus: subStatus ?? null,
           submissionId: hasCompletedSubmission ? sub.id : null,
@@ -267,6 +283,12 @@ Deno.serve(async (req) => {
         success: true,
         categories: result,
         divisions: divisionsResponse,
+        contest: contest ? {
+          name: contest.name,
+          description: contest.description ?? null,
+          rules: contest.rules ?? null,
+          coverImageUrl: contest.cover_image_url ?? null,
+        } : undefined,
         contestStatus: contestStatus ?? null,
         submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
       } satisfies GetCategoriesResponse),

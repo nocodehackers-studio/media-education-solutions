@@ -7,10 +7,18 @@ export interface ParticipantCategory {
   deadline: string
   status: 'published' | 'closed'
   description: string | null
+  rules: string | null
   hasSubmitted: boolean
   submissionStatus: 'uploaded' | 'submitted' | null
   submissionId: string | null
   noSubmission?: boolean
+}
+
+export interface ContestInfo {
+  name: string
+  description: string | null
+  rules: string | null
+  coverImageUrl: string | null
 }
 
 export interface ParticipantDivision {
@@ -30,6 +38,7 @@ interface GetCategoriesResponse {
   success: boolean
   categories?: ParticipantCategory[]
   divisions?: ParticipantDivision[]
+  contest?: ContestInfo
   contestStatus?: string
   error?: string
 }
@@ -37,6 +46,7 @@ interface GetCategoriesResponse {
 export interface ParticipantCategoriesResult {
   categories: ParticipantCategory[]
   divisions: ParticipantDivision[]
+  contest: ContestInfo | null
   contestStatus: string | null
 }
 
@@ -72,6 +82,7 @@ export const participantsApi = {
     return {
       categories,
       divisions,
+      contest: data.contest ?? null,
       contestStatus: data.contestStatus ?? null,
     }
   },
