@@ -111,6 +111,7 @@ describe('CreateContestForm', () => {
       winnersPageEnabled: false,
       winnersPageGeneratedAt: null,
       notifyTlc: false,
+      deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -203,6 +204,7 @@ describe('CreateContestForm', () => {
       winnersPageEnabled: false,
       winnersPageGeneratedAt: null,
       notifyTlc: false,
+      deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

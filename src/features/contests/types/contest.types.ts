@@ -1,7 +1,7 @@
 /**
  * Contest status values
  */
-export type ContestStatus = 'draft' | 'published' | 'closed' | 'reviewed' | 'finished';
+export type ContestStatus = 'draft' | 'published' | 'closed' | 'reviewed' | 'finished' | 'deleted';
 
 /**
  * Contest entity from database (snake_case)
@@ -20,6 +20,7 @@ export interface ContestRow {
   winners_page_enabled: boolean;
   winners_page_generated_at: string | null;
   notify_tlc: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +42,7 @@ export interface Contest {
   winnersPageEnabled: boolean;
   winnersPageGeneratedAt: string | null;
   notifyTlc: boolean;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

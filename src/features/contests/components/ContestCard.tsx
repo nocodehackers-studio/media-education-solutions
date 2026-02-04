@@ -18,6 +18,7 @@ const statusConfig: Record<ContestStatus, { label: string; className: string }> 
   closed: { label: 'Closed', className: 'bg-amber-100 text-amber-800 hover:bg-amber-100' },
   reviewed: { label: 'Reviewed', className: 'bg-purple-100 text-purple-800 hover:bg-purple-100' },
   finished: { label: 'Finished', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
+  deleted: { label: 'Deleted', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
 };
 
 interface ContestCardProps {

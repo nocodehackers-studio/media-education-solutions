@@ -29,7 +29,7 @@ export function DeleteContestButton({ contestId }: DeleteContestButtonProps) {
   const handleDelete = async () => {
     try {
       await deleteContest.mutateAsync(contestId);
-      toast.success('Contest deleted');
+      toast.success('Contest moved to trash. It will be permanently deleted in 90 days.');
       navigate('/admin/contests');
     } catch (error) {
       toast.error(
@@ -53,8 +53,9 @@ export function DeleteContestButton({ contestId }: DeleteContestButtonProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will delete all categories, submissions, and codes. This action
-            cannot be undone.
+            This contest will be moved to Trash and become inaccessible. It will
+            be permanently deleted after 90 days. You can restore it from the
+            Recently Deleted section on the contests page.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

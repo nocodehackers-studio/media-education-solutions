@@ -44,6 +44,7 @@ const baseContest: Contest = {
   winnersPageEnabled: false,
   winnersPageGeneratedAt: null,
   notifyTlc: false,
+  deletedAt: null,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
 };

@@ -29,6 +29,7 @@ function transformContestRow(row: ContestRow): Contest {
     winnersPageEnabled: row.winners_page_enabled ?? false,
     winnersPageGeneratedAt: row.winners_page_generated_at ?? null,
     notifyTlc: row.notify_tlc ?? true,
+    deletedAt: row.deleted_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -147,6 +148,7 @@ export const contestsApi = {
     const { data, error } = await supabase
       .from('contests')
       .select('*')
+      .neq('status', 'deleted')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -234,15 +236,56 @@ export const contestsApi = {
   },
 
   /**
-   * Delete a contest (cascades to categories, submissions, codes)
+   * Soft-delete a contest (sets status to 'deleted' with timestamp)
+   * Contest will be permanently deleted after 90 days by scheduled cleanup
    * @param id Contest ID
    */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('contests').delete().eq('id', id);
+    const { error } = await supabase
+      .from('contests')
+      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+      .eq('id', id);
 
     if (error) {
       throw new Error(`Failed to delete contest: ${error.message}`);
     }
+  },
+
+  /**
+   * Restore a soft-deleted contest back to draft status
+   * @param id Contest ID
+   */
+  async restore(id: string): Promise<Contest> {
+    const { data, error } = await supabase
+      .from('contests')
+      .update({ status: 'draft', deleted_at: null })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to restore contest: ${error.message}`);
+    }
+
+    return transformContestRow(data as ContestRow);
+  },
+
+  /**
+   * List soft-deleted contests ordered by deletion date
+   * @returns Array of deleted contests
+   */
+  async listDeleted(): Promise<Contest[]> {
+    const { data, error } = await supabase
+      .from('contests')
+      .select('*')
+      .eq('status', 'deleted')
+      .order('deleted_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch deleted contests: ${error.message}`);
+    }
+
+    return (data as ContestRow[]).map(transformContestRow);
   },
 
   /**
@@ -473,7 +516,7 @@ export const contestsApi = {
   async getStats(): Promise<DashboardStats> {
     // Run all 4 COUNT queries in parallel — Supabase never rejects, errors are in response
     const [contestsResult, activeResult, participantsResult, submissionsResult] = await Promise.all([
-      supabase.from('contests').select('*', { count: 'exact', head: true }),
+      supabase.from('contests').select('*', { count: 'exact', head: true }).neq('status', 'deleted'),
       supabase.from('contests').select('*', { count: 'exact', head: true }).eq('status', 'published'),
       supabase.from('participants').select('*', { count: 'exact', head: true }),
       supabase.from('submissions').select('*', { count: 'exact', head: true }),
@@ -522,6 +565,7 @@ export const contestsApi = {
     const { data, error } = await supabase
       .from('contests')
       .select('*')
+      .neq('status', 'deleted')
       .order('created_at', { ascending: false })
       .limit(limit);
 

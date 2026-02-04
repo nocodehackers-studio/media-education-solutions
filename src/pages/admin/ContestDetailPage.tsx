@@ -58,6 +58,7 @@ const statusConfig: Record<ContestStatus, { label: string; className: string; do
   closed: { label: 'Closed', className: 'bg-amber-100 text-amber-800', dotColor: 'bg-amber-500' },
   reviewed: { label: 'Reviewed', className: 'bg-purple-100 text-purple-800', dotColor: 'bg-purple-500' },
   finished: { label: 'Finished', className: 'bg-green-100 text-green-800', dotColor: 'bg-green-500' },
+  deleted: { label: 'Deleted', className: 'bg-red-100 text-red-800', dotColor: 'bg-red-500' },
 };
 
 const statusOptions: { value: ContestStatus; label: string }[] = [

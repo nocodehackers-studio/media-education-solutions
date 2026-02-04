@@ -38,7 +38,8 @@ export type Database = {
           contest_code: string
           rules: string | null
           cover_image_url: string | null
-          status: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished'
+          status: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished' | 'deleted'
+          deleted_at: string | null
           winners_page_password: string | null
           created_at: string
           updated_at: string
@@ -51,7 +52,8 @@ export type Database = {
           contest_code: string
           rules?: string | null
           cover_image_url?: string | null
-          status?: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished'
+          status?: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished' | 'deleted'
+          deleted_at?: string | null
           winners_page_password?: string | null
           created_at?: string
           updated_at?: string
@@ -63,7 +65,8 @@ export type Database = {
           contest_code?: string
           rules?: string | null
           cover_image_url?: string | null
-          status?: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished'
+          status?: 'draft' | 'published' | 'closed' | 'reviewed' | 'finished' | 'deleted'
+          deleted_at?: string | null
           winners_page_password?: string | null
           updated_at?: string
         }

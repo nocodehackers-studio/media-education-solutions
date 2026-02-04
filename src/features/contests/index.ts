@@ -6,6 +6,7 @@
 export { ContestCard } from './components/ContestCard';
 export { CreateContestForm } from './components/CreateContestForm';
 export { DeleteContestButton } from './components/DeleteContestButton';
+export { DeletedContestsList } from './components/DeletedContestsList';
 export { EditContestForm } from './components/EditContestForm';
 export { CodesTab } from './components/CodesTab';
 export { CodeListTable } from './components/CodeListTable';
@@ -24,6 +25,8 @@ export { useCreateContest } from './hooks/useCreateContest';
 export { useUpdateContest } from './hooks/useUpdateContest';
 export { useUpdateContestStatus } from './hooks/useUpdateContestStatus';
 export { useDeleteContest } from './hooks/useDeleteContest';
+export { useDeletedContests } from './hooks/useDeletedContests';
+export { useRestoreContest } from './hooks/useRestoreContest';
 export { useParticipantCodes } from './hooks/useParticipantCodes';
 /** @deprecated Use useGenerateSingleCode instead per Change Proposal 2026-01-21 */
 export { useGenerateCodes } from './hooks/useGenerateCodes';
