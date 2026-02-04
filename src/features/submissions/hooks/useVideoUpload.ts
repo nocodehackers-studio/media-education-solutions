@@ -201,12 +201,9 @@ export function useVideoUpload({
 
         uploadRef.current = upload
 
-        // Check for previous upload to resume
-        const previousUploads = await upload.findPreviousUploads()
-        if (previousUploads.length > 0) {
-          upload.resumeFromPreviousUpload(previousUploads[0])
-        }
-
+        // Don't resume previous uploads — each startUpload creates a fresh
+        // Bunny video ID, so any cached TUS URL points to a deleted video
+        // and would 404 on the HEAD check.
         upload.start()
       } catch (error) {
         console.error('Upload start error:', error)
