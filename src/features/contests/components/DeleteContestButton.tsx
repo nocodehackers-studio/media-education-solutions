@@ -41,7 +41,11 @@ export function DeleteContestButton({ contestId }: DeleteContestButtonProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" data-testid="delete-contest-button">
+        <Button
+          variant="outline"
+          className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          data-testid="delete-contest-button"
+        >
           Delete Contest
         </Button>
       </AlertDialogTrigger>

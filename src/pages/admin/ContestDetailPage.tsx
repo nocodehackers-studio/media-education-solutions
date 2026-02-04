@@ -6,6 +6,11 @@ import {
   Button,
   Card,
   CardContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -15,13 +20,14 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  toast,
 } from '@/components/ui';
 import {
   ContestDetailsTab,
-  DeleteContestButton,
   CodesTab,
   AdminWinnersTab,
   useContest,
+  useUpdateContestStatus,
 } from '@/features/contests';
 import type { ContestStatus } from '@/features/contests';
 import { CategoriesTab, JudgesTab } from '@/features/categories';
@@ -40,6 +46,14 @@ const statusConfig: Record<ContestStatus, { label: string; className: string }> 
   finished: { label: 'Finished', className: 'bg-green-100 text-green-800' },
 };
 
+const statusOptions: { value: ContestStatus; label: string }[] = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'reviewed', label: 'Reviewed' },
+  { value: 'finished', label: 'Finished' },
+];
+
 /**
  * Contest detail page with tabs
  * Shows contest details, categories, codes, and judges tabs
@@ -49,6 +63,23 @@ export function ContestDetailPage() {
   const { contestId } = useParams<{ contestId: string }>();
   const { data: contest, isLoading, error } = useContest(contestId!);
   const [logsSheetOpen, setLogsSheetOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
+  const updateStatus = useUpdateContestStatus();
+
+  const handleStatusChange = async (newStatus: ContestStatus) => {
+    if (!contest) return;
+    setPendingStatus(newStatus);
+    try {
+      await updateStatus.mutateAsync({ id: contest.id, status: newStatus });
+      toast.success('Status updated');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update status'
+      );
+    } finally {
+      setPendingStatus(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -124,7 +155,22 @@ export function ContestDetailPage() {
               View Submissions
             </Button>
           </Link>
-          <DeleteContestButton contestId={contest.id} />
+          <Select
+            value={pendingStatus ?? contest.status}
+            onValueChange={(value) => handleStatusChange(value as ContestStatus)}
+            disabled={updateStatus.isPending}
+          >
+            <SelectTrigger className="w-[140px]" data-testid="status-select">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

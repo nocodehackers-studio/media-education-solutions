@@ -5,55 +5,21 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  toast,
 } from '@/components/ui';
 import { EditContestForm } from './EditContestForm';
-import { useUpdateContestStatus } from '../hooks/useUpdateContestStatus';
-import type { Contest, ContestStatus } from '../types/contest.types';
+import { DeleteContestButton } from './DeleteContestButton';
+import type { Contest } from '../types/contest.types';
 
 interface ContestDetailsTabProps {
   contest: Contest;
 }
 
-const statusOptions: { value: ContestStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'published', label: 'Published' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'reviewed', label: 'Reviewed' },
-  { value: 'finished', label: 'Finished' },
-];
-
 /**
  * Details tab content for contest detail page
- * Shows contest info with edit toggle and status dropdown
+ * Shows contest info with edit toggle
  */
 export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
-  const updateStatus = useUpdateContestStatus();
-
-  // Display pending status during mutation, otherwise use prop value
-  const displayStatus = pendingStatus ?? contest.status;
-
-  const handleStatusChange = async (newStatus: ContestStatus) => {
-    setPendingStatus(newStatus); // Optimistic update
-
-    try {
-      await updateStatus.mutateAsync({ id: contest.id, status: newStatus });
-      toast.success('Status updated');
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to update status'
-      );
-    } finally {
-      setPendingStatus(null); // Clear pending state, prop will have correct value
-    }
-  };
 
   const handleEditSuccess = () => {
     setIsEditing(false);
@@ -63,30 +29,12 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Contest Details</CardTitle>
-        <div className="flex gap-2">
-          <Select
-            value={displayStatus}
-            onValueChange={(value) => handleStatusChange(value as ContestStatus)}
-            disabled={updateStatus.isPending}
-          >
-            <SelectTrigger className="w-[140px]" data-testid="status-select">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant={isEditing ? 'outline' : 'default'}
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            {isEditing ? 'Cancel' : 'Edit'}
-          </Button>
-        </div>
+        <Button
+          variant={isEditing ? 'outline' : 'default'}
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? 'Cancel' : 'Edit'}
+        </Button>
       </CardHeader>
       <CardContent>
         {isEditing ? (
@@ -129,6 +77,9 @@ export function ContestDetailsTab({ contest }: ContestDetailsTabProps) {
             </div>
           </div>
         )}
+        <div className="mt-8 pt-6 border-t">
+          <DeleteContestButton contestId={contest.id} />
+        </div>
       </CardContent>
     </Card>
   );
