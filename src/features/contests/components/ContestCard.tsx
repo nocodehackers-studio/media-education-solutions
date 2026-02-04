@@ -61,10 +61,10 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
         </div>
       )}
 
-      <CardHeader className={contest.coverImageUrl && contest.logoUrl ? 'pb-3' : undefined}>
+      <CardHeader className={contest.coverImageUrl && contest.logoUrl ? 'pb-4' : undefined}>
         {/* Logo — overlaps cover when present */}
         {contest.logoUrl && (
-          <div className={contest.coverImageUrl ? '-mt-10 mb-1' : ''}>
+          <div className={contest.coverImageUrl ? '-mt-10 mb-2' : ''}>
             <img
               src={contest.logoUrl}
               alt=""
@@ -86,19 +86,19 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
         )}
       </CardHeader>
 
-      <CardFooter className="flex-col gap-0 px-6 pb-4 pt-0">
+      <CardFooter className="flex-col gap-0 px-6 pb-6 pt-0">
         <Separator className="mb-4" />
         <div className="grid grid-cols-3 gap-4 w-full text-center">
           <div>
-            <p className="text-2xl font-bold">{totalSubmissions}</p>
+            <p className="text-lg font-semibold">{totalSubmissions}</p>
             <p className="text-xs text-muted-foreground">Submissions</p>
           </div>
           <div>
-            <p className="text-2xl font-bold">{reviewedPercent}%</p>
+            <p className="text-lg font-semibold">{reviewedPercent}%</p>
             <p className="text-xs text-muted-foreground">Reviewed</p>
           </div>
           <div>
-            <p className="text-2xl font-bold">
+            <p className="text-lg font-semibold">
               {daysLeft === null ? '—' : daysLeft}
             </p>
             <p className="text-xs text-muted-foreground">
