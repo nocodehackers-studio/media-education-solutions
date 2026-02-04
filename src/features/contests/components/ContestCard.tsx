@@ -54,24 +54,32 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
       onClick={() => onClick(contest.id)}
       data-testid="contest-card"
     >
-      {/* Cover image with overlapping logo */}
-      {contest.coverImageUrl && (
-        <div className="h-32 overflow-hidden">
+      {/* Cover image or placeholder */}
+      <div className="h-32 overflow-hidden">
+        {contest.coverImageUrl ? (
           <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full bg-muted" />
+        )}
+      </div>
 
-      <CardHeader className={contest.coverImageUrl && contest.logoUrl ? 'pb-4' : undefined}>
-        {/* Logo — overlaps cover when present */}
-        {contest.logoUrl && (
-          <div className={contest.coverImageUrl ? '-mt-10 mb-2' : ''}>
+      <CardHeader className="pb-4">
+        {/* Logo — overlaps cover */}
+        <div className="-mt-10 mb-2">
+          {contest.logoUrl ? (
             <img
               src={contest.logoUrl}
               alt=""
               className="-ml-0.5 w-12 h-12 rounded-xl border-[3px] border-background bg-background object-cover"
             />
-          </div>
-        )}
+          ) : (
+            <div className="-ml-0.5 w-12 h-12 rounded-xl border-[3px] border-background bg-muted flex items-center justify-center">
+              <span className="text-lg font-semibold text-muted-foreground">
+                {contest.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
