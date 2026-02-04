@@ -6,6 +6,8 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowLeft,
+  CircleCheck,
+  CircleX,
 } from 'lucide-react'
 import {
   Badge,
@@ -15,6 +17,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
+  Separator,
   Skeleton,
 } from '@/components/ui'
 import {
@@ -31,8 +34,8 @@ const DIVISION_STORAGE_KEY = 'participant_selected_division'
 
 /**
  * Participant categories page — redesigned as a two-step flow.
- * Step 1: Contest landing with hero image, description, rules, and division selection.
- * Step 2: Category list for the selected division.
+ * Step 1: Contest landing with hero image, description, rules, and division/category list.
+ * Step 2: Category list for the selected division (multi-division only).
  */
 export function ParticipantCategoriesPage() {
   const navigate = useNavigate()
@@ -54,10 +57,11 @@ export function ParticipantCategoriesPage() {
   const divisions = data?.divisions
   const contest = data?.contest
   const contestFinished = data?.contestStatus === 'finished'
+  const isSingleDivision = (divisions?.length ?? 0) === 1
 
-  // Restore division from sessionStorage, or auto-select single division
+  // Restore division from sessionStorage (multi-division only)
   useEffect(() => {
-    if (!divisions || selectedDivision) return
+    if (!divisions || selectedDivision || isSingleDivision) return
 
     const savedId = sessionStorage.getItem(DIVISION_STORAGE_KEY)
     if (savedId) {
@@ -66,15 +70,9 @@ export function ParticipantCategoriesPage() {
         setSelectedDivision(found)
         return
       }
-      // Stale value — clean up
       sessionStorage.removeItem(DIVISION_STORAGE_KEY)
     }
-
-    // Auto-select when there's only one division
-    if (divisions.length === 1) {
-      setSelectedDivision(divisions[0])
-    }
-  }, [divisions, selectedDivision])
+  }, [divisions, selectedDivision, isSingleDivision])
 
   const handleSelectDivision = (division: ParticipantDivision) => {
     sessionStorage.setItem(DIVISION_STORAGE_KEY, division.id)
@@ -136,7 +134,15 @@ export function ParticipantCategoriesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {selectedDivision === null ? (
+      {!isSingleDivision && selectedDivision !== null ? (
+        <div key="step2" className="animate-in fade-in slide-in-from-right-4 duration-200">
+          <Step2CategoryList
+            division={selectedDivision}
+            contestFinished={contestFinished}
+            onBack={handleBack}
+          />
+        </div>
+      ) : (
         <div key="step1" className="animate-in fade-in duration-200">
           <Step1ContestLanding
             contest={contest}
@@ -146,14 +152,6 @@ export function ParticipantCategoriesPage() {
             rulesOpen={rulesOpen}
             onRulesOpenChange={setRulesOpen}
             onSelectDivision={handleSelectDivision}
-          />
-        </div>
-      ) : (
-        <div key="step2" className="animate-in fade-in slide-in-from-right-4 duration-200">
-          <Step2CategoryList
-            division={selectedDivision}
-            contestFinished={contestFinished}
-            onBack={handleBack}
           />
         </div>
       )}
@@ -167,7 +165,7 @@ export function ParticipantCategoriesPage() {
   )
 }
 
-// ── Step 1: Contest Landing + Division Selection ──
+// ── Step 1: Contest Landing + Division/Category Selection ──
 
 interface Step1Props {
   contest: ContestInfo | null | undefined
@@ -188,6 +186,8 @@ function Step1ContestLanding({
   onRulesOpenChange,
   onSelectDivision,
 }: Step1Props) {
+  const isSingleDivision = divisions.length === 1
+
   return (
     <>
       {/* Cover image */}
@@ -208,18 +208,33 @@ function Step1ContestLanding({
             <img
               src={contest.logoUrl}
               alt=""
-              className="w-20 h-20 rounded-xl border-4 border-background bg-background object-cover"
+              className="-ml-1 w-20 h-20 rounded-xl border-4 border-background bg-background object-cover"
             />
           </div>
         )}
 
         {/* Title row with user menu */}
-        <div className={`flex items-start justify-between gap-4 mb-4${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
+        <div className={`flex items-end justify-between gap-4 mb-3${!contest?.logoUrl && !contest?.coverImageUrl ? ' mt-4' : ''}`}>
           <h1 className="text-3xl sm:text-4xl font-bold">{contestName}</h1>
-          <div className="shrink-0 text-right mt-1">
+          <div className="shrink-0 text-right">
             <p className="text-xs text-muted-foreground mb-1">Logged in as</p>
             <ParticipantUserMenu />
           </div>
+        </div>
+
+        {/* Contest status */}
+        <div className="mb-4">
+          {contestFinished ? (
+            <Badge variant="secondary" className="text-xs">
+              <CircleX className="h-3 w-3 mr-1" />
+              Closed
+            </Badge>
+          ) : (
+            <Badge variant="default" className="bg-green-600 text-xs">
+              <CircleCheck className="h-3 w-3 mr-1" />
+              Accepting Submissions
+            </Badge>
+          )}
         </div>
 
         {/* Contest description */}
@@ -249,6 +264,9 @@ function Step1ContestLanding({
           </Collapsible>
         )}
 
+        {/* Divider */}
+        <Separator className="mb-6" />
+
         {/* Finished contest banner */}
         {contestFinished && (
           <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg mb-6">
@@ -257,43 +275,73 @@ function Step1ContestLanding({
           </div>
         )}
 
-        {/* Division selection */}
+        {/* Categories / Division selection */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">
-            {contestFinished ? 'Your Submissions' : 'Choose Your Division'}
-          </h2>
-
-          {divisions.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">
-                  {contestFinished
-                    ? 'No categories available.'
-                    : 'No categories are currently accepting submissions.'}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {divisions.map((division) => (
-                <Card
-                  key={division.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => onSelectDivision(division)}
-                >
-                  <CardContent className="py-4 px-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">{division.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {division.categories.length}{' '}
-                        {division.categories.length === 1 ? 'category' : 'categories'}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+          {isSingleDivision ? (
+            <>
+              <h2 className="text-lg font-semibold">
+                {contestFinished ? 'Your Submissions' : 'Categories'}
+              </h2>
+              {divisions[0].categories.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground">
+                      {contestFinished
+                        ? 'No categories available.'
+                        : 'No categories are currently accepting submissions.'}
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-3">
+                  {divisions[0].categories.map((category) => (
+                    <ParticipantCategoryCard
+                      key={category.id}
+                      category={category}
+                      contestFinished={contestFinished}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">
+                {contestFinished ? 'Your Submissions' : 'Choose Your Division'}
+              </h2>
+              {divisions.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground">
+                      {contestFinished
+                        ? 'No categories available.'
+                        : 'No categories are currently accepting submissions.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {divisions.map((division) => (
+                    <Card
+                      key={division.id}
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => onSelectDivision(division)}
+                    >
+                      <CardContent className="py-4 px-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold">{division.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {division.categories.length}{' '}
+                            {division.categories.length === 1 ? 'category' : 'categories'}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -301,7 +349,7 @@ function Step1ContestLanding({
   )
 }
 
-// ── Step 2: Categories for Selected Division ──
+// ── Step 2: Categories for Selected Division (multi-division only) ──
 
 interface Step2Props {
   division: ParticipantDivision
