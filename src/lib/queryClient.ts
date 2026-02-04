@@ -72,7 +72,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      gcTime: 1000 * 60 * 30,
+      gcTime: Infinity,
       // F5 fix: short-circuit retries on auth errors
       retry: (failureCount, error) => {
         if (isAuthError(error)) return false
