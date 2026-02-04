@@ -17,3 +17,4 @@ export { useGenerateWinnersPage } from './useGenerateWinnersPage';
 export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPage } from './useWinnersManagement';
 export { useCategoryApprovalStatus } from './useCategoryApprovalStatus';
 export { useEffectiveWinners } from './useEffectiveWinners';
+export { useContestDetailStats } from './useContestDetailStats';

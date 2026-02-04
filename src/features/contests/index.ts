@@ -38,6 +38,7 @@ export { useGenerateWinnersPage } from './hooks/useGenerateWinnersPage';
 export { useUpdateWinnersPassword, useRevokeWinnersPage, useReactivateWinnersPage } from './hooks/useWinnersManagement';
 export { useCategoryApprovalStatus } from './hooks/useCategoryApprovalStatus';
 export { useEffectiveWinners } from './hooks/useEffectiveWinners';
+export { useContestDetailStats } from './hooks/useContestDetailStats';
 
 // === API ===
 export { contestsApi } from './api/contestsApi';
