@@ -265,7 +265,7 @@ export function ContestDetailPage() {
 
       {/* Cover Image (no gradient) */}
       {contest.coverImageUrl && (
-        <div className="h-48 md:h-64 -mx-6 -mt-2 overflow-hidden rounded-lg">
+        <div className="h-48 md:h-64 -mx-6 -mt-2 overflow-hidden">
           <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
         </div>
       )}

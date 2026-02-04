@@ -5,7 +5,10 @@ import {
   CardDescription,
   CardFooter,
   Badge,
+  Separator,
 } from '@/components/ui';
+import { useCategories } from '@/features/categories';
+import { useAdminSubmissions } from '@/features/submissions';
 import type { Contest, ContestStatus } from '../types/contest.types';
 
 // Status colors per UX spec: ux-consistency-patterns.md
@@ -22,8 +25,28 @@ interface ContestCardProps {
   onClick: (id: string) => void;
 }
 
+function computeDaysLeft(categories: { deadline: string }[]): number | null {
+  if (categories.length === 0) return null;
+  const now = new Date();
+  const latest = categories.reduce((acc, cat) => {
+    const d = new Date(cat.deadline);
+    return d > acc ? d : acc;
+  }, new Date(0));
+  if (latest <= now) return 0;
+  return Math.ceil((latest.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export function ContestCard({ contest, onClick }: ContestCardProps) {
   const status = statusConfig[contest.status];
+
+  const { data: categories } = useCategories(contest.id);
+  const { data: submissions } = useAdminSubmissions(contest.id);
+
+  const totalSubmissions = submissions?.length ?? 0;
+  const categoryCount = categories?.length ?? 0;
+  const categoriesJudged = categories?.filter((c) => c.judgingCompletedAt !== null).length ?? 0;
+  const reviewedPercent = categoryCount > 0 ? Math.round((categoriesJudged / categoryCount) * 100) : 0;
+  const daysLeft = categories ? computeDaysLeft(categories) : null;
 
   return (
     <Card
@@ -31,19 +54,27 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
       onClick={() => onClick(contest.id)}
       data-testid="contest-card"
     >
+      {/* Cover image with overlapping logo */}
       {contest.coverImageUrl && (
         <div className="h-32 overflow-hidden">
           <img src={contest.coverImageUrl} alt="" className="w-full h-full object-cover" />
         </div>
       )}
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            {contest.logoUrl && (
-              <img src={contest.logoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
-            )}
-            <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
+
+      <CardHeader className={contest.coverImageUrl && contest.logoUrl ? 'pb-3' : undefined}>
+        {/* Logo — overlaps cover when present */}
+        {contest.logoUrl && (
+          <div className={contest.coverImageUrl ? '-mt-10 mb-1' : ''}>
+            <img
+              src={contest.logoUrl}
+              alt=""
+              className="-ml-0.5 w-12 h-12 rounded-xl border-[3px] border-background bg-background object-cover"
+            />
           </div>
+        )}
+
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
           <Badge className={status.className} variant="secondary">
             {status.label}
           </Badge>
@@ -54,10 +85,26 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
           </CardDescription>
         )}
       </CardHeader>
-      <CardFooter>
-        <div className="text-sm text-muted-foreground">
-          <p>Submissions: 0</p>
-          <p>Created: {new Date(contest.createdAt).toLocaleDateString()}</p>
+
+      <CardFooter className="flex-col gap-0 px-6 pb-4 pt-0">
+        <Separator className="mb-4" />
+        <div className="grid grid-cols-3 gap-4 w-full text-center">
+          <div>
+            <p className="text-2xl font-bold">{totalSubmissions}</p>
+            <p className="text-xs text-muted-foreground">Submissions</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{reviewedPercent}%</p>
+            <p className="text-xs text-muted-foreground">Reviewed</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold">
+              {daysLeft === null ? '—' : daysLeft}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {daysLeft === 0 ? 'Ended' : 'Days Left'}
+            </p>
+          </div>
         </div>
       </CardFooter>
     </Card>
