@@ -26,7 +26,7 @@ export const adminSubmissionsApi = {
           admin_feedback_override, admin_feedback_override_at,
           judge:profiles!judge_id(first_name, last_name)
         ),
-        rankings(id, rank, submission_id, admin_ranking_override, admin_ranking_override_at)
+        rankings!submission_id(id, rank, submission_id, admin_ranking_override, admin_ranking_override_at)
       `)
       .eq('categories.divisions.contest_id', contestId)
       .order('submitted_at', { ascending: false })
