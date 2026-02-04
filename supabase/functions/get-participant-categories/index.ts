@@ -235,16 +235,30 @@ Deno.serve(async (req) => {
       if (categoryIds.length > 0) {
         const { data: submissions } = await supabaseAdmin
           .from('submissions')
-          .select('id, category_id, status, feedback, score')
+          .select('id, category_id, status')
           .eq('participant_id', participantId)
           .in('category_id', categoryIds)
 
         if (submissions) {
+          // Check for reviews (feedback/rating) via a separate query on the reviews table
+          const submissionIds = submissions.map((s) => s.id)
+          const reviewedSet = new Set<string>()
+          if (submissionIds.length > 0) {
+            const { data: reviews } = await supabaseAdmin
+              .from('reviews')
+              .select('submission_id')
+              .in('submission_id', submissionIds)
+              .or('feedback.neq.null,rating.neq.null')
+            if (reviews) {
+              reviews.forEach((r) => reviewedSet.add(r.submission_id))
+            }
+          }
+
           submissions.forEach((s) => {
             submissionMap[s.category_id] = {
               status: s.status,
               id: s.id,
-              hasFeedback: s.feedback != null || s.score != null,
+              hasFeedback: reviewedSet.has(s.id),
             }
           })
         }
