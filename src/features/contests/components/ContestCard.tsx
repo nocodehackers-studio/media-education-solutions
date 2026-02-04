@@ -82,19 +82,17 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg line-clamp-1">{contest.name}</CardTitle>
+          <CardTitle className="text-lg truncate">{contest.name}</CardTitle>
           <Badge className={status.className} variant="secondary">
             {status.label}
           </Badge>
         </div>
-        {contest.description && (
-          <CardDescription className="line-clamp-2">
-            {contest.description}
-          </CardDescription>
-        )}
+        <CardDescription className="line-clamp-1">
+          {contest.description || '\u00A0'}
+        </CardDescription>
       </CardHeader>
 
-      <CardFooter className="flex-col gap-0 px-6 pb-6 pt-0">
+      <CardFooter className="flex-col gap-0 px-6 pb-6 pt-2">
         <Separator className="mb-4" />
         <div className="grid grid-cols-3 gap-4 w-full text-center">
           <div>
