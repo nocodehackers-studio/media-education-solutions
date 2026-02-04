@@ -6,6 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Copy, Eye, RefreshCw, ShieldOff, ShieldCheck } from 'lucide-react';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Badge,
   Button,
   Card,
@@ -176,7 +185,7 @@ export function WinnersSetupForm({ contest, allCategoriesApproved, approvedCount
 
           {/* Change password */}
           {!showChangePassword ? (
-            <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)}>
+            <Button variant="outline" onClick={() => setShowChangePassword(true)}>
               Change Password
             </Button>
           ) : (
@@ -217,10 +226,10 @@ export function WinnersSetupForm({ contest, allCategoriesApproved, approvedCount
                   )}
                 />
                 <div className="flex gap-2">
-                  <Button type="submit" size="sm" disabled={updatePasswordMutation.isPending}>
+                  <Button type="submit" disabled={updatePasswordMutation.isPending}>
                     Update Password
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setShowChangePassword(false); form.reset(); }}>
+                  <Button type="button" variant="outline" onClick={() => { setShowChangePassword(false); form.reset(); }}>
                     Cancel
                   </Button>
                 </div>
@@ -231,18 +240,37 @@ export function WinnersSetupForm({ contest, allCategoriesApproved, approvedCount
           {/* Revoke / Reactivate */}
           <div className="border-t pt-4">
             {contest.winnersPageEnabled ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleRevoke}
-                disabled={revokeMutation.isPending}
-              >
-                <ShieldOff className="h-4 w-4 mr-2" />
-                Revoke Winners Page
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    disabled={revokeMutation.isPending}
+                  >
+                    <ShieldOff className="h-4 w-4 mr-2" />
+                    Revoke Winners Page
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Revoke winners page?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will disable public access to the winners page. You can reactivate it later.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleRevoke}
+                      disabled={revokeMutation.isPending}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {revokeMutation.isPending ? 'Revoking...' : 'Revoke'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ) : (
               <Button
-                size="sm"
                 onClick={handleReactivate}
                 disabled={reactivateMutation.isPending}
               >

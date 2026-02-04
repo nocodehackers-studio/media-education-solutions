@@ -58,7 +58,7 @@ export function JudgesTab({ contestId }: JudgesTabProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <JudgesTable categories={categories} />
+        <JudgesTable categories={categories} contestId={contestId} />
       </CardContent>
     </Card>
   );

@@ -2,28 +2,34 @@
 // Table displaying categories with judge assignments and progress
 
 import { useState } from 'react';
+import { Send } from 'lucide-react';
 import {
   Badge,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  toast,
 } from '@/components/ui';
 import { AssignJudgeSheet } from './AssignJudgeSheet';
 import { JudgeProgressCell } from './JudgeProgressCell';
 import { JudgeDetailSheet } from './JudgeDetailSheet';
+import { useResendJudgeInvitation } from '../hooks/useResendJudgeInvitation';
 import type { Category } from '../types';
 
 interface JudgesTableProps {
   categories: Category[];
+  contestId: string;
 }
 
 // TODO: Epic 5 optimization - When reviews table exists, batch-fetch progress
 // for all categories in parent component to avoid N+1 queries from JudgeProgressCell.
 
-export function JudgesTable({ categories }: JudgesTableProps) {
+export function JudgesTable({ categories, contestId }: JudgesTableProps) {
+  const resendInvitation = useResendJudgeInvitation(contestId);
   const [viewingJudge, setViewingJudge] = useState<{
     judgeName: string;
     categoryId: string;
@@ -86,9 +92,33 @@ export function JudgesTable({ categories }: JudgesTableProps) {
                 <JudgeStatusBadge hasJudge={!!category.assignedJudge} />
               </TableCell>
 
-              {/* Actions (AC4) - AssignJudgeSheet includes its own trigger button */}
+              {/* Actions (AC4) - Assign, resend invite, or reassign */}
               <TableCell>
-                {!category.assignedJudge && (
+                {category.assignedJudge ? (
+                  <div className="flex items-center gap-1">
+                    {category.invitedAt && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Resend invitation"
+                        disabled={resendInvitation.isPending}
+                        onClick={() => {
+                          resendInvitation.mutate(category.id, {
+                            onSuccess: () => toast.success('Invitation resent'),
+                            onError: (err) => toast.error(err.message),
+                          });
+                        }}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <AssignJudgeSheet
+                      categoryId={category.id}
+                      categoryName={category.name}
+                      mode="reassign"
+                    />
+                  </div>
+                ) : (
                   <AssignJudgeSheet
                     categoryId={category.id}
                     categoryName={category.name}

@@ -4,7 +4,6 @@
 
 // === Components ===
 export { ContestCard } from './components/ContestCard';
-export { ContestDetailsTab } from './components/ContestDetailsTab';
 export { CreateContestForm } from './components/CreateContestForm';
 export { DeleteContestButton } from './components/DeleteContestButton';
 export { EditContestForm } from './components/EditContestForm';
@@ -12,7 +11,6 @@ export { CodesTab } from './components/CodesTab';
 export { CodeListTable } from './components/CodeListTable';
 /** @deprecated Use AddCodeDialog instead per Change Proposal 2026-01-21 */
 export { GenerateCodesButton } from './components/GenerateCodesButton';
-export { ExportCodesButton } from './components/ExportCodesButton';
 export { AddCodeDialog } from './components/AddCodeDialog';
 export { CategoryApprovalList } from './components/CategoryApprovalList';
 export { WinnersSetupForm } from './components/WinnersSetupForm';
@@ -49,7 +47,6 @@ export {
   generateContestCode,
   generateParticipantCode,
   generateParticipantCodes,
-  exportCodesToCSV,
 } from './utils';
 
 // === Types ===

@@ -14,7 +14,6 @@ import {
 import { useParticipantCodes } from '../hooks/useParticipantCodes';
 import { CodeListTable } from './CodeListTable';
 import { AddCodeDialog } from './AddCodeDialog';
-import { ExportCodesButton } from './ExportCodesButton';
 import type { Contest } from '../types/contest.types';
 
 interface CodesTabProps {
@@ -42,7 +41,6 @@ export function CodesTab({ contest }: CodesTabProps) {
           </div>
           <div className="flex gap-2">
             <Skeleton className="h-10 w-[120px]" />
-            <Skeleton className="h-10 w-20" />
             <Skeleton className="h-10 w-36" />
           </div>
         </CardHeader>
@@ -100,8 +98,7 @@ export function CodesTab({ contest }: CodesTabProps) {
               <SelectItem value="used">Used</SelectItem>
             </SelectContent>
           </Select>
-          <ExportCodesButton codes={allCodes} contestCode={contest.contestCode} />
-          <AddCodeDialog contestId={contest.id} />
+          <AddCodeDialog contestId={contest.id} variant="default" />
         </div>
       </CardHeader>
       <CardContent>

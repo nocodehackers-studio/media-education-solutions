@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, BarChart3, Layers, Users } from 'lucide-react';
+import { ArrowLeft, FileText, BarChart3, Layers, Users, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Button,
@@ -8,6 +8,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Progress,
   Select,
   SelectContent,
@@ -27,8 +30,9 @@ import {
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import {
-  ContestDetailsTab,
   CodesTab,
+  DeleteContestButton,
+  EditContestForm,
   AdminWinnersTab,
   useContest,
   useUpdateContestStatus,
@@ -154,6 +158,8 @@ export function ContestDetailPage() {
   const { contestId } = useParams<{ contestId: string }>();
   const { data: contest, isLoading, error } = useContest(contestId!);
   const [logsSheetOpen, setLogsSheetOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ContestStatus | null>(null);
   const updateStatus = useUpdateContestStatus();
   const stats = useContestDetailStats(contestId!);
@@ -318,22 +324,71 @@ export function ContestDetailPage() {
         />
       </div>
 
+      {/* Inline Description & Rules */}
+      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 -ml-2">
+                {detailsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                <span className="text-sm font-medium">Description & Rules</span>
+              </Button>
+            </CollapsibleTrigger>
+            <Button variant="ghost" size="sm" onClick={() => setEditSheetOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0 space-y-3">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+                <p className="mt-1 text-sm">
+                  {contest.description || 'No description provided'}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Rules</h3>
+                <p className="mt-1 text-sm whitespace-pre-wrap">
+                  {contest.rules || 'No rules provided'}
+                </p>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Edit Contest Sheet */}
+      <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Edit Contest</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <EditContestForm
+              contest={contest}
+              onSuccess={() => setEditSheetOpen(false)}
+              onCancel={() => setEditSheetOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Tabs */}
-      <Tabs defaultValue="details">
+      <Tabs defaultValue="categories">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="categories">Divisions & Categories</TabsTrigger>
           <TabsTrigger value="codes">Codes</TabsTrigger>
           <TabsTrigger value="judges">Judges</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {(contest.status === 'reviewed' || contest.status === 'finished') && (
-            <TabsTrigger value="winners">Winners</TabsTrigger>
-          )}
+          <TabsTrigger
+            value="winners"
+            disabled={contest.status !== 'finished'}
+            title={contest.status !== 'finished' ? 'This will be available once the contest is finished.' : undefined}
+          >
+            Winners
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="details" className="mt-6">
-          <ContestDetailsTab contest={contest} />
-        </TabsContent>
 
         <TabsContent value="categories" className="mt-6">
           <CategoriesTab contest={contest} />
@@ -349,22 +404,44 @@ export function ContestDetailPage() {
 
         <TabsContent value="notifications" className="mt-6">
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">Email Notifications</h3>
+                <p className="text-sm text-muted-foreground">
+                  Summary of notifications sent for this contest
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setLogsSheetOpen(true)}
+              >
+                View All Logs
+              </Button>
+            </div>
             <NotificationSummary contestId={contest.id} />
-            <Button
-              variant="outline"
-              onClick={() => setLogsSheetOpen(true)}
-            >
-              View All Notifications
-            </Button>
           </div>
         </TabsContent>
 
-        {(contest.status === 'reviewed' || contest.status === 'finished') && (
-          <TabsContent value="winners" className="mt-6">
+        <TabsContent value="winners" className="mt-6">
+          {contest.status === 'finished' ? (
             <AdminWinnersTab contest={contest} />
-          </TabsContent>
-        )}
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <p className="text-muted-foreground">
+                  Winners management will be available once the contest is finished.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* Danger Zone */}
+      <div className="border-t pt-6">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Danger Zone</h3>
+        <DeleteContestButton contestId={contest.id} />
+      </div>
 
       {/* Notification Logs Sheet */}
       <Sheet open={logsSheetOpen} onOpenChange={setLogsSheetOpen}>

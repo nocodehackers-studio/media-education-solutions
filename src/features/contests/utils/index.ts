@@ -4,4 +4,3 @@ export {
   generateParticipantCode,
   generateParticipantCodes,
 } from './generateParticipantCodes';
-export { exportCodesToCSV } from './exportCodesToCSV';

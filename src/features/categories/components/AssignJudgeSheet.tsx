@@ -39,6 +39,7 @@ type AssignJudgeInput = z.infer<typeof assignJudgeSchema>;
 interface AssignJudgeSheetProps {
   categoryId: string;
   categoryName: string;
+  mode?: 'assign' | 'reassign';
 }
 
 /**
@@ -50,6 +51,7 @@ interface AssignJudgeSheetProps {
 export function AssignJudgeSheet({
   categoryId,
   categoryName,
+  mode = 'assign',
 }: AssignJudgeSheetProps) {
   const [open, setOpen] = useState(false);
   const assignJudge = useAssignJudge();
@@ -94,17 +96,24 @@ export function AssignJudgeSheet({
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Assign Judge
-        </Button>
+        {mode === 'reassign' ? (
+          <Button variant="ghost" size="sm" title="Reassign judge">
+            <UserPlus className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Assign Judge
+          </Button>
+        )}
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Assign Judge</SheetTitle>
+          <SheetTitle>{mode === 'reassign' ? 'Reassign Judge' : 'Assign Judge'}</SheetTitle>
           <SheetDescription>
-            Assign a judge to review submissions for "{categoryName}". Enter
-            their email address below.
+            {mode === 'reassign'
+              ? `Replace the current judge for "${categoryName}". Enter the new judge's email address below.`
+              : `Assign a judge to review submissions for "${categoryName}". Enter their email address below.`}
           </SheetDescription>
         </SheetHeader>
 
