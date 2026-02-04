@@ -92,7 +92,6 @@ export const contestsApi = {
           rules: input.rules || null,
           cover_image_url: coverImageUrl,
           status: 'draft',
-          notify_tlc: true,
         })
         .select()
         .single();
