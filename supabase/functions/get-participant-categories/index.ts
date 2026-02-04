@@ -290,6 +290,7 @@ Deno.serve(async (req) => {
           description: contest.description ?? null,
           rules: contest.rules ?? null,
           coverImageUrl: contest.cover_image_url ?? null,
+          logoUrl: contest.logo_url ?? null,
         } : undefined,
         contestStatus: contestStatus ?? null,
         submissionsAvailable,  // F5: Indicate if hasSubmitted is reliable
