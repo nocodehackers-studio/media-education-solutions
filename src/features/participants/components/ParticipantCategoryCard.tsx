@@ -31,7 +31,9 @@ export function ParticipantCategoryCard({ category, contestFinished }: Participa
   const TypeIcon = category.type === 'video' ? Video : Image;
 
   const handleSubmit = () => {
-    navigate(`/participant/submit/${category.id}`);
+    navigate(`/participant/submit/${category.id}`, {
+      state: { type: category.type },
+    });
   };
 
   const handleViewEdit = () => {
