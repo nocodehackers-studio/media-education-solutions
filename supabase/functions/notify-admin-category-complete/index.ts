@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       throw new Error('BREVO_API_KEY not configured');
     }
 
-    const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
+    const appUrl = Deno.env.get('APP_URL') || 'https://media-education-solutions-nocodehackers.vercel.app';
     const senderName = 'Media Education Solutions';
     const senderEmail =
       Deno.env.get('BREVO_SENDER_EMAIL') || 'noreply@yourdomain.com';

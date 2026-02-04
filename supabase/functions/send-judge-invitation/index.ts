@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
     }
 
     // Build app URL
-    const appUrl = Deno.env.get('APP_URL') || 'https://yourapp.com';
+    const appUrl = Deno.env.get('APP_URL') || 'https://media-education-solutions-nocodehackers.vercel.app';
     console.log('[send-judge-invitation] APP_URL:', appUrl);
 
     // Story 3-3: Generate magic link for password setup flow
