@@ -82,7 +82,7 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="line-clamp-1">{contest.name}</CardTitle>
+          <CardTitle className="text-lg line-clamp-1">{contest.name}</CardTitle>
           <Badge className={status.className} variant="secondary">
             {status.label}
           </Badge>
