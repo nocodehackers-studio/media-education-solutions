@@ -129,7 +129,7 @@ describe('ParticipantCategoryCard', () => {
     })
   })
 
-  describe('uploaded (pending) category', () => {
+  describe('uploaded category (no pending badge)', () => {
     const uploadedCategory: ParticipantCategory = {
       ...baseCategory,
       hasSubmitted: true,
@@ -137,9 +137,10 @@ describe('ParticipantCategoryCard', () => {
       submissionId: 'sub-789',
     }
 
-    it('shows Pending badge', () => {
+    it('does not show any status badge for uploaded state', () => {
       renderCard(uploadedCategory)
-      expect(screen.getByText('Pending')).toBeInTheDocument()
+      expect(screen.queryByText('Pending')).not.toBeInTheDocument()
+      expect(screen.queryByText('Submitted')).not.toBeInTheDocument()
     })
   })
 

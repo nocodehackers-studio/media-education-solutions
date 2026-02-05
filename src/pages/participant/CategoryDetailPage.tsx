@@ -1,25 +1,37 @@
+import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
   Video,
   Image,
   CheckCircle,
-  Clock,
-  ChevronRight,
   Lock,
+  Pencil,
+  User,
+  Mail,
+  Users,
 } from 'lucide-react'
 import {
   Button,
   Badge,
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
   Separator,
+  Skeleton,
 } from '@/components/ui'
 import {
   DeadlineCountdown,
+  ParticipantFeedbackSection,
   useParticipantCategories,
   type ParticipantCategory,
 } from '@/features/participants'
+import {
+  SubmissionPreview,
+  EditSubmissionInfoSheet,
+  useSubmissionPreview,
+} from '@/features/submissions'
 import { useParticipantSession } from '@/contexts'
 
 interface LocationState {
@@ -30,13 +42,14 @@ interface LocationState {
 
 /**
  * Category detail page — shows full category info (description, rules, deadline)
- * and submission action (submit, view, or feedback).
+ * and inline submission preview when one exists.
  */
 export function CategoryDetailPage() {
   const { categoryId } = useParams<{ categoryId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useParticipantSession()
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
 
   const state = location.state as LocationState | null
 
@@ -56,6 +69,16 @@ export function CategoryDetailPage() {
 
   const acceptingSubmissions =
     state?.acceptingSubmissions ?? cachedData?.acceptingSubmissions ?? false
+
+  // Fetch full submission data when a submission exists
+  const {
+    data: submissionData,
+    isLoading: submissionLoading,
+  } = useSubmissionPreview({
+    submissionId: category?.submissionId ?? undefined,
+    participantId: session?.participantId ?? '',
+    participantCode: session?.code ?? '',
+  })
 
   const handleBack = () => {
     navigate('/participant/categories')
@@ -86,6 +109,7 @@ export function CategoryDetailPage() {
   const isDisabled = contestFinished && category.noSubmission
   const TypeIcon = category.type === 'video' ? Video : Image
   const typeLabel = category.type === 'video' ? 'Video' : 'Photo'
+  const hasSubmission = category.hasSubmitted && category.submissionId
 
   const handleSubmit = () => {
     navigate(`/participant/submit/${category.id}`, {
@@ -93,11 +117,14 @@ export function CategoryDetailPage() {
     })
   }
 
-  const handleViewSubmission = () => {
-    if (category.submissionId) {
-      navigate(`/participant/preview/${category.submissionId}`)
-    }
+  const handleReplace = () => {
+    navigate(`/participant/submit/${category.id}`, {
+      state: { type: category.type, acceptingSubmissions },
+    })
   }
+
+  const submission = submissionData?.submission
+  const isLocked = submission?.isLocked ?? false
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -153,57 +180,151 @@ export function CategoryDetailPage() {
 
         {(category.description || category.rules) && <Separator />}
 
-        {/* Submission status card */}
-        {category.hasSubmitted && category.submissionId && (
-          <Card
-            className="cursor-pointer hover:bg-accent/50 transition-colors"
-            onClick={handleViewSubmission}
-          >
-            <CardContent className="py-4 px-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium">Your Submission</span>
-                {category.submissionStatus === 'submitted' ? (
+        {/* Inline submission preview */}
+        {hasSubmission && submissionLoading && (
+          <div className="space-y-4">
+            <Skeleton className="w-full aspect-video rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+          </div>
+        )}
+
+        {hasSubmission && submission && (
+          <>
+            {/* Media preview */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Your Submission</CardTitle>
                   <Badge variant="default" className="bg-green-600 text-xs">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Submitted
                   </Badge>
-                ) : category.submissionStatus === 'uploaded' ? (
-                  <Badge variant="default" className="bg-amber-500 text-xs">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Pending
-                  </Badge>
-                ) : null}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <SubmissionPreview
+                  submission={submission}
+                  libraryId={submissionData.libraryId}
+                  videoReady={submissionData.videoReady}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Submission details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Submission Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="text-sm font-medium">{submission.studentName || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Teacher/Leader/Coach</p>
+                    <p className="text-sm font-medium">{submission.tlcName || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Mail className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">TLC Email</p>
+                    <p className="text-sm font-medium">{submission.tlcEmail || 'Not provided'}</p>
+                  </div>
+                </div>
+                {submission.groupMemberNames && (
+                  <div className="flex items-start gap-3">
+                    <Users className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Group Members</p>
+                      <p className="text-sm font-medium">{submission.groupMemberNames}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Feedback section when contest is finished */}
+            {contestFinished && (
+              <>
+                {submission.review ? (
+                  <ParticipantFeedbackSection feedback={submission.review} />
+                ) : (
+                  <Card>
+                    <CardContent className="py-6">
+                      <p className="text-sm text-muted-foreground text-center">
+                        Your submission has not been reviewed yet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {/* Lock state message */}
+            {!contestFinished && isLocked && (
+              <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
+                <Lock className="h-5 w-5 flex-shrink-0" />
+                <p>
+                  {submission.categoryStatus === 'closed'
+                    ? 'This category is no longer accepting changes'
+                    : 'Deadline passed — submission locked'}
+                </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+            )}
+
+            {/* Action buttons */}
+            {!contestFinished && !isLocked && (
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" onClick={handleReplace}>
+                  Replace
+                </Button>
+                <Button variant="outline" onClick={() => setEditSheetOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit Submission
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Action button */}
-        <div>
-          {isDisabled ? (
-            <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
-          ) : contestFinished && category.hasSubmitted ? (
-            <Button className="w-full" onClick={handleViewSubmission}>
-              View Feedback
-            </Button>
-          ) : contestFinished ? (
-            <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
-          ) : !acceptingSubmissions ? (
-            <p className="text-sm text-muted-foreground">This contest is closed. Submissions are no longer accepted.</p>
-          ) : isClosed ? (
-            <p className="text-sm text-muted-foreground">This category is no longer accepting submissions.</p>
-          ) : category.hasSubmitted ? (
-            <Button variant="outline" className="w-full" onClick={handleViewSubmission}>
-              View Submission
-            </Button>
-          ) : (
-            <Button className="w-full" onClick={handleSubmit}>
-              Submit Entry
-            </Button>
-          )}
-        </div>
+        {/* No submission — show action */}
+        {!hasSubmission && (
+          <div>
+            {isDisabled ? (
+              <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
+            ) : contestFinished ? (
+              <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
+            ) : !acceptingSubmissions ? (
+              <p className="text-sm text-muted-foreground">This contest is closed. Submissions are no longer accepted.</p>
+            ) : isClosed ? (
+              <p className="text-sm text-muted-foreground">This category is no longer accepting submissions.</p>
+            ) : (
+              <Button className="w-full" onClick={handleSubmit}>
+                Submit Entry
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Edit Submission Info Sheet (includes withdraw in danger zone) */}
+      {submission && category.submissionId && session && (
+        <EditSubmissionInfoSheet
+          open={editSheetOpen}
+          onOpenChange={setEditSheetOpen}
+          submission={submission}
+          participantId={session.participantId}
+          participantCode={session.code}
+          submissionId={category.submissionId}
+          isLocked={isLocked}
+        />
+      )}
     </div>
   )
 }

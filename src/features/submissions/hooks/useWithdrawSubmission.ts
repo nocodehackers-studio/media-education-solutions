@@ -16,7 +16,7 @@ interface WithdrawSubmissionResponse {
   error?: string
 }
 
-export function useWithdrawSubmission() {
+export function useWithdrawSubmission(options?: { onSuccess?: () => void }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -48,11 +48,15 @@ export function useWithdrawSubmission() {
 
       return data
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Submission withdrawn')
-      queryClient.invalidateQueries({ queryKey: ['participant-categories'] })
+      await queryClient.refetchQueries({ queryKey: ['participant-categories'] })
       queryClient.invalidateQueries({ queryKey: ['submission-preview'] })
-      navigate('/participant/categories')
+      if (options?.onSuccess) {
+        options.onSuccess()
+      } else {
+        navigate('/participant/categories')
+      }
     },
     onError: (error) => {
       const code = error instanceof Error ? error.message : ''

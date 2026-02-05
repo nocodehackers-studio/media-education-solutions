@@ -2,6 +2,8 @@
 // Integrates PhotoUploadForm with session context
 
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { PhotoUploadForm } from '@/features/submissions'
@@ -18,8 +20,12 @@ export function PhotoUploadPage() {
     return null
   }
 
-  const handleUploadComplete = (submissionId: string) => {
-    navigate(`/participant/preview/${submissionId}`)
+  const queryClient = useQueryClient()
+
+  const handleUploadComplete = async () => {
+    toast.success('Your submission has been received!')
+    await queryClient.refetchQueries({ queryKey: ['participant-categories'] })
+    navigate(`/participant/category/${categoryId}`)
   }
 
   const handleBack = () => {

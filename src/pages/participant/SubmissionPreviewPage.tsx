@@ -17,7 +17,6 @@ import {
   SubmissionPreviewSkeleton,
   EditSubmissionInfoSheet,
   useSubmissionPreview,
-  useConfirmSubmission,
 } from '@/features/submissions'
 import { ParticipantFeedbackSection } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
@@ -33,17 +32,6 @@ export function SubmissionPreviewPage() {
     participantId: session?.participantId ?? '',
     participantCode: session?.code ?? '',
   })
-
-  const confirmMutation = useConfirmSubmission()
-
-  const handleConfirm = () => {
-    if (!submissionId || !session) return
-    confirmMutation.mutate({
-      submissionId,
-      participantId: session.participantId,
-      participantCode: session.code,
-    })
-  }
 
   const handleReplace = () => {
     if (data?.submission.categoryId) {
@@ -96,7 +84,6 @@ export function SubmissionPreviewPage() {
 
   const { submission, libraryId, videoReady } = data
   const isConfirmed = submission.status === 'submitted'
-  const canConfirm = submission.status === 'uploaded'
   const isLocked = submission.isLocked
   const contestFinished = submission.contestStatus === 'finished'
 
@@ -132,16 +119,7 @@ export function SubmissionPreviewPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Submission Details</CardTitle>
-              {!contestFinished && !isLocked && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditSheetOpen(true)}
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-              )}
+              {/* Edit moved to action buttons below */}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -176,14 +154,12 @@ export function SubmissionPreviewPage() {
               </div>
             )}
             <div className="flex items-center gap-2 pt-1">
-              {isConfirmed ? (
+              {isConfirmed && (
                 <div className="flex items-center gap-1.5 text-green-600 text-sm font-medium">
                   <CheckCircle className="h-4 w-4" />
                   Submitted
                 </div>
-              ) : canConfirm ? (
-                <span className="text-sm text-amber-600 font-medium">Pending confirmation</span>
-              ) : null}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -220,28 +196,18 @@ export function SubmissionPreviewPage() {
         {/* Action Buttons — hidden when contest is finished */}
         {!contestFinished && !isLocked && (
           <div className="flex flex-wrap gap-3">
-            {/* Confirm button (only for uploaded/unconfirmed) */}
-            {canConfirm && (
-              <Button
-                onClick={handleConfirm}
-                disabled={confirmMutation.isPending}
-              >
-                {confirmMutation.isPending ? 'Confirming...' : 'Confirm Submission'}
-              </Button>
-            )}
-
-            {/* Replace button (uploaded or submitted, not locked) */}
-            {(canConfirm || isConfirmed) && (
+            {/* Replace button */}
+            {isConfirmed && (
               <Button variant="outline" onClick={handleReplace}>
                 Replace
               </Button>
             )}
 
-            {/* Edit Details button */}
-            {(canConfirm || isConfirmed) && (
+            {/* Edit Submission button */}
+            {isConfirmed && (
               <Button variant="outline" onClick={() => setEditSheetOpen(true)}>
                 <Pencil className="h-4 w-4 mr-1" />
-                Edit Details
+                Edit Submission
               </Button>
             )}
           </div>

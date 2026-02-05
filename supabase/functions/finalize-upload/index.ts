@@ -119,13 +119,14 @@ Deno.serve(async (req) => {
     const mediaUrl = `https://iframe.mediadelivery.net/embed/${BUNNY_STREAM_LIBRARY_ID}/${submission.bunny_video_id}`
     const thumbnailUrl = `https://vz-${BUNNY_STREAM_LIBRARY_ID}.b-cdn.net/${submission.bunny_video_id}/thumbnail.jpg`
 
-    // Update submission to uploaded (awaiting participant confirmation)
+    // Update submission and auto-confirm (no separate confirmation step)
     const { error: updateError } = await supabaseAdmin
       .from('submissions')
       .update({
-        status: 'uploaded',
+        status: 'submitted',
         media_url: mediaUrl,
         thumbnail_url: thumbnailUrl,
+        submitted_at: new Date().toISOString(),
       })
       .eq('id', submissionId)
 

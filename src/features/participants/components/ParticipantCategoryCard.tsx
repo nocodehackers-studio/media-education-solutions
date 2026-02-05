@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Video, Image, CheckCircle, Clock, ChevronRight, Ban } from 'lucide-react'
+import { Video, Image, CheckCircle, ChevronRight, Ban } from 'lucide-react'
 import { Badge, Card, CardContent } from '@/components/ui'
 import { DeadlineCountdown } from './DeadlineCountdown'
 import { cn } from '@/lib/utils'
@@ -63,11 +63,6 @@ export function ParticipantCategoryCard({ category, contestFinished, acceptingSu
               <Badge variant="default" className="bg-green-600 text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Submitted
-              </Badge>
-            ) : category.submissionStatus === 'uploaded' ? (
-              <Badge variant="default" className="bg-amber-500 text-xs">
-                <Clock className="h-3 w-3 mr-1" />
-                Pending
               </Badge>
             ) : null}
           </div>
