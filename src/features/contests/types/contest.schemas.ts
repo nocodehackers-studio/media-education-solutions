@@ -39,6 +39,7 @@ export const createContestSchema = z.object({
     .optional()
     .or(z.literal('')),
   rules: z.string().optional(),
+  timezone: z.string().min(1, 'Timezone is required'),
 });
 
 /**
@@ -62,6 +63,7 @@ export const updateContestSchema = z.object({
   description: z.string().optional(),
   rules: z.string().optional(),
   notifyTlc: z.boolean().optional(),
+  timezone: z.string().optional(),
 });
 
 /**

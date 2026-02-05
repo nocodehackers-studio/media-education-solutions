@@ -43,6 +43,7 @@ const mockContest: Contest = {
   deletedAt: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  timezone: 'America/New_York',
 };
 
 function renderWithProviders(ui: React.ReactElement) {

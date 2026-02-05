@@ -34,6 +34,7 @@ interface CategoriesTabProps {
 interface DivisionSectionProps {
   division: Division;
   contestId: string;
+  contestTimezone: string;
   canAddCategory: boolean;
   defaultOpen?: boolean;
   isOnlyDivision: boolean;
@@ -45,6 +46,7 @@ interface DivisionSectionProps {
 function DivisionSection({
   division,
   contestId,
+  contestTimezone,
   canAddCategory,
   defaultOpen = true,
   isOnlyDivision,
@@ -116,6 +118,7 @@ function DivisionSection({
                   key={formKey}
                   divisionId={division.id}
                   contestId={contestId}
+                  contestTimezone={contestTimezone}
                   onSuccess={() => {
                     setIsFormDirty(false);
                     setCreateOpen(false);
@@ -153,6 +156,7 @@ function DivisionSection({
                 key={category.id}
                 category={category}
                 contestId={contestId}
+                contestTimezone={contestTimezone}
               />
             ))}
           </div>
@@ -226,6 +230,7 @@ export function CategoriesTab({ contest }: CategoriesTabProps) {
               key={division.id}
               division={division}
               contestId={contest.id}
+              contestTimezone={contest.timezone}
               canAddCategory={canAddCategory}
               defaultOpen={false}
               isOnlyDivision={isOnlyDivision}

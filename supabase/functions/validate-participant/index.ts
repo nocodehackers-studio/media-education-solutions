@@ -21,6 +21,7 @@ interface ValidationResponse {
   participantId?: string
   contestId?: string
   contestName?: string
+  contestTimezone?: string
   participantData?: {
     organizationName: string | null
     status: string
@@ -94,7 +95,7 @@ Deno.serve(async (req) => {
     // 1. Find contest by code
     const { data: contest, error: contestError } = await supabaseAdmin
       .from('contests')
-      .select('id, name, status, contest_code')
+      .select('id, name, status, contest_code, timezone')
       .eq('contest_code', normalizedContestCode)
       .single()
 
@@ -157,6 +158,7 @@ Deno.serve(async (req) => {
       participantId: participant.id,
       contestId: contest.id,
       contestName: contest.name,
+      contestTimezone: contest.timezone,
       participantData: {
         organizationName: participant.organization_name,
         status: participant.status,

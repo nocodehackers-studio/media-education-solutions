@@ -24,12 +24,14 @@ interface AdminSubmissionDetailProps {
   submission: AdminSubmission | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  contestTimezone?: string
 }
 
 export function AdminSubmissionDetail({
   submission,
   open,
   onOpenChange,
+  contestTimezone,
 }: AdminSubmissionDetailProps) {
   const navigate = useNavigate()
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -93,7 +95,7 @@ export function AdminSubmissionDetail({
                 <dd className="capitalize">{submission.mediaType}</dd>
 
                 <dt className="text-muted-foreground">Submitted</dt>
-                <dd>{formatSubmissionDate(submission.submittedAt, 'long')}</dd>
+                <dd>{formatSubmissionDate(submission.submittedAt, 'long', contestTimezone)}</dd>
 
                 <dt className="text-muted-foreground">Status</dt>
                 <dd>
@@ -117,7 +119,7 @@ export function AdminSubmissionDetail({
                 <div className="space-y-2">
                   {submission.disqualifiedAt && (
                     <p className="text-sm text-muted-foreground">
-                      Disqualified {formatSubmissionDate(submission.disqualifiedAt)}
+                      Disqualified {formatSubmissionDate(submission.disqualifiedAt, 'short', contestTimezone)}
                     </p>
                   )}
                   <Button
@@ -139,6 +141,7 @@ export function AdminSubmissionDetail({
               onOverrideFeedback={
                 submission.review ? () => setOverrideDialogOpen(true) : undefined
               }
+              contestTimezone={contestTimezone}
             />
 
             {/* View Rankings link */}

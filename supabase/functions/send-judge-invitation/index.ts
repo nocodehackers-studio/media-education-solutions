@@ -21,6 +21,7 @@ interface InvitationRequest {
   contestName: string;
   submissionCount: number;
   categoryDeadline?: string;
+  contestTimezone?: string;
 }
 
 Deno.serve(async (req) => {
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
     categoryId = body.categoryId;
     contestId = body.contestId;
     judgeEmail = body.judgeEmail;
-    const { judgeName, categoryName, contestName, submissionCount, categoryDeadline } = body;
+    const { judgeName, categoryName, contestName, submissionCount, categoryDeadline, contestTimezone } = body;
     console.log('[send-judge-invitation] Request body:', {
       categoryId,
       contestId,
@@ -98,6 +99,7 @@ Deno.serve(async (req) => {
       categoryName,
       contestName,
       submissionCount,
+      contestTimezone,
     });
 
     // Validate required fields
@@ -211,7 +213,7 @@ Deno.serve(async (req) => {
                   <p style="margin: 0;"><strong>Contest:</strong> ${contestName}</p>
                   <p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${categoryName}</p>
                   <p style="margin: 8px 0 0 0;"><strong>Submissions to Review:</strong> ${submissionCount}</p>${categoryDeadline ? `
-                  <p style="margin: 8px 0 0 0;"><strong>Judging Deadline:</strong> ${new Date(categoryDeadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
+                  <p style="margin: 8px 0 0 0;"><strong>Judging Deadline:</strong> ${new Date(categoryDeadline).toLocaleString('en-US', { timeZone: contestTimezone || 'America/New_York', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</p>` : ''}
                 </div>
 
                 <p>The submission deadline has passed and the category is now ready for judging.</p>

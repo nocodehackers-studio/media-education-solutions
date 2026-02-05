@@ -94,6 +94,7 @@ const mockCategories: CategoryWithContext[] = [
     judgingCompletedAt: null,
     contestName: 'Summer Contest',
     contestId: 'contest-1',
+    contestTimezone: 'America/New_York',
     divisionName: 'Youth Division',
     submissionCount: 15,
   },
@@ -112,6 +113,7 @@ const mockCategories: CategoryWithContext[] = [
     judgingCompletedAt: null,
     contestName: 'Winter Contest',
     contestId: 'contest-2',
+    contestTimezone: 'America/New_York',
     divisionName: 'Adult Division',
     submissionCount: 8,
   },
@@ -345,7 +347,7 @@ describe('JudgeDashboardPage', () => {
       expect(screen.getByText('Published')).toBeInTheDocument();
     });
 
-    it('shows "Awaiting deadline" text for published categories', () => {
+    it('shows deadline text for published categories', () => {
       mockUseCategoriesByJudge.mockReturnValue({
         data: mockCategories,
         isLoading: false,
@@ -355,8 +357,8 @@ describe('JudgeDashboardPage', () => {
 
       render(<JudgeDashboardPage />, { wrapper: createWrapper() });
 
-      // Relative time text changes over time, so match the prefix only
-      expect(screen.getByText(/Awaiting deadline:/i)).toBeInTheDocument();
+      // Now shows "Deadline: {date} ({relative time})" format
+      expect(screen.getByText(/Deadline:/i)).toBeInTheDocument();
     });
   });
 

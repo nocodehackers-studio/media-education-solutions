@@ -117,6 +117,7 @@ export function ParticipantSessionProvider({
         contestId: data.contestId,
         contestCode: contestCode.toUpperCase(),
         contestName: data.contestName,
+        contestTimezone: data.contestTimezone || 'America/New_York',
         lastActivity: Date.now(),
         organizationName: data.participantData?.organizationName || undefined,
       }

@@ -4,6 +4,7 @@ import { Badge, Card, CardContent } from '@/components/ui'
 import { DeadlineCountdown } from './DeadlineCountdown'
 import { cn } from '@/lib/utils'
 import { type ParticipantCategory } from '../api/participantsApi'
+import { useParticipantSession } from '@/contexts'
 
 export type { ParticipantCategory } from '../api/participantsApi'
 
@@ -15,6 +16,8 @@ interface ParticipantCategoryCardProps {
 
 export function ParticipantCategoryCard({ category, contestFinished, acceptingSubmissions = true }: ParticipantCategoryCardProps) {
   const navigate = useNavigate()
+  const { session } = useParticipantSession()
+  const contestTimezone = session?.contestTimezone || 'America/New_York'
   const isClosed = category.status === 'closed'
   const isDisabled = contestFinished && category.noSubmission
   const isContestClosed = acceptingSubmissions === false && !contestFinished
@@ -82,7 +85,7 @@ export function ParticipantCategoryCard({ category, contestFinished, acceptingSu
           ) : isContestClosed ? (
             <span className="text-muted-foreground text-sm">Submissions closed</span>
           ) : !isClosed ? (
-            <DeadlineCountdown deadline={category.deadline} />
+            <DeadlineCountdown deadline={category.deadline} timezone={contestTimezone} />
           ) : (
             <span className="text-muted-foreground text-sm">Submissions closed</span>
           )}

@@ -29,6 +29,7 @@ function transformContestRow(row: ContestRow): Contest {
     winnersPageEnabled: row.winners_page_enabled ?? false,
     winnersPageGeneratedAt: row.winners_page_generated_at ?? null,
     notifyTlc: row.notify_tlc ?? true,
+    timezone: row.timezone,
     deletedAt: row.deleted_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -90,6 +91,7 @@ export const contestsApi = {
           cover_image_url: null,
           logo_url: null,
           status: 'draft',
+          timezone: input.timezone || 'America/New_York',
         })
         .select()
         .single();
@@ -198,6 +200,7 @@ export const contestsApi = {
       description: emptyToNull(input.description),
       rules: emptyToNull(input.rules),
       ...(input.notifyTlc !== undefined && { notify_tlc: input.notifyTlc }),
+      ...(input.timezone !== undefined && { timezone: input.timezone }),
     };
 
     const { data, error } = await supabase

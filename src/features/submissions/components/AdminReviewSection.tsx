@@ -10,6 +10,7 @@ interface AdminReviewSectionProps {
   assignedJudgeName: string | null
   rankingPosition: number | null
   onOverrideFeedback?: () => void
+  contestTimezone?: string
 }
 
 export function AdminReviewSection({
@@ -17,6 +18,7 @@ export function AdminReviewSection({
   assignedJudgeName,
   rankingPosition,
   onOverrideFeedback,
+  contestTimezone,
 }: AdminReviewSectionProps) {
   if (!review) {
     return (
@@ -64,7 +66,7 @@ export function AdminReviewSection({
               <Badge variant="secondary" className="text-xs">Overridden</Badge>
               {review.adminFeedbackOverrideAt && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  {formatSubmissionDate(review.adminFeedbackOverrideAt, 'short')}
+                  {formatSubmissionDate(review.adminFeedbackOverrideAt, 'short', contestTimezone)}
                 </span>
               )}
             </div>
@@ -81,7 +83,7 @@ export function AdminReviewSection({
         </dd>
 
         <dt className="text-muted-foreground">Reviewed</dt>
-        <dd>{formatSubmissionDate(review.reviewedAt, 'long')}</dd>
+        <dd>{formatSubmissionDate(review.reviewedAt, 'long', contestTimezone)}</dd>
 
         {rankingPosition != null && (
           <>

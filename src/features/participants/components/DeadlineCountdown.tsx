@@ -5,13 +5,15 @@ import { useState, useEffect } from 'react';
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateTimeInTimezone } from '@/lib/dateUtils';
 
 interface DeadlineCountdownProps {
   deadline: string;
+  timezone: string;
   className?: string;
 }
 
-export function DeadlineCountdown({ deadline, className }: DeadlineCountdownProps) {
+export function DeadlineCountdown({ deadline, timezone, className }: DeadlineCountdownProps) {
   const [now, setNow] = useState(() => Date.now());
 
   // Update every minute
@@ -60,15 +62,20 @@ export function DeadlineCountdown({ deadline, className }: DeadlineCountdownProp
 
   const countdownText = formatDistanceToNow(deadlineDate, { addSuffix: true });
 
+  const formattedDeadline = formatDateTimeInTimezone(deadline, timezone);
+
   // F8: aria-live for screen reader announcements on dynamic updates
   return (
     <div
-      className={cn('flex items-center gap-1', urgencyStyles[urgency], className)}
+      className={cn('flex flex-col gap-0.5', className)}
       aria-live="polite"
       aria-atomic="true"
     >
-      <Clock className="h-4 w-4" aria-hidden="true" />
-      <span>Due {countdownText}</span>
+      <div className={cn('flex items-center gap-1', urgencyStyles[urgency])}>
+        <Clock className="h-4 w-4" aria-hidden="true" />
+        <span>Due {countdownText}</span>
+      </div>
+      <span className="text-xs text-muted-foreground">{formattedDeadline}</span>
     </div>
   );
 }

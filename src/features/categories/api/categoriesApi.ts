@@ -777,7 +777,8 @@ export const categoriesApi = {
           contests!inner (
             id,
             name,
-            status
+            status,
+            timezone
           )
         )
       `
@@ -826,6 +827,7 @@ export const categoriesApi = {
           id: string;
           name: string;
           status: string;
+          timezone: string;
         };
       };
     };
@@ -835,6 +837,7 @@ export const categoriesApi = {
       ...transformCategory(category),
       contestName: category.divisions.contests.name,
       contestId: category.divisions.contests.id,
+      contestTimezone: category.divisions.contests.timezone,
       divisionName: category.divisions.name,
       submissionCount: countMap.get(category.id) || 0,
     }));

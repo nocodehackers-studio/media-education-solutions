@@ -19,6 +19,18 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+// Mock useParticipantSession to provide timezone context
+vi.mock('@/contexts', () => ({
+  useParticipantSession: () => ({
+    session: {
+      contestTimezone: 'America/New_York',
+      participantId: 'participant-123',
+      code: 'TEST1234',
+      contestId: 'contest-123',
+    },
+  }),
+}))
+
 const baseCategory: ParticipantCategory = {
   id: 'cat-123',
   name: 'Best Documentary',

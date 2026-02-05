@@ -38,10 +38,12 @@ import { AssignJudgeSheet } from './AssignJudgeSheet';
 import { DuplicateCategoryDialog } from '@/features/divisions';
 import { useConfirmClose } from '@/hooks/useConfirmClose';
 import type { Category, CategoryStatus } from '../types/category.types';
+import { formatDateTimeInTimezone } from '@/lib/dateUtils';
 
 interface CategoryCardProps {
   category: Category;
   contestId: string;
+  contestTimezone: string;
 }
 
 // Status badge colors
@@ -63,20 +65,11 @@ const typeConfig = {
   },
 };
 
-// Format date using Intl.DateTimeFormat per architecture rules
-function formatDeadline(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(dateString));
-}
-
 /**
  * Compact row component displaying a single category
  * Includes status dropdown, edit/delete actions (draft only)
  */
-export function CategoryCard({ category, contestId }: CategoryCardProps) {
+export function CategoryCard({ category, contestId, contestTimezone }: CategoryCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -236,7 +229,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
           {optimisticStatus}
         </Badge>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
-          {formatDeadline(category.deadline)}
+          {formatDateTimeInTimezone(category.deadline, contestTimezone)}
           {deadlinePassed && <span className="text-red-500 ml-1">(Passed)</span>}
         </span>
 
@@ -286,6 +279,7 @@ export function CategoryCard({ category, contestId }: CategoryCardProps) {
                 key={formKey}
                 category={category}
                 contestId={contestId}
+                contestTimezone={contestTimezone}
                 onSuccess={() => {
                   setIsFormDirty(false);
                   setEditOpen(false);

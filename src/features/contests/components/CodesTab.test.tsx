@@ -50,6 +50,7 @@ const mockContest: Contest = {
   deletedAt: null,
   createdAt: '2026-01-13T00:00:00Z',
   updatedAt: '2026-01-13T00:00:00Z',
+  timezone: 'America/New_York',
 };
 
 const createMockParticipant = (

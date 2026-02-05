@@ -1,7 +1,7 @@
 // EditCategoryForm - Story 2.5
 // Form for editing an existing category (only for draft status)
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon } from 'lucide-react';
@@ -28,22 +28,16 @@ import {
   Textarea,
   toast,
 } from '@/components/ui';
+import { TimePicker } from '@/components/ui/time-picker';
 import { updateCategorySchema, type UpdateCategoryInput } from '../types/category.schemas';
 import { useUpdateCategory } from '../hooks/useUpdateCategory';
 import type { Category } from '../types/category.types';
-
-// Format date using Intl.DateTimeFormat per architecture rules
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(dateString));
-}
+import { formatDateInTimezone, extractTimeFromDate, combineDateAndTime } from '@/lib/dateUtils';
 
 interface EditCategoryFormProps {
   category: Category;
   contestId: string;
+  contestTimezone: string;
   onSuccess?: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
   /** When true, all fields are disabled (AC3: read-only for published/closed) */
@@ -54,8 +48,9 @@ interface EditCategoryFormProps {
  * Form component for editing an existing category
  * Supports read-only mode for published/closed categories (AC3)
  */
-export function EditCategoryForm({ category, contestId, onSuccess, onDirtyChange, readOnly = false }: EditCategoryFormProps) {
+export function EditCategoryForm({ category, contestId, contestTimezone, onSuccess, onDirtyChange, readOnly = false }: EditCategoryFormProps) {
   const updateCategory = useUpdateCategory(contestId);
+  const [time, setTime] = useState(() => extractTimeFromDate(category.deadline, contestTimezone));
 
   const form = useForm<UpdateCategoryInput>({
     resolver: zodResolver(updateCategorySchema),
@@ -78,9 +73,14 @@ export function EditCategoryForm({ category, contestId, onSuccess, onDirtyChange
 
   const onSubmit = async (data: UpdateCategoryInput) => {
     try {
+      // Combine date and time into UTC ISO string if deadline was provided
+      const input = { ...data };
+      if (data.deadline) {
+        input.deadline = combineDateAndTime(data.deadline, time, contestTimezone);
+      }
       await updateCategory.mutateAsync({
         categoryId: category.id,
-        input: data,
+        input,
       });
       toast.success('Category updated');
       onSuccess?.();
@@ -137,42 +137,52 @@ export function EditCategoryForm({ category, contestId, onSuccess, onDirtyChange
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Submission Deadline {!readOnly && '*'}</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild disabled={readOnly}>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      disabled={readOnly}
-                      className={cn(
-                        'w-full pl-3 text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      {field.value ? (
-                        formatDate(field.value)
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        field.onChange(date.toISOString());
-                      }
-                    }}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
+              <div className="flex flex-col gap-2">
+                <Popover>
+                  <PopoverTrigger asChild disabled={readOnly}>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        disabled={readOnly}
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          formatDateInTimezone(field.value, contestTimezone)
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          field.onChange(date.toISOString());
+                        }
+                      }}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">at</span>
+                  <TimePicker
+                    value={time}
+                    onChange={setTime}
+                    disabled={readOnly || !field.value}
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+              </div>
               <FormDescription>
-                After this date, category will automatically close.
+                After this date and time, category will automatically close.
               </FormDescription>
               <FormMessage />
             </FormItem>

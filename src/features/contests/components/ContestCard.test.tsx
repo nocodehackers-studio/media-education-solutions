@@ -31,6 +31,7 @@ const mockContest: Contest = {
   deletedAt: null,
   createdAt: '2026-01-10T12:00:00Z',
   updatedAt: '2026-01-10T12:00:00Z',
+  timezone: 'America/New_York',
 };
 
 describe('ContestCard', () => {

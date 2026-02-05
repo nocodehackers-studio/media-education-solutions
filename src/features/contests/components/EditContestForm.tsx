@@ -6,14 +6,21 @@ import {
   Button,
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
   toast,
 } from '@/components/ui';
+import { TIMEZONE_OPTIONS, getTimezoneOffsetLabel } from '@/lib/dateUtils';
 import { updateContestSchema, type UpdateContestInput } from '../types/contest.schemas';
 import { useUpdateContest } from '../hooks/useUpdateContest';
 import { useUploadCoverImage, useDeleteCoverImage, useUploadLogo, useDeleteLogo } from '../hooks/useContestCoverImage';
@@ -49,6 +56,7 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
       description: contest.description || '',
       rules: contest.rules || '',
       notifyTlc: contest.notifyTlc,
+      timezone: contest.timezone,
     },
   });
 
@@ -313,6 +321,34 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="timezone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Timezone</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {TIMEZONE_OPTIONS.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({getTimezoneOffsetLabel(tz.value)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                All deadlines will be displayed in this timezone.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

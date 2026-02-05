@@ -10,6 +10,7 @@ export interface ParticipantSession {
   contestId: string
   contestCode: string
   contestName: string
+  contestTimezone: string
   lastActivity: number // timestamp for inactivity tracking
   organizationName?: string
 }

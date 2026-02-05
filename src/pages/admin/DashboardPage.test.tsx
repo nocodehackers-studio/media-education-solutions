@@ -65,6 +65,7 @@ const mockActiveContests: Contest[] = [
     deletedAt: null,
     createdAt: '2026-01-10T12:00:00Z',
     updatedAt: '2026-01-10T12:00:00Z',
+    timezone: 'America/New_York',
   },
   {
     id: 'contest-2',
@@ -83,6 +84,7 @@ const mockActiveContests: Contest[] = [
     deletedAt: null,
     createdAt: '2026-01-09T12:00:00Z',
     updatedAt: '2026-01-09T12:00:00Z',
+    timezone: 'America/New_York',
   },
 ];
 

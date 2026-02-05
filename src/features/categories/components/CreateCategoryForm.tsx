@@ -1,7 +1,7 @@
 // CreateCategoryForm - Story 2.5
 // Form for creating a new category within a contest
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon } from 'lucide-react';
@@ -28,21 +28,15 @@ import {
   Textarea,
   toast,
 } from '@/components/ui';
+import { TimePicker } from '@/components/ui/time-picker';
 import { createCategorySchema, type CreateCategoryInput } from '../types/category.schemas';
 import { useCreateCategory } from '../hooks/useCreateCategory';
-
-// Format date using Intl.DateTimeFormat per architecture rules
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(dateString));
-}
+import { formatDateInTimezone, combineDateAndTime } from '@/lib/dateUtils';
 
 interface CreateCategoryFormProps {
   divisionId: string;
   contestId: string;
+  contestTimezone: string;
   onSuccess?: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
 }
@@ -52,8 +46,9 @@ interface CreateCategoryFormProps {
  * Story 2-9: Categories now belong to divisions
  * Validates with Zod schema and submits via TanStack Query mutation
  */
-export function CreateCategoryForm({ divisionId, contestId, onSuccess, onDirtyChange }: CreateCategoryFormProps) {
+export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onSuccess, onDirtyChange }: CreateCategoryFormProps) {
   const createCategory = useCreateCategory(divisionId, contestId);
+  const [time, setTime] = useState('23:59');
 
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),
@@ -74,9 +69,12 @@ export function CreateCategoryForm({ divisionId, contestId, onSuccess, onDirtyCh
 
   const onSubmit = async (data: CreateCategoryInput) => {
     try {
-      await createCategory.mutateAsync(data);
+      // Combine date and time into UTC ISO string
+      const deadlineUtc = combineDateAndTime(data.deadline, time, contestTimezone);
+      await createCategory.mutateAsync({ ...data, deadline: deadlineUtc });
       toast.success('Category created');
       form.reset();
+      setTime('23:59');
       onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create category');
@@ -131,41 +129,51 @@ export function CreateCategoryForm({ divisionId, contestId, onSuccess, onDirtyCh
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Submission Deadline *</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full pl-3 text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      {field.value ? (
-                        formatDate(field.value)
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        field.onChange(date.toISOString());
-                      }
-                    }}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
+              <div className="flex flex-col gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          formatDateInTimezone(field.value, contestTimezone)
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          field.onChange(date.toISOString());
+                        }
+                      }}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">at</span>
+                  <TimePicker
+                    value={time}
+                    onChange={setTime}
+                    disabled={!field.value}
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+              </div>
               <FormDescription>
-                After this date, category will automatically close.
+                After this date and time, category will automatically close.
               </FormDescription>
               <FormMessage />
             </FormItem>

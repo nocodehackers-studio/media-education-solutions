@@ -10,6 +10,8 @@ import {
 import { useCategories } from '@/features/categories';
 import { useAdminSubmissions } from '@/features/submissions';
 import type { Contest, ContestStatus } from '../types/contest.types';
+import { toZonedTime } from 'date-fns-tz';
+import { differenceInCalendarDays } from 'date-fns';
 
 // Status colors per UX spec: ux-consistency-patterns.md
 const statusConfig: Record<ContestStatus, { label: string; className: string }> = {
@@ -26,15 +28,28 @@ interface ContestCardProps {
   onClick: (id: string) => void;
 }
 
-function computeDaysLeft(categories: { deadline: string }[]): number | null {
+function computeDaysLeft(categories: { deadline: string }[], timezone: string): number | null {
   if (categories.length === 0) return null;
-  const now = new Date();
+
+  // Find the latest deadline
   const latest = categories.reduce((acc, cat) => {
     const d = new Date(cat.deadline);
     return d > acc ? d : acc;
   }, new Date(0));
-  if (latest <= now) return 0;
-  return Math.ceil((latest.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Convert to contest timezone for calendar day comparison
+  try {
+    const nowInTz = toZonedTime(new Date(), timezone);
+    const latestInTz = toZonedTime(latest, timezone);
+
+    const days = differenceInCalendarDays(latestInTz, nowInTz);
+    return days < 0 ? 0 : days;
+  } catch {
+    // Fallback to simple calculation on timezone error
+    const now = new Date();
+    if (latest <= now) return 0;
+    return Math.ceil((latest.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  }
 }
 
 export function ContestCard({ contest, onClick }: ContestCardProps) {
@@ -47,7 +62,7 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
   const categoryCount = categories?.length ?? 0;
   const categoriesJudged = categories?.filter((c) => c.judgingCompletedAt !== null).length ?? 0;
   const reviewedPercent = categoryCount > 0 ? Math.round((categoriesJudged / categoryCount) * 100) : 0;
-  const daysLeft = categories ? computeDaysLeft(categories) : null;
+  const daysLeft = categories ? computeDaysLeft(categories, contest.timezone) : null;
 
   return (
     <Card

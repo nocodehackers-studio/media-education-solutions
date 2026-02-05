@@ -20,11 +20,13 @@ type SortDirection = 'asc' | 'desc'
 interface AdminSubmissionsTableProps {
   submissions: AdminSubmission[]
   onSelectSubmission: (submission: AdminSubmission) => void
+  contestTimezone?: string
 }
 
 export function AdminSubmissionsTable({
   submissions,
   onSelectSubmission,
+  contestTimezone,
 }: AdminSubmissionsTableProps) {
   const [sortField, setSortField] = useState<SortField>('submittedAt')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -138,7 +140,7 @@ export function AdminSubmissionsTable({
                 {submission.mediaType}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {formatSubmissionDate(submission.submittedAt)}
+                {formatSubmissionDate(submission.submittedAt, 'short', contestTimezone)}
               </TableCell>
               <TableCell>
                 <Badge variant={SUBMISSION_STATUS_VARIANT[submission.status] ?? 'secondary'}>

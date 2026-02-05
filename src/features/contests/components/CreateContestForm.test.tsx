@@ -114,6 +114,7 @@ describe('CreateContestForm', () => {
       deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      timezone: 'America/New_York',
     });
 
     const onSuccess = vi.fn();
@@ -207,6 +208,7 @@ describe('CreateContestForm', () => {
       deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      timezone: 'America/New_York',
     });
 
     renderWithProviders(<CreateContestForm />);

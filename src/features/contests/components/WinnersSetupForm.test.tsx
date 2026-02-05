@@ -47,6 +47,7 @@ const baseContest: Contest = {
   deletedAt: null,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
+  timezone: 'America/New_York',
 };
 
 const finishedContest: Contest = {

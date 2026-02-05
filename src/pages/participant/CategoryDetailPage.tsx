@@ -145,7 +145,11 @@ export function CategoryDetailPage() {
 
           {/* Deadline */}
           {!contestFinished && !isClosed && (
-            <DeadlineCountdown deadline={category.deadline} className="text-base" />
+            <DeadlineCountdown
+              deadline={category.deadline}
+              timezone={session?.contestTimezone || 'America/New_York'}
+              className="text-base"
+            />
           )}
           {!contestFinished && isClosed && (
             <div className="flex items-center gap-1 text-muted-foreground">

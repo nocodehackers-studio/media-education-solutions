@@ -68,7 +68,7 @@ describe('EditCategoryForm', () => {
 
   it('renders form with pre-populated fields', () => {
     renderWithProviders(
-      <EditCategoryForm category={mockCategory} contestId="contest-123" />
+      <EditCategoryForm category={mockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByLabelText(/category name/i)).toHaveValue('Best Video');
@@ -78,7 +78,7 @@ describe('EditCategoryForm', () => {
 
   it('renders all form fields', () => {
     renderWithProviders(
-      <EditCategoryForm category={mockCategory} contestId="contest-123" />
+      <EditCategoryForm category={mockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByLabelText(/category name/i)).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('EditCategoryForm', () => {
   it('shows validation error when name is cleared', async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <EditCategoryForm category={mockCategory} contestId="contest-123" />
+      <EditCategoryForm category={mockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     const nameInput = screen.getByLabelText(/category name/i);
@@ -118,6 +118,7 @@ describe('EditCategoryForm', () => {
       <EditCategoryForm
         category={mockCategory}
         contestId="contest-123"
+        contestTimezone="America/New_York"
         onSuccess={onSuccess}
       />
     );
@@ -148,7 +149,7 @@ describe('EditCategoryForm', () => {
     );
 
     renderWithProviders(
-      <EditCategoryForm category={mockCategory} contestId="contest-123" />
+      <EditCategoryForm category={mockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     const nameInput = screen.getByLabelText(/category name/i);
@@ -165,10 +166,12 @@ describe('EditCategoryForm', () => {
 
   it('renders type dropdown with current type selected', () => {
     renderWithProviders(
-      <EditCategoryForm category={mockCategory} contestId="contest-123" />
+      <EditCategoryForm category={mockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    // Verify type dropdown is present (there are multiple comboboxes due to TimePicker)
+    const comboboxes = screen.getAllByRole('combobox');
+    expect(comboboxes.length).toBeGreaterThan(0);
   });
 
   it('handles category with null description and rules', () => {
@@ -179,7 +182,7 @@ describe('EditCategoryForm', () => {
     };
 
     renderWithProviders(
-      <EditCategoryForm category={categoryWithNulls} contestId="contest-123" />
+      <EditCategoryForm category={categoryWithNulls} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByLabelText(/description/i)).toHaveValue('');

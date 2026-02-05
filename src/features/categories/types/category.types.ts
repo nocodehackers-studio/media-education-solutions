@@ -64,6 +64,7 @@ export interface CategoryRowWithJudge extends CategoryRow {
 export interface CategoryWithContext extends Category {
   contestName: string;
   contestId: string;
+  contestTimezone: string;
   divisionName: string;
   submissionCount: number;
 }

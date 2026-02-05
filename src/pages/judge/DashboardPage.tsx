@@ -8,6 +8,7 @@ import { Calendar, CheckCircle2, ClipboardList, Eye, LogOut, Play } from 'lucide
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts';
 import { useCategoriesByJudge, type CategoryWithContext } from '@/features/categories';
+import { formatDateTimeInTimezone } from '@/lib/dateUtils';
 import {
   Badge,
   Button,
@@ -184,7 +185,9 @@ function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
     try {
       const deadlineDate = new Date(category.deadline);
       if (isNaN(deadlineDate.getTime())) return 'Awaiting deadline';
-      return `Awaiting deadline: ${formatDistanceToNow(deadlineDate, { addSuffix: true })}`;
+      const relativeTime = formatDistanceToNow(deadlineDate, { addSuffix: true });
+      const absoluteTime = formatDateTimeInTimezone(category.deadline, category.contestTimezone);
+      return `Deadline: ${absoluteTime} (${relativeTime})`;
     } catch {
       return 'Awaiting deadline';
     }

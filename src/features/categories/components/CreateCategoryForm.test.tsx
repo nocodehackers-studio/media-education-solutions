@@ -48,7 +48,7 @@ describe('CreateCategoryForm', () => {
   });
 
   it('renders all form fields', () => {
-    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" contestTimezone="America/New_York" />);
 
     expect(screen.getByLabelText(/category name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/submission type/i)).toBeInTheDocument();
@@ -60,7 +60,7 @@ describe('CreateCategoryForm', () => {
 
   it('shows validation error for empty name', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" contestTimezone="America/New_York" />);
 
     const submitButton = screen.getByRole('button', { name: /create category/i });
     await user.click(submitButton);
@@ -72,7 +72,7 @@ describe('CreateCategoryForm', () => {
 
   it('shows validation error for missing deadline', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" contestTimezone="America/New_York" />);
 
     const nameInput = screen.getByLabelText(/category name/i);
     await user.type(nameInput, 'Test Category');
@@ -90,14 +90,15 @@ describe('CreateCategoryForm', () => {
   // The core form validation logic is tested through the validation error tests above.
 
   it('renders type dropdown', () => {
-    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" contestTimezone="America/New_York" />);
 
-    // Verify type dropdown is present
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    // Verify type dropdown is present (there are multiple comboboxes due to TimePicker)
+    const comboboxes = screen.getAllByRole('combobox');
+    expect(comboboxes.length).toBeGreaterThan(0);
   });
 
   it('renders date picker button', () => {
-    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" />);
+    renderWithProviders(<CreateCategoryForm divisionId="div-1" contestId="contest-123" contestTimezone="America/New_York" />);
 
     // The date picker shows "Pick a date" or a selected date
     expect(screen.getByLabelText(/submission deadline/i)).toBeInTheDocument();

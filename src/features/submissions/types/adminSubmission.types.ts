@@ -113,7 +113,22 @@ export const SUBMISSION_STATUS_VARIANT: Record<string, 'default' | 'destructive'
 }
 
 // Date formatting helpers for admin views
-export function formatSubmissionDate(dateStr: string, style: 'short' | 'long' = 'short'): string {
+export function formatSubmissionDate(dateStr: string, style: 'short' | 'long' = 'short', timezone?: string): string {
+  if (timezone) {
+    // Use timezone-aware formatting
+    try {
+      return new Date(dateStr).toLocaleString('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: style === 'short' ? 'short' : 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      // Fall back to browser timezone if invalid
+    }
+  }
   return new Date(dateStr).toLocaleDateString(undefined, {
     year: 'numeric',
     month: style === 'short' ? 'short' : 'long',

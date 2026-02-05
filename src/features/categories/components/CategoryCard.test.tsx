@@ -79,7 +79,7 @@ describe('CategoryCard', () => {
 
   it('renders category name and description', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByText('Best Video')).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('CategoryCard', () => {
 
   it('displays type badge for video category', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByText('video')).toBeInTheDocument();
@@ -99,6 +99,7 @@ describe('CategoryCard', () => {
       <CategoryCard
         category={{ ...baseMockCategory, type: 'photo' }}
         contestId="contest-123"
+        contestTimezone="America/New_York"
       />
     );
 
@@ -107,7 +108,7 @@ describe('CategoryCard', () => {
 
   it('displays status badge', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByText('draft')).toBeInTheDocument();
@@ -116,7 +117,7 @@ describe('CategoryCard', () => {
   it('shows Edit button for draft category (AC2)', async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // Edit button should be visible
@@ -135,6 +136,7 @@ describe('CategoryCard', () => {
       <CategoryCard
         category={{ ...baseMockCategory, status: 'published' }}
         contestId="contest-123"
+        contestTimezone="America/New_York"
       />
     );
 
@@ -149,6 +151,7 @@ describe('CategoryCard', () => {
       <CategoryCard
         category={{ ...baseMockCategory, status: 'closed' }}
         contestId="contest-123"
+        contestTimezone="America/New_York"
       />
     );
 
@@ -160,11 +163,11 @@ describe('CategoryCard', () => {
 
   it('displays deadline formatted date', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
-    // Intl.DateTimeFormat format: December DD, 2026 (may vary by timezone)
-    expect(screen.getByText(/december \d+, 2026/i)).toBeInTheDocument();
+    // formatDateTimeInTimezone returns format like "Dec 31, 2026 7:00 PM"
+    expect(screen.getByText(/dec \d+, 2026/i)).toBeInTheDocument();
   });
 
   it('displays passed indicator when deadline has passed', () => {
@@ -174,6 +177,7 @@ describe('CategoryCard', () => {
       <CategoryCard
         category={{ ...baseMockCategory, deadline: pastDeadline }}
         contestId="contest-123"
+        contestTimezone="America/New_York"
       />
     );
 
@@ -186,7 +190,7 @@ describe('CategoryCard', () => {
 
   it('renders status dropdown with current status (AC4)', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // Verify status dropdown is present with current status value
@@ -198,7 +202,7 @@ describe('CategoryCard', () => {
     const user = userEvent.setup();
 
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     const editButton = screen.getByRole('button', { name: /edit/i });
@@ -213,7 +217,7 @@ describe('CategoryCard', () => {
 
   it('shows Assign Judge button when no judge assigned (AC1)', () => {
     renderWithProviders(
-      <CategoryCard category={baseMockCategory} contestId="contest-123" />
+      <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByRole('button', { name: /assign judge/i })).toBeInTheDocument();
@@ -232,7 +236,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.getByText('judge@example.com')).toBeInTheDocument();
@@ -252,7 +256,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // The remove button is a ghost button with UserMinus icon
@@ -277,7 +281,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={categoryWithJudge} contestId="contest-123" />
+      <CategoryCard category={categoryWithJudge} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // Find and click the remove button
@@ -309,6 +313,7 @@ describe('CategoryCard', () => {
       <CategoryCard
         category={{ ...baseMockCategory, status: 'published' }}
         contestId="contest-123"
+        contestTimezone="America/New_York"
       />
     );
 
@@ -365,7 +370,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     const resendButton = screen.getByTitle('Resend invitation email');
@@ -387,7 +392,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={publishedWithJudge} contestId="contest-123" />
+      <CategoryCard category={publishedWithJudge} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     expect(screen.queryByTitle('Resend invitation email')).not.toBeInTheDocument();
@@ -408,7 +413,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={closedNotInvited} contestId="contest-123" />
+      <CategoryCard category={closedNotInvited} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // F17: Button shows with "Send" title (not "Resend") when no prior invitation
@@ -436,7 +441,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // Click resend button to open confirmation dialog
@@ -476,7 +481,7 @@ describe('CategoryCard', () => {
     };
 
     renderWithProviders(
-      <CategoryCard category={closedInvitedCategory} contestId="contest-123" />
+      <CategoryCard category={closedInvitedCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
     // Open and confirm dialog
