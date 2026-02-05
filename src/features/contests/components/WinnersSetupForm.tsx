@@ -90,6 +90,7 @@ export function WinnersSetupForm({ contest, allCategoriesApproved, approvedCount
     defaultValues: { password: '', confirmPassword: '' },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch() is intentionally used here
   const passwordValue = form.watch('password');
   const strength = passwordValue ? getPasswordStrength(passwordValue) : null;
 

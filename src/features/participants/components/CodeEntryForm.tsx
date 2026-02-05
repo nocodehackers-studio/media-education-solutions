@@ -53,23 +53,29 @@ export function CodeEntryForm({
     turnstileTokenRef.current = ''
   }, [])
 
+  const handleFormSubmit = useCallback(
+    async (data: CodeEntryFormData) => {
+      if (!turnstileTokenRef.current) {
+        form.setError('root', { message: 'Please complete the verification' })
+        return
+      }
+      try {
+        await onSubmit(data, turnstileTokenRef.current)
+      } catch (error) {
+        // Token consumed on submission - reset widget for retry
+        turnstileRef.current?.reset()
+        turnstileTokenRef.current = ''
+        throw error // Re-throw so CodeEntryPage handles the error display
+      }
+    },
+    [form, onSubmit]
+  )
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(async (data) => {
-          if (!turnstileTokenRef.current) {
-            form.setError('root', { message: 'Please complete the verification' })
-            return
-          }
-          try {
-            await onSubmit(data, turnstileTokenRef.current)
-          } catch (error) {
-            // Token consumed on submission - reset widget for retry
-            turnstileRef.current?.reset()
-            turnstileTokenRef.current = ''
-            throw error // Re-throw so CodeEntryPage handles the error display
-          }
-        })}
+        // eslint-disable-next-line react-hooks/refs -- ref is accessed at submit time, not render time
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-4"
       >
         <FormField

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   RefreshCw,
@@ -40,7 +40,10 @@ const DIVISION_STORAGE_KEY = 'participant_selected_division'
 export function ParticipantCategoriesPage() {
   const navigate = useNavigate()
   const { session, showWarning, endSession, extendSession } = useParticipantSession()
-  const [selectedDivision, setSelectedDivision] = useState<ParticipantDivision | null>(null)
+  // Store division ID in state, initialized from sessionStorage
+  const [selectedDivisionId, setSelectedDivisionId] = useState<string | null>(
+    () => sessionStorage.getItem(DIVISION_STORAGE_KEY)
+  )
   const [rulesOpen, setRulesOpen] = useState(false)
 
   const {
@@ -61,29 +64,25 @@ export function ParticipantCategoriesPage() {
   const contestClosed = data?.contestStatus === 'closed' || data?.contestStatus === 'reviewed'
   const isSingleDivision = (divisions?.length ?? 0) === 1
 
-  // Restore division from sessionStorage (multi-division only)
-  useEffect(() => {
-    if (!divisions || selectedDivision || isSingleDivision) return
-
-    const savedId = sessionStorage.getItem(DIVISION_STORAGE_KEY)
-    if (savedId) {
-      const found = divisions.find((d) => d.id === savedId)
-      if (found) {
-        setSelectedDivision(found)
-        return
-      }
+  // Derive selected division from ID when divisions data is available
+  const selectedDivision = useMemo(() => {
+    if (!divisions || isSingleDivision || !selectedDivisionId) return null
+    const found = divisions.find((d) => d.id === selectedDivisionId)
+    if (!found && selectedDivisionId) {
+      // Clean up invalid stored ID
       sessionStorage.removeItem(DIVISION_STORAGE_KEY)
     }
-  }, [divisions, selectedDivision, isSingleDivision])
+    return found ?? null
+  }, [divisions, selectedDivisionId, isSingleDivision])
 
   const handleSelectDivision = (division: ParticipantDivision) => {
     sessionStorage.setItem(DIVISION_STORAGE_KEY, division.id)
-    setSelectedDivision(division)
+    setSelectedDivisionId(division.id)
   }
 
   const handleBack = () => {
     sessionStorage.removeItem(DIVISION_STORAGE_KEY)
-    setSelectedDivision(null)
+    setSelectedDivisionId(null)
   }
 
   const handleLogout = () => {

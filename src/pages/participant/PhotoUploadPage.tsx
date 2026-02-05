@@ -13,14 +13,13 @@ export function PhotoUploadPage() {
   const navigate = useNavigate()
   const { categoryId } = useParams<{ categoryId: string }>()
   const { session } = useParticipantSession()
+  const queryClient = useQueryClient()
 
   // Redirect if no session or missing categoryId
   if (!session || !categoryId) {
     navigate('/', { replace: true })
     return null
   }
-
-  const queryClient = useQueryClient()
 
   const handleUploadComplete = async () => {
     toast.success('Your submission has been received!')
