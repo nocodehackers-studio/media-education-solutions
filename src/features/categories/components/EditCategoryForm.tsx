@@ -123,9 +123,6 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
                   <SelectItem value="photo">Photo</SelectItem>
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Video submissions up to 500MB, photos up to 10MB.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -182,9 +179,7 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
                 </div>
               </div>
               <FormDescription>
-                After this date and time, category will automatically close.
-                <br />
-                <span className="font-medium">Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}</span>
+                Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}
               </FormDescription>
               <FormMessage />
             </FormItem>

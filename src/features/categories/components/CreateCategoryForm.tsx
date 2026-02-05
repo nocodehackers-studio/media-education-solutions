@@ -115,9 +115,6 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
                   <SelectItem value="photo">Photo</SelectItem>
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Video submissions up to 500MB, photos up to 10MB.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -173,9 +170,7 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
                 </div>
               </div>
               <FormDescription>
-                After this date and time, category will automatically close.
-                <br />
-                <span className="font-medium">Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}</span>
+                Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}
               </FormDescription>
               <FormMessage />
             </FormItem>
