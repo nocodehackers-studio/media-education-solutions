@@ -51,7 +51,8 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
           onExpire?.()
         },
         'error-callback': onError,
-        theme: 'auto',
+        theme: 'light',
+        size: 'flexible',
       })
 
       widgetIdRef.current = widgetId

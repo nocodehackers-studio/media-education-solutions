@@ -86,13 +86,13 @@ export function CodeEntryPage() {
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Your codes were provided by your teacher or organization.
           </p>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            <Link to="/login" className="hover:text-foreground underline-offset-4 hover:underline">
-              Are you a judge? Sign in here
-            </Link>
-          </p>
         </CardContent>
       </Card>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        <Link to="/login" className="hover:text-foreground underline-offset-4 hover:underline">
+          Are you a judge? Sign in here
+        </Link>
+      </p>
     </div>
   )
 }

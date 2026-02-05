@@ -104,18 +104,17 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
                 />
               </FormControl>
               <FormMessage />
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </FormItem>
           )}
         />
-
-        <div className="flex items-center justify-end">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </div>
 
         <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} onExpire={handleTurnstileExpire} />
         {form.formState.errors.root && (

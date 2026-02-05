@@ -47,7 +47,8 @@ describe('Turnstile', () => {
       expect.any(HTMLDivElement),
       expect.objectContaining({
         callback: onVerify,
-        theme: 'auto',
+        theme: 'light',
+        size: 'flexible',
       }),
     )
   })
