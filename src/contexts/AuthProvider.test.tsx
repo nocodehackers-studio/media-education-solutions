@@ -13,6 +13,7 @@ vi.mock('@/lib/supabase', () => ({
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(),
       signOut: vi.fn(),
+      setSession: vi.fn(),
     },
   },
 }))
@@ -133,7 +134,12 @@ describe('AuthProvider', () => {
     })
 
     it('caches profile to localStorage on successful sign-in', async () => {
-      vi.mocked(authApi.signIn).mockResolvedValue(mockUser)
+      vi.mocked(authApi.signIn).mockResolvedValue({
+        user: mockUser,
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+      })
+      vi.mocked(supabase.auth.setSession).mockResolvedValue({ data: { session: {} }, error: null } as unknown as Awaited<ReturnType<typeof supabase.auth.setSession>>)
 
       const wrapper = ({ children }: { children: ReactNode }) => (
         <AuthProvider>{children}</AuthProvider>
@@ -145,7 +151,7 @@ describe('AuthProvider', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      await result.current.signIn('admin@example.com', 'password123')
+      await result.current.signIn('admin@example.com', 'password123', 'test-turnstile-token')
 
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
@@ -240,7 +246,12 @@ describe('AuthProvider', () => {
 
   describe('signIn', () => {
     it('updates user state on successful sign in', async () => {
-      vi.mocked(authApi.signIn).mockResolvedValue(mockUser)
+      vi.mocked(authApi.signIn).mockResolvedValue({
+        user: mockUser,
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+      })
+      vi.mocked(supabase.auth.setSession).mockResolvedValue({ data: { session: {} }, error: null } as unknown as Awaited<ReturnType<typeof supabase.auth.setSession>>)
 
       const wrapper = ({ children }: { children: ReactNode }) => (
         <AuthProvider>{children}</AuthProvider>
@@ -252,13 +263,13 @@ describe('AuthProvider', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      await result.current.signIn('admin@example.com', 'password123')
+      await result.current.signIn('admin@example.com', 'password123', 'test-turnstile-token')
 
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
       })
 
-      expect(authApi.signIn).toHaveBeenCalledWith('admin@example.com', 'password123')
+      expect(authApi.signIn).toHaveBeenCalledWith('admin@example.com', 'password123', 'test-turnstile-token')
       expect(result.current.isAuthenticated).toBe(true)
     })
 
@@ -271,6 +282,7 @@ describe('AuthProvider', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authApi.signIn).mockReturnValue(signInPromise as any)
+      vi.mocked(supabase.auth.setSession).mockResolvedValue({ data: { session: {} }, error: null } as unknown as Awaited<ReturnType<typeof supabase.auth.setSession>>)
 
       const wrapper = ({ children }: { children: ReactNode }) => (
         <AuthProvider>{children}</AuthProvider>
@@ -282,13 +294,13 @@ describe('AuthProvider', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signInCall = result.current.signIn('admin@example.com', 'password123')
+      const signInCall = result.current.signIn('admin@example.com', 'password123', 'test-turnstile-token')
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(true)
       })
 
-      resolveSignIn!(mockUser)
+      resolveSignIn!({ user: mockUser, accessToken: 'test-access-token', refreshToken: 'test-refresh-token' })
       await signInCall
 
       await waitFor(() => {

@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
+import { useRef, useCallback } from 'react'
 import {
   Button,
   Input,
@@ -11,18 +12,19 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui'
+import { Turnstile, type TurnstileRef } from '@/components'
 import {
   codeEntrySchema,
   type CodeEntryFormData,
 } from '../types/participant.schemas'
 
 interface CodeEntryFormProps {
-  onSubmit: (data: CodeEntryFormData) => Promise<void>
+  onSubmit: (data: CodeEntryFormData, turnstileToken: string) => Promise<void>
   isLoading?: boolean
 }
 
 /**
- * Code entry form with contest code and participant code fields.
+ * Code entry form with contest code and participant code fields + Turnstile bot protection.
  * Uses React Hook Form + Zod for validation.
  * Auto-uppercases input values.
  */
@@ -30,6 +32,9 @@ export function CodeEntryForm({
   onSubmit,
   isLoading = false,
 }: CodeEntryFormProps) {
+  const turnstileTokenRef = useRef<string>('')
+  const turnstileRef = useRef<TurnstileRef>(null)
+
   const form = useForm<CodeEntryFormData>({
     resolver: zodResolver(codeEntrySchema),
     mode: 'onBlur',
@@ -39,13 +44,34 @@ export function CodeEntryForm({
     },
   })
 
-  const handleSubmit = async (data: CodeEntryFormData) => {
-    await onSubmit(data)
-  }
+  const handleTurnstileVerify = useCallback((token: string) => {
+    turnstileTokenRef.current = token
+    form.clearErrors('root')
+  }, [form])
+
+  const handleTurnstileExpire = useCallback(() => {
+    turnstileTokenRef.current = ''
+  }, [])
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(async (data) => {
+          if (!turnstileTokenRef.current) {
+            form.setError('root', { message: 'Please complete the verification' })
+            return
+          }
+          try {
+            await onSubmit(data, turnstileTokenRef.current)
+          } catch (error) {
+            // Token consumed on submission - reset widget for retry
+            turnstileRef.current?.reset()
+            turnstileTokenRef.current = ''
+            throw error // Re-throw so CodeEntryPage handles the error display
+          }
+        })}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="contestCode"
@@ -89,6 +115,11 @@ export function CodeEntryForm({
             </FormItem>
           )}
         />
+
+        <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} onExpire={handleTurnstileExpire} />
+        {form.formState.errors.root && (
+          <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+        )}
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

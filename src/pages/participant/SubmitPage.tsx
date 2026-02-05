@@ -60,8 +60,8 @@ export function SubmitPage() {
   // Redirect if no session
   useEffect(() => {
     if (!session) {
-      console.log('[SubmitPage] No session, redirecting to /enter')
-      navigate('/enter', { replace: true })
+      console.log('[SubmitPage] No session, redirecting to /')
+      navigate('/', { replace: true })
     }
   }, [session, navigate])
 

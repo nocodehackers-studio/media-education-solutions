@@ -27,9 +27,9 @@ export function LoginPage() {
     }
   }, [isAuthenticated, user, isLoading, navigate, location.state])
 
-  const handleSubmit = async (data: LoginFormData) => {
+  const handleSubmit = async (data: LoginFormData, turnstileToken: string) => {
     try {
-      await signIn(data.email, data.password)
+      await signIn(data.email, data.password, turnstileToken)
       toast.success('Welcome back!')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Invalid email or password')

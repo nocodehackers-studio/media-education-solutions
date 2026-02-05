@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -41,10 +41,10 @@ export function CodeEntryPage() {
     }
   }, [isAuthenticated, contextLoading, navigate])
 
-  const handleSubmit = async (data: CodeEntryFormData) => {
+  const handleSubmit = async (data: CodeEntryFormData, turnstileToken: string) => {
     setIsSubmitting(true)
     try {
-      await enterContest(data.contestCode, data.participantCode)
+      await enterContest(data.contestCode, data.participantCode, turnstileToken)
       toast.success('Welcome! Choose a category to submit your work.')
       navigate('/participant/categories', { replace: true })
     } catch (error) {
@@ -85,6 +85,11 @@ export function CodeEntryPage() {
           <CodeEntryForm onSubmit={handleSubmit} isLoading={isSubmitting} />
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Your codes were provided by your teacher or organization.
+          </p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            <Link to="/login" className="hover:text-foreground underline-offset-4 hover:underline">
+              Are you a judge? Sign in here
+            </Link>
           </p>
         </CardContent>
       </Card>

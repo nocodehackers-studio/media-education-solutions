@@ -110,7 +110,7 @@ describe('VideoUploadPage', () => {
   })
 
   describe('Session handling', () => {
-    it('redirects to /enter when no session', () => {
+    it('redirects to / when no session', () => {
       vi.mocked(useParticipantSession).mockReturnValue({
         session: null,
         isLoading: false,
@@ -126,7 +126,7 @@ describe('VideoUploadPage', () => {
 
       renderWithRouter()
 
-      expect(mockNavigate).toHaveBeenCalledWith('/enter', { replace: true })
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
     })
   })
 })

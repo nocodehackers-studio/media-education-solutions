@@ -252,14 +252,14 @@ describe('ParticipantCategoriesPage', () => {
       }
     })
 
-    it('calls endSession and navigates to /enter on logout', async () => {
+    it('calls endSession and navigates to / on logout', async () => {
       const user = userEvent.setup()
       renderPage()
 
       await user.click(screen.getByRole('button', { name: /exit/i }))
 
       expect(mockEndSession).toHaveBeenCalled()
-      expect(mockNavigate).toHaveBeenCalledWith('/enter', { replace: true })
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
     })
   })
 

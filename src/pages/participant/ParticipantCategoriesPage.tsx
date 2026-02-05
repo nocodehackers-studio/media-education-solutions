@@ -89,7 +89,7 @@ export function ParticipantCategoriesPage() {
   const handleLogout = () => {
     sessionStorage.removeItem(DIVISION_STORAGE_KEY)
     endSession()
-    navigate('/enter', { replace: true })
+    navigate('/', { replace: true })
   }
 
   if (!session) {
@@ -124,7 +124,7 @@ export function ParticipantCategoriesPage() {
               {isContestUnavailable ? (
                 <>
                   <p className="text-muted-foreground mb-4">This contest is no longer available.</p>
-                  <Button onClick={() => { endSession(); navigate('/enter', { replace: true }) }}>
+                  <Button onClick={() => { endSession(); navigate('/', { replace: true }) }}>
                     Return to Code Entry
                   </Button>
                 </>

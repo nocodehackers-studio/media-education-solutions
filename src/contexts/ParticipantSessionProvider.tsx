@@ -99,11 +99,11 @@ export function ParticipantSessionProvider({
 
   // Enter contest with codes
   const enterContest = useCallback(
-    async (contestCode: string, participantCode: string) => {
+    async (contestCode: string, participantCode: string, turnstileToken: string) => {
       const { data, error } = await supabase.functions.invoke(
         'validate-participant',
         {
-          body: { contestCode, participantCode },
+          body: { contestCode, participantCode, turnstileToken },
         }
       )
 

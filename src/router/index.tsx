@@ -62,10 +62,10 @@ const PublicWinnersPage = lazy(() =>
   import('@/pages/public/PublicWinnersPage').then((m) => ({ default: m.PublicWinnersPage }))
 )
 
+// Critical path - eagerly loaded (participant entry is the landing page)
+import { CodeEntryPage } from '@/pages/participant/CodeEntryPage'
+
 // Lazy load participant pages
-const CodeEntryPage = lazy(() =>
-  import('@/pages/participant/CodeEntryPage').then((m) => ({ default: m.CodeEntryPage }))
-)
 const ParticipantCategoriesPage = lazy(() =>
   import('@/pages/participant/ParticipantCategoriesPage').then((m) => ({
     default: m.ParticipantCategoriesPage,
@@ -288,14 +288,6 @@ const router = createBrowserRouter([
 
   // Participant routes (public entry, protected dashboard)
   {
-    path: '/enter',
-    element: (
-      <PageLazyRoute>
-        <CodeEntryPage />
-      </PageLazyRoute>
-    ),
-  },
-  {
     path: '/participant',
     element: <Navigate to="/participant/categories" replace />,
   },
@@ -356,10 +348,10 @@ const router = createBrowserRouter([
     ),
   },
 
-  // Default redirect - send to login
+  // Participant entry - primary landing page
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <CodeEntryPage />,
   },
 
   // 404 catch-all - lazy loaded

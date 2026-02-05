@@ -16,7 +16,7 @@ export function PhotoUploadPage() {
 
   // Redirect if no session or missing categoryId
   if (!session || !categoryId) {
-    navigate('/enter', { replace: true })
+    navigate('/', { replace: true })
     return null
   }
 

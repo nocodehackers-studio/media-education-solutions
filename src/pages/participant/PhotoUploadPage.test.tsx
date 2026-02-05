@@ -98,13 +98,13 @@ describe('PhotoUploadPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/participant/categories')
   })
 
-  it('redirects to /enter when no session', () => {
+  it('redirects to / when no session', () => {
     vi.mocked(useParticipantSession).mockReturnValue({
       session: null,
     } as ReturnType<typeof useParticipantSession>)
 
     renderWithRouter()
 
-    expect(mockNavigate).toHaveBeenCalledWith('/enter', { replace: true })
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
   })
 })

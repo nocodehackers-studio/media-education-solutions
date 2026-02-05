@@ -2,7 +2,7 @@
  * LoginForm Unit Tests
  * Tests form validation, submission, and loading states
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
@@ -31,10 +31,24 @@ function renderWithRouter(ui: ReactNode) {
 }
 
 describe('LoginForm', () => {
-  const mockOnSubmit = vi.fn()
+  const mockOnSubmit = vi.fn<(data: { email: string; password: string }, turnstileToken: string) => Promise<void>>()
 
   beforeEach(() => {
     mockOnSubmit.mockClear()
+    // Mock Turnstile widget - callback fires immediately with test token
+    window.turnstile = {
+      render: vi.fn((_container, options) => {
+        options.callback('test-turnstile-token')
+        return 'widget-1'
+      }),
+      reset: vi.fn(),
+      remove: vi.fn(),
+      getResponse: vi.fn(),
+    }
+  })
+
+  afterEach(() => {
+    window.turnstile = undefined
   })
 
   it('renders email and password fields', () => {
@@ -138,7 +152,7 @@ describe('LoginForm', () => {
   })
 
   describe('submission', () => {
-    it('calls onSubmit with valid data', async () => {
+    it('calls onSubmit with valid data and turnstile token', async () => {
       const user = userEvent.setup()
       renderWithRouter(<LoginForm onSubmit={mockOnSubmit} />)
 
@@ -152,6 +166,7 @@ describe('LoginForm', () => {
           email: 'admin@example.com',
           password: 'password123',
         })
+        expect(mockOnSubmit.mock.calls[0][1]).toBe('test-turnstile-token')
       })
     })
 

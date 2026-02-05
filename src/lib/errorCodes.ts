@@ -42,6 +42,9 @@ export const ERROR_CODES = {
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
   INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
 
+  // Bot Protection
+  TURNSTILE_FAILED: 'TURNSTILE_FAILED',
+
   // General
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   SERVER_ERROR: 'SERVER_ERROR',
@@ -82,6 +85,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   SUBMISSION_LIMIT_EXCEEDED: 'You have reached the submission limit.',
   FILE_TOO_LARGE: 'File size exceeds the maximum allowed.',
   INVALID_FILE_TYPE: 'This file type is not supported.',
+  TURNSTILE_FAILED: 'Verification failed. Please try again.',
   VALIDATION_ERROR: 'Please check your input and try again.',
   SERVER_ERROR: 'Something went wrong. Please try again later.',
 }

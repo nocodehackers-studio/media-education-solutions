@@ -2,16 +2,30 @@
  * CodeEntryForm Unit Tests
  * Tests form validation, submission, auto-uppercase, and loading states
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CodeEntryForm } from './CodeEntryForm'
 
 describe('CodeEntryForm', () => {
-  const mockOnSubmit = vi.fn()
+  const mockOnSubmit = vi.fn<(data: { contestCode: string; participantCode: string }, turnstileToken: string) => Promise<void>>()
 
   beforeEach(() => {
     mockOnSubmit.mockClear()
+    // Mock Turnstile widget - callback fires immediately with test token
+    window.turnstile = {
+      render: vi.fn((_container, options) => {
+        options.callback('test-turnstile-token')
+        return 'widget-1'
+      }),
+      reset: vi.fn(),
+      remove: vi.fn(),
+      getResponse: vi.fn(),
+    }
+  })
+
+  afterEach(() => {
+    window.turnstile = undefined
   })
 
   it('renders contest code and participant code fields', () => {
@@ -121,7 +135,7 @@ describe('CodeEntryForm', () => {
   })
 
   describe('submission', () => {
-    it('calls onSubmit with valid data', async () => {
+    it('calls onSubmit with valid data and turnstile token', async () => {
       const user = userEvent.setup()
       render(<CodeEntryForm onSubmit={mockOnSubmit} />)
 
@@ -135,6 +149,7 @@ describe('CodeEntryForm', () => {
           contestCode: 'ABC123',
           participantCode: 'WXYZ5678',
         })
+        expect(mockOnSubmit.mock.calls[0][1]).toBe('test-turnstile-token')
       })
     })
 

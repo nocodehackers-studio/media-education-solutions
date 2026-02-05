@@ -13,6 +13,7 @@ const corsHeaders = {
 interface ValidationRequest {
   contestCode: string
   participantCode: string
+  turnstileToken: string
 }
 
 interface ValidationResponse {
@@ -34,12 +35,47 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { contestCode, participantCode }: ValidationRequest = await req.json()
+    const { contestCode, participantCode, turnstileToken }: ValidationRequest = await req.json()
 
     if (!contestCode || !participantCode) {
       console.warn('Validation failed: missing codes')
       return new Response(
         JSON.stringify({ success: false, error: 'MISSING_CODES' } satisfies ValidationResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Verify Turnstile token
+    if (!turnstileToken) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'TURNSTILE_FAILED' } satisfies ValidationResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const turnstileSecret = Deno.env.get('TURNSTILE_SECRET_KEY')
+    if (!turnstileSecret) {
+      console.error('TURNSTILE_SECRET_KEY is not configured')
+      return new Response(
+        JSON.stringify({ success: false, error: 'SERVER_ERROR' } satisfies ValidationResponse),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    const turnstileBody = new URLSearchParams({
+      secret: turnstileSecret,
+      response: turnstileToken,
+    })
+    if (clientIp) turnstileBody.set('remoteip', clientIp)
+    const turnstileRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: turnstileBody,
+    })
+    const turnstileResult = await turnstileRes.json()
+    if (!turnstileResult.success) {
+      console.warn('Turnstile verification failed')
+      return new Response(
+        JSON.stringify({ success: false, error: 'TURNSTILE_FAILED' } satisfies ValidationResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

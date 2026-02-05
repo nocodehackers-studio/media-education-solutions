@@ -8,7 +8,7 @@ interface ParticipantRouteProps {
 
 /**
  * Protected route that requires participant session.
- * Redirects unauthenticated participants to /enter.
+ * Redirects unauthenticated participants to /.
  * Uses code-based session (NOT Supabase Auth).
  */
 export function ParticipantRoute({ children }: ParticipantRouteProps) {
@@ -30,9 +30,9 @@ export function ParticipantRoute({ children }: ParticipantRouteProps) {
     // If session timed out, pass expired flag so CodeEntryPage can show message
     if (sessionExpired) {
       clearExpired()
-      return <Navigate to="/enter" state={{ from: location, expired: true }} replace />
+      return <Navigate to="/" state={{ from: location, expired: true }} replace />
     }
-    return <Navigate to="/enter" state={{ from: location }} replace />
+    return <Navigate to="/" state={{ from: location }} replace />
   }
 
   return <>{children}</>

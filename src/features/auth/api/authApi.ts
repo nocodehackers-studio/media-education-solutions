@@ -21,71 +21,57 @@ function transformProfile(profile: {
   }
 }
 
+interface SignInResult {
+  user: User
+  accessToken: string
+  refreshToken: string
+}
+
 /**
- * Sign in with email and password.
- * Returns user profile on success.
- * @throws Error with "Invalid email or password" on auth failure
- * @throws Error with "Something went wrong" on server/network errors
+ * Sign in with email and password via server-side edge function.
+ * Turnstile token is verified server-side before auth proceeds.
+ * Returns user profile + session tokens on success.
+ * @throws Error with user-friendly message on failure
  */
 async function signIn(
   email: string,
-  password: string
-): Promise<User> {
-  const { data: authData, error: authError } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  password: string,
+  turnstileToken: string,
+): Promise<SignInResult> {
+  const { data, error } = await supabase.functions.invoke('verify-admin-login', {
+    body: { email, password, turnstileToken },
+  })
 
-  if (authError) {
-    // Distinguish between authentication failures and server/network errors
-    // Check the actual error message, not just status code (400 can mean many things)
-    const errorMsg = authError.message?.toLowerCase() || ''
-
-    if (errorMsg.includes('invalid login credentials') ||
-        errorMsg.includes('invalid password')) {
-      // Wrong password/email - don't reveal which one (security best practice)
+  // supabase.functions.invoke sets error for non-2xx responses.
+  // The error.context (a Response object) contains the JSON body with our error code.
+  if (error) {
+    let errorCode = 'SERVER_ERROR'
+    try {
+      const errorBody = await (error as { context?: Response }).context?.json()
+      if (errorBody?.error) errorCode = errorBody.error
+    } catch {
+      // JSON parse failed, fall through to SERVER_ERROR
+    }
+    if (errorCode === 'AUTH_INVALID_CREDENTIALS') {
       throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
-    } else if (errorMsg.includes('email not confirmed')) {
-      // User needs to verify email - be specific
+    } else if (errorCode === 'TURNSTILE_FAILED') {
+      throw new Error(getErrorMessage(ERROR_CODES.TURNSTILE_FAILED))
+    } else if (errorCode === 'EMAIL_NOT_CONFIRMED') {
       throw new Error('Please verify your email address before signing in.')
     } else {
-      // Server/network error, rate limiting, user disabled, etc.
       throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
     }
   }
 
-  if (!authData.user) {
-    throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
+  if (!data?.user || !data?.access_token || !data?.refresh_token) {
+    throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
   }
 
-  // Fetch profile to get role
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, email, role, first_name, last_name')
-    .eq('id', authData.user.id)
-    .single()
-
-  if (profileError || !profile) {
-    // Sign out user since we can't complete login without profile
-    await supabase.auth.signOut()
-
-    if (profileError) {
-      // We have an error object - check what kind
-      if (profileError.code === 'PGRST116') {
-        // No rows found - profile doesn't exist
-        throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
-      } else {
-        // Database error, network timeout, etc.
-        throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
-      }
-    } else {
-      // !profile but no error (shouldn't happen, defensive)
-      throw new Error(getErrorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS))
-    }
+  return {
+    user: transformProfile(data.user),
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
   }
-
-  return transformProfile(profile)
 }
 
 /**

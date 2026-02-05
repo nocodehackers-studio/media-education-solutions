@@ -19,7 +19,7 @@ export function ParticipantUserMenu() {
   const handleLogout = () => {
     sessionStorage.removeItem(DIVISION_STORAGE_KEY)
     endSession()
-    navigate('/enter', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const handleMySubmissions = () => {

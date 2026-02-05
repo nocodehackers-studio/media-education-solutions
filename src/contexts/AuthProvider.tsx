@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { authApi, type User } from '@/features/auth'
 import { AuthContext } from './AuthContext'
 import { queryClient, PROFILE_STORAGE_KEY } from '@/lib/queryClient'
+import { getErrorMessage, ERROR_CODES } from '@/lib/errorCodes'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -207,14 +208,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [fetchUserProfile])
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string, turnstileToken: string) => {
     setIsLoading(true)
     try {
-      const profile = await authApi.signIn(email, password)
+      const { user: profile, accessToken, refreshToken } = await authApi.signIn(email, password, turnstileToken)
+      // Set ref BEFORE setSession to prevent onAuthStateChange from double-processing
       setSessionUserId(profile.id)
       sessionUserIdRef.current = profile.id
       setUser(profile)
       cacheProfile(profile, profile.id)
+      // Establish Supabase session on client (onAuthStateChange SIGNED_IN will be skipped via guard)
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      })
+      // If setSession fails, rollback state to prevent inconsistent auth
+      if (sessionError) {
+        console.error('Failed to establish session:', sessionError)
+        setUser(null)
+        setSessionUserId(null)
+        sessionUserIdRef.current = null
+        cacheProfile(null, null)
+        throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+      }
     } finally {
       setIsLoading(false)
     }
