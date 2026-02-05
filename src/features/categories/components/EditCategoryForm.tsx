@@ -158,7 +158,7 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
                     <Calendar
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
