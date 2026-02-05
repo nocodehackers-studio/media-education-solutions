@@ -32,7 +32,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { updateCategorySchema, type UpdateCategoryInput } from '../types/category.schemas';
 import { useUpdateCategory } from '../hooks/useUpdateCategory';
 import type { Category } from '../types/category.types';
-import { formatDateInTimezone, extractTimeFromDate, combineDateAndTime } from '@/lib/dateUtils';
+import { formatDateInTimezone, extractTimeFromDate, combineDateAndTime, getTimezoneDisplayLabel } from '@/lib/dateUtils';
 
 interface EditCategoryFormProps {
   category: Category;
@@ -183,6 +183,8 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
               </div>
               <FormDescription>
                 After this date and time, category will automatically close.
+                <br />
+                <span className="font-medium">Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}</span>
               </FormDescription>
               <FormMessage />
             </FormItem>

@@ -12,15 +12,10 @@ import {
   FormLabel,
   FormMessage,
   Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Textarea,
   toast,
 } from '@/components/ui';
-import { TIMEZONE_OPTIONS, getTimezoneOffsetLabel } from '@/lib/dateUtils';
+import { TimezoneCombobox } from '@/components/ui/timezone-combobox';
 import { updateContestSchema, type UpdateContestInput } from '../types/contest.schemas';
 import { useUpdateContest } from '../hooks/useUpdateContest';
 import { useUploadCoverImage, useDeleteCoverImage, useUploadLogo, useDeleteLogo } from '../hooks/useContestCoverImage';
@@ -332,20 +327,12 @@ export function EditContestForm({ contest, onSuccess, onCancel }: EditContestFor
           render={({ field }) => (
             <FormItem>
               <FormLabel>Timezone</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {TIMEZONE_OPTIONS.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label} ({getTimezoneOffsetLabel(tz.value)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <TimezoneCombobox
+                  value={field.value ?? 'America/New_York'}
+                  onChange={field.onChange}
+                />
+              </FormControl>
               <FormDescription>
                 All deadlines will be displayed in this timezone.
               </FormDescription>

@@ -31,7 +31,7 @@ import {
 import { TimePicker } from '@/components/ui/time-picker';
 import { createCategorySchema, type CreateCategoryInput } from '../types/category.schemas';
 import { useCreateCategory } from '../hooks/useCreateCategory';
-import { formatDateInTimezone, combineDateAndTime } from '@/lib/dateUtils';
+import { formatDateInTimezone, combineDateAndTime, getTimezoneDisplayLabel } from '@/lib/dateUtils';
 
 interface CreateCategoryFormProps {
   divisionId: string;
@@ -174,6 +174,8 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
               </div>
               <FormDescription>
                 After this date and time, category will automatically close.
+                <br />
+                <span className="font-medium">Contest timezone: {getTimezoneDisplayLabel(contestTimezone)}</span>
               </FormDescription>
               <FormMessage />
             </FormItem>
