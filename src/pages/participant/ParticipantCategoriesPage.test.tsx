@@ -209,9 +209,10 @@ describe('ParticipantCategoriesPage', () => {
       expect(screen.getByText('Middle School')).toBeInTheDocument()
     })
 
-    it('shows exit button', () => {
+    it('shows user menu button', () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /exit/i })).toBeInTheDocument()
+      // User menu shows participant code as button text
+      expect(screen.getByRole('button', { name: /ABCD1234/i })).toBeInTheDocument()
     })
   })
 
@@ -234,18 +235,23 @@ describe('ParticipantCategoriesPage', () => {
       }
     })
 
-    it('auto-selects single division and shows categories', () => {
+    it('auto-selects single division and shows categories directly', () => {
       renderPage()
-      // Should see category list (step 2), not division selection
+      // Should see category list directly without division selection step
       expect(screen.getByText('Best Video')).toBeInTheDocument()
-      expect(screen.getByText('All Categories')).toBeInTheDocument()
+      // Single division doesn't show division name as header, just shows categories
+      expect(screen.getByText(/categories/i)).toBeInTheDocument()
     })
   })
 
   describe('logout', () => {
+    const divisions: ParticipantDivision[] = [
+      { id: 'd-1', name: 'Elementary', displayOrder: 0, categories: [baseCategory] },
+    ]
+
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: [], divisions: [], contest: baseContest, contestStatus: null },
+        data: { categories: [baseCategory], divisions, contest: baseContest, contestStatus: null },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -256,7 +262,10 @@ describe('ParticipantCategoriesPage', () => {
       const user = userEvent.setup()
       renderPage()
 
-      await user.click(screen.getByRole('button', { name: /exit/i }))
+      // Click user menu trigger (shows participant code)
+      await user.click(screen.getByRole('button', { name: /ABCD1234/i }))
+      // Click Log Out in the popover
+      await user.click(screen.getByRole('button', { name: /log out/i }))
 
       expect(mockEndSession).toHaveBeenCalled()
       expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })

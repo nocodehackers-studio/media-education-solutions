@@ -81,27 +81,25 @@ describe('PhotoUploadPage', () => {
     expect(screen.getByTestId('photo-upload-form')).toBeInTheDocument()
   })
 
-  it('navigates to preview page on upload complete', async () => {
+  it('navigates to category page on upload complete', async () => {
     renderWithRouter()
 
     const user = userEvent.setup()
     await user.click(screen.getByText('Complete Upload'))
 
     expect(mockNavigate).toHaveBeenCalledWith(
-      '/participant/preview/submission-789'
+      '/participant/category/category-123'
     )
   })
 
-  it('navigates back to categories when back button clicked', async () => {
+  it('navigates back to category page when back button clicked', async () => {
     renderWithRouter()
 
     const user = userEvent.setup()
-    const backButton = screen.getByRole('button', {
-      name: 'Go back to categories',
-    })
+    const backButton = screen.getByRole('button', { name: /back/i })
     await user.click(backButton)
 
-    expect(mockNavigate).toHaveBeenCalledWith('/participant/categories')
+    expect(mockNavigate).toHaveBeenCalledWith('/participant/category/category-123')
   })
 
   it('redirects to / when no session', () => {
