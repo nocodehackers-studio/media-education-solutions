@@ -96,7 +96,9 @@ describe('CategoriesTab', () => {
   it('renders loading state', () => {
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
-    expect(screen.getByText(/categories/i)).toBeInTheDocument();
+    // Loading state shows skeletons
+    const skeletons = document.querySelectorAll('[class*="animate-pulse"]');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('renders empty state when no divisions exist', async () => {
@@ -145,7 +147,7 @@ describe('CategoriesTab', () => {
     });
   });
 
-  it('shows Add button for draft contest', async () => {
+  it('shows Add Division and Add category buttons for draft contest', async () => {
     vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
       data: [mockDivision],
       isLoading: false,
@@ -155,11 +157,16 @@ describe('CategoriesTab', () => {
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'draft' }} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
+      // Should have Add Division button at the top level
+      expect(screen.getByRole('button', { name: /add division/i })).toBeInTheDocument();
+      // Should have Add button for category in the division section
+      // (there are two Add buttons total)
+      const addButtons = screen.getAllByRole('button', { name: /^add$/i });
+      expect(addButtons.length).toBeGreaterThan(0);
     });
   });
 
-  it('shows Add button for published contest', async () => {
+  it('shows Add buttons for published contest', async () => {
     vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
       data: [mockDivision],
       isLoading: false,
@@ -169,11 +176,11 @@ describe('CategoriesTab', () => {
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'published' }} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add division/i })).toBeInTheDocument();
     });
   });
 
-  it('hides Add button and shows message for closed contest (AC1)', async () => {
+  it('hides Add category button and shows message for closed contest (AC1)', async () => {
     vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
       data: [mockDivision],
       isLoading: false,
@@ -183,7 +190,11 @@ describe('CategoriesTab', () => {
     renderWithProviders(<CategoriesTab contest={{ ...mockContest, status: 'closed' }} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /add/i })).not.toBeInTheDocument();
+      // Add Division button should still be present
+      expect(screen.getByRole('button', { name: /add division/i })).toBeInTheDocument();
+      // But Add (category) buttons should NOT be present
+      expect(screen.queryByRole('button', { name: /^add$/i })).not.toBeInTheDocument();
+      // Shows the closed contest message
       expect(screen.getByText(/cannot add categories to a closed contest/i)).toBeInTheDocument();
     });
   });
@@ -202,7 +213,7 @@ describe('CategoriesTab', () => {
     });
   });
 
-  it('opens create form sheet when Add clicked', async () => {
+  it('opens create category form sheet when Add clicked', async () => {
     const user = userEvent.setup();
     vi.mocked(divisionsHooks.useDivisions).mockReturnValue({
       data: [mockDivision],
@@ -213,10 +224,14 @@ describe('CategoriesTab', () => {
     renderWithProviders(<CategoriesTab contest={mockContest} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
+      // Wait for the Add button in the division section (not Add Division)
+      const addButtons = screen.getAllByRole('button', { name: /^add$/i });
+      expect(addButtons.length).toBeGreaterThan(0);
     });
 
-    await user.click(screen.getByRole('button', { name: /add/i }));
+    // Click the first Add button (for adding category to division)
+    const addButtons = screen.getAllByRole('button', { name: /^add$/i });
+    await user.click(addButtons[0]);
 
     await waitFor(() => {
       expect(screen.getByText(/create category in general/i)).toBeInTheDocument();

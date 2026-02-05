@@ -85,7 +85,13 @@ describe('VideoUploadForm', () => {
 
   describe('File validation', () => {
     it('starts upload for valid video file', async () => {
+      const user = userEvent.setup()
       render(<VideoUploadForm {...defaultProps} />)
+
+      // Fill in required form fields first
+      await user.type(screen.getByLabelText(/your name/i), 'John Doe')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach name/i), 'Jane Smith')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach email/i), 'jane@example.com')
 
       const file = new File(['video content'], 'test.mp4', {
         type: 'video/mp4',
@@ -95,7 +101,7 @@ describe('VideoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
 
@@ -138,7 +144,13 @@ describe('VideoUploadForm', () => {
     })
 
     it('accepts file by extension even without MIME type', async () => {
+      const user = userEvent.setup()
       render(<VideoUploadForm {...defaultProps} />)
+
+      // Fill in required form fields first
+      await user.type(screen.getByLabelText(/your name/i), 'John Doe')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach name/i), 'Jane Smith')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach email/i), 'jane@example.com')
 
       // Some browsers don't set MIME type correctly
       const file = new File(['video'], 'video.mkv', { type: '' })
@@ -148,7 +160,7 @@ describe('VideoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
   })
@@ -178,7 +190,13 @@ describe('VideoUploadForm', () => {
     })
 
     it('accepts file on drop', async () => {
+      const user = userEvent.setup()
       render(<VideoUploadForm {...defaultProps} />)
+
+      // Fill in required form fields first
+      await user.type(screen.getByLabelText(/your name/i), 'John Doe')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach name/i), 'Jane Smith')
+      await user.type(screen.getByLabelText(/teacher.*leader.*coach email/i), 'jane@example.com')
 
       const file = new File(['video content'], 'test.mp4', {
         type: 'video/mp4',
@@ -191,7 +209,7 @@ describe('VideoUploadForm', () => {
       })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
   })

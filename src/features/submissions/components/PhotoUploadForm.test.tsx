@@ -89,9 +89,20 @@ describe('PhotoUploadForm', () => {
     })
   })
 
+  // Helper to fill required form fields
+  const fillFormFields = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.type(screen.getByLabelText(/your name/i), 'John Doe')
+    await user.type(screen.getByLabelText(/teacher.*leader.*coach name/i), 'Jane Smith')
+    await user.type(screen.getByLabelText(/teacher.*leader.*coach email/i), 'jane@example.com')
+  }
+
   describe('File validation', () => {
     it('starts upload for valid image file', async () => {
+      const user = userEvent.setup()
       render(<PhotoUploadForm {...defaultProps} />)
+
+      // Fill in required form fields first
+      await fillFormFields(user)
 
       const file = new File(['photo content'], 'test.jpg', {
         type: 'image/jpeg',
@@ -103,7 +114,7 @@ describe('PhotoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
 
@@ -150,7 +161,10 @@ describe('PhotoUploadForm', () => {
     })
 
     it('accepts PNG files', async () => {
+      const user = userEvent.setup()
       render(<PhotoUploadForm {...defaultProps} />)
+
+      await fillFormFields(user)
 
       const file = new File(['photo'], 'image.png', { type: 'image/png' })
       const input = document.querySelector(
@@ -160,12 +174,15 @@ describe('PhotoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
 
     it('accepts WebP files', async () => {
+      const user = userEvent.setup()
       render(<PhotoUploadForm {...defaultProps} />)
+
+      await fillFormFields(user)
 
       const file = new File(['photo'], 'image.webp', { type: 'image/webp' })
       const input = document.querySelector(
@@ -175,12 +192,15 @@ describe('PhotoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
 
     it('accepts GIF files', async () => {
+      const user = userEvent.setup()
       render(<PhotoUploadForm {...defaultProps} />)
+
+      await fillFormFields(user)
 
       const file = new File(['photo'], 'image.gif', { type: 'image/gif' })
       const input = document.querySelector(
@@ -190,7 +210,7 @@ describe('PhotoUploadForm', () => {
       fireEvent.change(input, { target: { files: [file] } })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
   })
@@ -222,7 +242,11 @@ describe('PhotoUploadForm', () => {
     })
 
     it('accepts file on drop', async () => {
+      const user = userEvent.setup()
       render(<PhotoUploadForm {...defaultProps} />)
+
+      // Fill in required form fields first
+      await fillFormFields(user)
 
       const file = new File(['photo content'], 'test.jpg', {
         type: 'image/jpeg',
@@ -236,7 +260,7 @@ describe('PhotoUploadForm', () => {
       })
 
       await waitFor(() => {
-        expect(mockStartUpload).toHaveBeenCalledWith(file)
+        expect(mockStartUpload).toHaveBeenCalledWith(file, expect.any(Object))
       })
     })
   })

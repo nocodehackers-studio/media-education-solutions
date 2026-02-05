@@ -31,9 +31,6 @@ vi.mock('@/contexts', () => ({
   })),
 }))
 
-const mockConfirmMutate = vi.fn()
-const mockWithdrawMutate = vi.fn()
-
 vi.mock('@/features/submissions', () => ({
   SubmissionPreview: vi.fn(({ submission }) => (
     <div data-testid="submission-preview">Preview: {submission.categoryName}</div>
@@ -41,6 +38,7 @@ vi.mock('@/features/submissions', () => ({
   SubmissionPreviewSkeleton: vi.fn(() => (
     <div data-testid="submission-preview-skeleton">Loading...</div>
   )),
+  EditSubmissionInfoSheet: vi.fn(() => null),
   useSubmissionPreview: vi.fn(() => ({
     data: {
       submission: {
@@ -65,14 +63,6 @@ vi.mock('@/features/submissions', () => ({
     isLoading: false,
     error: null,
   })),
-  useConfirmSubmission: vi.fn(() => ({
-    mutate: mockConfirmMutate,
-    isPending: false,
-  })),
-  useWithdrawSubmission: vi.fn(() => ({
-    mutate: mockWithdrawMutate,
-    isPending: false,
-  })),
 }))
 
 vi.mock('@/features/participants', () => ({
@@ -83,11 +73,7 @@ vi.mock('@/features/participants', () => ({
   )),
 }))
 
-import {
-  useSubmissionPreview,
-  useConfirmSubmission,
-  useWithdrawSubmission,
-} from '@/features/submissions'
+import { useSubmissionPreview } from '@/features/submissions'
 
 const defaultSubmission = {
   id: 'sub-123',
@@ -115,14 +101,6 @@ describe('SubmissionPreviewPage', () => {
       isLoading: false,
       error: null,
     } as ReturnType<typeof useSubmissionPreview>)
-    vi.mocked(useConfirmSubmission).mockReturnValue({
-      mutate: mockConfirmMutate,
-      isPending: false,
-    } as unknown as ReturnType<typeof useConfirmSubmission>)
-    vi.mocked(useWithdrawSubmission).mockReturnValue({
-      mutate: mockWithdrawMutate,
-      isPending: false,
-    } as unknown as ReturnType<typeof useWithdrawSubmission>)
   })
 
   const renderWithRouter = (submissionId = 'sub-123') => {
@@ -153,18 +131,16 @@ describe('SubmissionPreviewPage', () => {
       expect(screen.getByText('Preview: Best Short Film')).toBeInTheDocument()
     })
 
-    it('renders Confirm, Replace, and Withdraw buttons for uploaded status', () => {
+    it('does not show action buttons for uploaded (unconfirmed) status', () => {
+      // Action buttons only appear after submission is confirmed
       renderWithRouter()
 
       expect(
-        screen.getByRole('button', { name: 'Confirm Submission' })
-      ).toBeInTheDocument()
+        screen.queryByRole('button', { name: 'Replace' })
+      ).not.toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: 'Replace' })
-      ).toBeInTheDocument()
-      expect(
-        screen.getByRole('button', { name: 'Withdraw' })
-      ).toBeInTheDocument()
+        screen.queryByRole('button', { name: /Edit Submission/i })
+      ).not.toBeInTheDocument()
     })
 
     it('shows media type label in card header', () => {
@@ -219,42 +195,8 @@ describe('SubmissionPreviewPage', () => {
     })
   })
 
-  describe('Confirm submission', () => {
-    it('calls confirm mutation with correct params', async () => {
-      renderWithRouter()
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button', { name: 'Confirm Submission' }))
-
-      expect(mockConfirmMutate).toHaveBeenCalledWith({
-        submissionId: 'sub-123',
-        participantId: 'participant-123',
-        participantCode: 'ABC123',
-      })
-    })
-
-    it('shows pending text while confirming', () => {
-      vi.mocked(useConfirmSubmission).mockReturnValue({
-        mutate: mockConfirmMutate,
-        isPending: true,
-      } as unknown as ReturnType<typeof useConfirmSubmission>)
-
-      renderWithRouter()
-
-      expect(screen.getByText('Confirming...')).toBeInTheDocument()
-    })
-
-    it('disables confirm button while pending', () => {
-      vi.mocked(useConfirmSubmission).mockReturnValue({
-        mutate: mockConfirmMutate,
-        isPending: true,
-      } as unknown as ReturnType<typeof useConfirmSubmission>)
-
-      renderWithRouter()
-
-      expect(screen.getByText('Confirming...').closest('button')).toBeDisabled()
-    })
-  })
+  // Note: Confirm submission tests removed - confirmation is now handled elsewhere
+  // The SubmissionPreviewPage no longer has inline confirm functionality
 
   describe('Submitted state', () => {
     beforeEach(() => {
@@ -290,58 +232,16 @@ describe('SubmissionPreviewPage', () => {
       ).toBeInTheDocument()
     })
 
-    it('shows Withdraw button for submitted status', () => {
+    it('shows Edit Submission button for submitted status', () => {
       renderWithRouter()
 
       expect(
-        screen.getByRole('button', { name: 'Withdraw' })
+        screen.getByRole('button', { name: /Edit Submission/i })
       ).toBeInTheDocument()
     })
   })
 
-  describe('Withdraw submission', () => {
-    it('opens confirmation dialog when Withdraw clicked', async () => {
-      renderWithRouter()
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
-
-      expect(screen.getByText('Withdraw submission?')).toBeInTheDocument()
-      expect(
-        screen.getByText(
-          'This will remove your submission. You can submit again before the deadline.'
-        )
-      ).toBeInTheDocument()
-    })
-
-    it('calls withdraw mutation when confirmed', async () => {
-      renderWithRouter()
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
-      // Click the confirm action in the dialog
-      const dialogButtons = screen.getAllByRole('button', { name: 'Withdraw' })
-      // The dialog action button is the second "Withdraw" button
-      await user.click(dialogButtons[dialogButtons.length - 1])
-
-      expect(mockWithdrawMutate).toHaveBeenCalledWith({
-        submissionId: 'sub-123',
-        participantId: 'participant-123',
-        participantCode: 'ABC123',
-      })
-    })
-
-    it('closes dialog when Cancel clicked', async () => {
-      renderWithRouter()
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button', { name: 'Withdraw' }))
-      expect(screen.getByText('Withdraw submission?')).toBeInTheDocument()
-
-      await user.click(screen.getByRole('button', { name: 'Cancel' }))
-      expect(screen.queryByText('Withdraw submission?')).not.toBeInTheDocument()
-    })
-  })
+  // Note: Withdraw submission tests removed - withdraw is now in EditSubmissionInfoSheet
 
   describe('Locked state', () => {
     it('shows deadline locked message when isLocked is true', () => {
@@ -542,6 +442,16 @@ describe('SubmissionPreviewPage', () => {
     })
 
     it('navigates to submit page when Replace clicked', async () => {
+      // Replace button only shows for submitted status
+      vi.mocked(useSubmissionPreview).mockReturnValue({
+        data: {
+          submission: { ...defaultSubmission, status: 'submitted' },
+          libraryId: 'lib-123',
+        },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useSubmissionPreview>)
+
       renderWithRouter()
 
       const user = userEvent.setup()

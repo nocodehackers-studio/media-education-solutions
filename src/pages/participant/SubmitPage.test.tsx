@@ -18,17 +18,10 @@ vi.mock('@/contexts', () => ({
   })),
 }))
 
-// Mock supabase
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(),
-        })),
-      })),
-    })),
-  },
+// Mock useParticipantCategories
+const mockUseParticipantCategories = vi.fn()
+vi.mock('@/features/participants', () => ({
+  useParticipantCategories: () => mockUseParticipantCategories(),
 }))
 
 // Mock VideoUploadPage and PhotoUploadPage
@@ -51,7 +44,6 @@ vi.mock('react-router-dom', async () => {
 })
 
 import { useParticipantSession } from '@/contexts'
-import { supabase } from '@/lib/supabase'
 
 describe('SubmitPage', () => {
   let queryClient: QueryClient
@@ -68,12 +60,18 @@ describe('SubmitPage', () => {
     vi.mocked(useParticipantSession).mockReturnValue({
       session: mockSession,
     } as ReturnType<typeof useParticipantSession>)
+    // Default mock: empty categories data, not loading
+    mockUseParticipantCategories.mockReturnValue({
+      data: { categories: [], acceptingSubmissions: true },
+      isLoading: false,
+      error: null,
+    })
   })
 
-  const renderWithProviders = (categoryId = 'category-123') => {
+  const renderWithProviders = (categoryId = 'category-123', navState?: { type?: string }) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[`/participant/submit/${categoryId}`]}>
+        <MemoryRouter initialEntries={[{ pathname: `/participant/submit/${categoryId}`, state: navState }]}>
           <Routes>
             <Route path="/participant/submit/:categoryId" element={<SubmitPage />} />
           </Routes>
@@ -83,14 +81,12 @@ describe('SubmitPage', () => {
   }
 
   it('shows loading skeleton while fetching category type', () => {
-    // Mock pending query
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockReturnValue(new Promise(() => {})), // Never resolves
-        }),
-      }),
-    } as unknown as ReturnType<typeof supabase.from>)
+    // Mock loading state
+    mockUseParticipantCategories.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    })
 
     renderWithProviders()
 
@@ -99,18 +95,8 @@ describe('SubmitPage', () => {
   })
 
   it('renders VideoUploadPage for video category', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: { type: 'video' },
-            error: null,
-          }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof supabase.from>)
-
-    renderWithProviders()
+    // Pass category type via navigation state (the primary method)
+    renderWithProviders('category-123', { type: 'video' })
 
     await waitFor(() => {
       expect(screen.getByTestId('video-upload-page')).toBeInTheDocument()
@@ -118,35 +104,57 @@ describe('SubmitPage', () => {
   })
 
   it('renders PhotoUploadPage for photo category', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: { type: 'photo' },
-            error: null,
-          }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof supabase.from>)
-
-    renderWithProviders()
+    // Pass category type via navigation state (the primary method)
+    renderWithProviders('category-123', { type: 'photo' })
 
     await waitFor(() => {
       expect(screen.getByTestId('photo-upload-page')).toBeInTheDocument()
     })
   })
 
+  it('resolves category type from edge function data when no nav state', async () => {
+    mockUseParticipantCategories.mockReturnValue({
+      data: {
+        categories: [{ id: 'category-123', type: 'video', name: 'Video Category' }],
+        acceptingSubmissions: true,
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders('category-123') // No nav state
+
+    await waitFor(() => {
+      expect(screen.getByTestId('video-upload-page')).toBeInTheDocument()
+    })
+  })
+
+  it('shows error message when category not found', async () => {
+    // No nav state and category not in the list
+    mockUseParticipantCategories.mockReturnValue({
+      data: {
+        categories: [], // Empty - category won't be found
+        acceptingSubmissions: true,
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders('category-123')
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to load category. Please try again.')
+      ).toBeInTheDocument()
+    })
+  })
+
   it('shows error message when category fetch fails', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { message: 'Not found' },
-          }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof supabase.from>)
+    mockUseParticipantCategories.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('Network error'),
+    })
 
     renderWithProviders()
 

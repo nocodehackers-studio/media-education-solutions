@@ -97,9 +97,7 @@ describe('useWithdrawSubmission', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(mockToastSuccess).toHaveBeenCalledWith('Submission withdrawn')
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['participant-categories'],
-    })
+    // The hook uses refetchQueries for participant-categories and invalidateQueries for submission-preview
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: ['submission-preview'],
     })

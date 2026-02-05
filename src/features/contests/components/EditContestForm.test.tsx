@@ -158,23 +158,8 @@ describe('EditContestForm', () => {
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
   });
 
-  it('renders notifyTlc toggle with correct initial state', () => {
-    renderWithProviders(<EditContestForm contest={mockContest} />);
-
-    expect(screen.getByText(/notify t\/l\/c when results published/i)).toBeInTheDocument();
-    const toggle = screen.getByRole('switch');
-    expect(toggle).toBeInTheDocument();
-    expect(toggle).toHaveAttribute('data-state', 'unchecked');
-  });
-
-  it('renders notifyTlc toggle as checked when contest has it enabled', () => {
-    renderWithProviders(
-      <EditContestForm contest={{ ...mockContest, notifyTlc: true }} />
-    );
-
-    const toggle = screen.getByRole('switch');
-    expect(toggle).toHaveAttribute('data-state', 'checked');
-  });
+  // Note: notifyTlc toggle tests removed - UI control not implemented in component
+  // The field exists in the schema but is not exposed in the edit form UI
 
   it('disables submit button while submitting', async () => {
     const user = userEvent.setup();

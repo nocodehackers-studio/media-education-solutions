@@ -113,13 +113,21 @@ describe('CategoryCard', () => {
     expect(screen.getByText('draft')).toBeInTheDocument();
   });
 
-  it('shows Edit and Delete buttons for draft category (AC2)', () => {
+  it('shows Edit button for draft category (AC2)', async () => {
+    const user = userEvent.setup();
     renderWithProviders(
       <CategoryCard category={baseMockCategory} contestId="contest-123" />
     );
 
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
-    expect(screen.getByTestId('delete-category-button')).toBeInTheDocument();
+    // Edit button should be visible
+    const editButton = screen.getByRole('button', { name: /edit/i });
+    expect(editButton).toBeInTheDocument();
+
+    // Delete button is inside the edit sheet - click to open and verify
+    await user.click(editButton);
+    await waitFor(() => {
+      expect(screen.getByTestId('delete-category-button')).toBeInTheDocument();
+    });
   });
 
   it('shows View button and hides Edit/Delete for published category (AC3)', () => {
@@ -155,8 +163,8 @@ describe('CategoryCard', () => {
       <CategoryCard category={baseMockCategory} contestId="contest-123" />
     );
 
-    // date-fns PPP format: December 31st, 2026
-    expect(screen.getByText(/deadline/i)).toBeInTheDocument();
+    // Intl.DateTimeFormat format: December DD, 2026 (may vary by timezone)
+    expect(screen.getByText(/december \d+, 2026/i)).toBeInTheDocument();
   });
 
   it('displays passed indicator when deadline has passed', () => {
@@ -169,7 +177,7 @@ describe('CategoryCard', () => {
       />
     );
 
-    expect(screen.getByText(/passed/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(passed\)/i)).toBeInTheDocument();
   });
 
   // Note: Status dropdown interaction tests are skipped due to Radix UI Select

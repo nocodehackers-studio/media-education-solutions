@@ -59,7 +59,7 @@ describe('SubmissionPreview', () => {
       expect(iframe).toBeInTheDocument()
       expect(iframe).toHaveAttribute(
         'src',
-        'https://iframe.mediadelivery.net/embed/lib-123/bunny-vid-456'
+        'https://iframe.mediadelivery.net/embed/lib-123/bunny-vid-456?responsive=true'
       )
     })
 

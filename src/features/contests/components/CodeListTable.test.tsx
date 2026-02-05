@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CodeListTable } from './CodeListTable';
 import type { Participant } from '../types/contest.types';
 
@@ -17,10 +18,27 @@ const createMockParticipant = (
 });
 
 describe('CodeListTable', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+  });
+
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    );
+  };
+
   it('renders table headers correctly', () => {
     const codes: Participant[] = [];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('Code')).toBeInTheDocument();
     expect(screen.getByText('Organization')).toBeInTheDocument();
@@ -30,7 +48,7 @@ describe('CodeListTable', () => {
   it('displays code in monospace font', () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused')];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     const codeCell = screen.getByText('12345678');
     expect(codeCell).toHaveClass('font-mono');
@@ -39,7 +57,7 @@ describe('CodeListTable', () => {
   it('displays unused codes with outline badge', () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused')];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('Unused')).toBeInTheDocument();
   });
@@ -49,7 +67,7 @@ describe('CodeListTable', () => {
       createMockParticipant('12345678', 'used'),
     ];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('Used')).toBeInTheDocument();
   });
@@ -57,7 +75,7 @@ describe('CodeListTable', () => {
   it('shows organization name when provided', () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused', 'Springfield Elementary')];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('Springfield Elementary')).toBeInTheDocument();
   });
@@ -65,7 +83,7 @@ describe('CodeListTable', () => {
   it('shows "-" for organization when not provided', () => {
     const codes: Participant[] = [createMockParticipant('12345678', 'unused', null)];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('-')).toBeInTheDocument();
   });
@@ -77,7 +95,7 @@ describe('CodeListTable', () => {
       createMockParticipant('33333333', 'unused', 'School C'),
     ];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     expect(screen.getByText('11111111')).toBeInTheDocument();
     expect(screen.getByText('22222222')).toBeInTheDocument();
@@ -90,7 +108,7 @@ describe('CodeListTable', () => {
   it('renders empty table when no codes provided', () => {
     const codes: Participant[] = [];
 
-    render(<CodeListTable codes={codes} contestId="contest-123" />);
+    renderWithProviders(<CodeListTable codes={codes} contestId="contest-123" />);
 
     // Table should exist with headers
     expect(screen.getByRole('table')).toBeInTheDocument();

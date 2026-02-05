@@ -73,7 +73,7 @@ describe('DeleteContestButton', () => {
 
     expect(screen.getByText('Are you sure?')).toBeInTheDocument();
     expect(
-      screen.getByText(/This will delete all categories, submissions, and codes/i)
+      screen.getByText(/This contest will be moved to Trash/i)
     ).toBeInTheDocument();
   });
 
@@ -112,7 +112,7 @@ describe('DeleteContestButton', () => {
 
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith('contest-123');
-      expect(toast.success).toHaveBeenCalledWith('Contest deleted');
+      expect(toast.success).toHaveBeenCalledWith('Contest moved to trash. It will be permanently deleted in 90 days.');
       expect(mockNavigate).toHaveBeenCalledWith('/admin/contests');
     });
   });
