@@ -68,6 +68,6 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(
 
     if (!scriptReady) return null
 
-    return <div ref={containerRef} />
+    return <div ref={containerRef} className="overflow-hidden rounded-md" />
   },
 )
