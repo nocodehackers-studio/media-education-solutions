@@ -39,7 +39,7 @@ import { AssignJudgeSheet } from './AssignJudgeSheet';
 import { DuplicateCategoryDialog } from '@/features/divisions';
 import { useConfirmClose } from '@/hooks/useConfirmClose';
 import type { Category, CategoryStatus } from '../types/category.types';
-import { formatDateTimeInTimezone } from '@/lib/dateUtils';
+import { DeadlineCountdown } from '@/features/participants';
 
 interface CategoryCardProps {
   category: Category;
@@ -146,7 +146,6 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
 
   const isDraft = optimisticStatus === 'draft';
   const isEditable = isDraft;
-  const deadlinePassed = new Date(category.deadline) < new Date();
 
   const handleEditOpenChange = useCallback((open: boolean) => {
     if (!open && isEditable) {
@@ -171,15 +170,6 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
       : submissionCountError
         ? 'Cannot verify submission count'
         : null;
-
-  // Auto-close category if deadline passed (AC5 - client-side check)
-  useEffect(() => {
-    if (deadlinePassed && optimisticStatus !== 'closed') {
-      handleStatusChange('closed');
-    }
-  // Only run on mount and when deadline/status change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadlinePassed]);
 
   const handleStatusChange = async (newStatus: CategoryStatus) => {
     // AC4: For Draft status, always refetch submission count first
@@ -229,10 +219,11 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
         <Badge className={statusColors[optimisticStatus]} variant="secondary">
           {optimisticStatus}
         </Badge>
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
-          {formatDateTimeInTimezone(category.deadline, contestTimezone)}
-          {deadlinePassed && <span className="text-red-500 ml-1">(Passed)</span>}
-        </span>
+        <DeadlineCountdown
+          deadline={category.deadline}
+          timezone={contestTimezone}
+          className="text-xs"
+        />
 
         <div className="flex items-center gap-1 ml-auto shrink-0">
           <div className="flex flex-col gap-0.5">

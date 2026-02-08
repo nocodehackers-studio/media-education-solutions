@@ -78,7 +78,7 @@ describe('ParticipantCategoryCard', () => {
   describe('published category', () => {
     it('shows countdown timer', () => {
       renderCard(baseCategory)
-      expect(screen.getByText(/due/i)).toBeInTheDocument()
+      expect(screen.getByText(/\d+h \d+m \d+s/)).toBeInTheDocument()
     })
 
     it('navigates to category detail on click', async () => {

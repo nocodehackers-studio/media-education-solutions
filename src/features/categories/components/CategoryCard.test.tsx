@@ -8,6 +8,19 @@ import { toast } from '@/components/ui';
 import * as categoriesApi from '../api/categoriesApi';
 import type { Category } from '../types/category.types';
 
+// Mock DeadlineCountdown from participants feature
+vi.mock('@/features/participants', () => ({
+  DeadlineCountdown: (props: { deadline: string; timezone: string; className?: string }) => (
+    <span
+      data-testid="deadline-countdown"
+      data-timezone={props.timezone}
+      data-classname={props.className}
+    >
+      {props.deadline}
+    </span>
+  ),
+}));
+
 // Mock the API
 vi.mock('../api/categoriesApi', () => ({
   categoriesApi: {
@@ -161,27 +174,16 @@ describe('CategoryCard', () => {
     expect(screen.queryByTestId('delete-category-button')).not.toBeInTheDocument();
   });
 
-  it('displays deadline formatted date', () => {
+  it('renders DeadlineCountdown component with correct props', () => {
     renderWithProviders(
       <CategoryCard category={baseMockCategory} contestId="contest-123" contestTimezone="America/New_York" />
     );
 
-    // formatDateTimeInTimezone returns format like "Dec 31, 2026 7:00 PM"
-    expect(screen.getByText(/dec \d+, 2026/i)).toBeInTheDocument();
-  });
-
-  it('displays passed indicator when deadline has passed', () => {
-    const pastDeadline = new Date('2020-01-01').toISOString();
-
-    renderWithProviders(
-      <CategoryCard
-        category={{ ...baseMockCategory, deadline: pastDeadline }}
-        contestId="contest-123"
-        contestTimezone="America/New_York"
-      />
-    );
-
-    expect(screen.getByText(/\(passed\)/i)).toBeInTheDocument();
+    const countdown = screen.getByTestId('deadline-countdown');
+    expect(countdown).toBeInTheDocument();
+    expect(countdown).toHaveAttribute('data-timezone', 'America/New_York');
+    expect(countdown).toHaveAttribute('data-classname', 'text-xs');
+    expect(countdown).toHaveTextContent(baseMockCategory.deadline);
   });
 
   // Note: Status dropdown interaction tests are skipped due to Radix UI Select
