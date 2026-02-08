@@ -218,7 +218,7 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
   const TypeIcon = typeConfig[category.type].icon;
 
   return (
-    <div className="flex flex-col gap-2 p-3 border rounded-lg">
+    <div className="flex flex-col gap-2 p-3 border rounded-lg min-w-0 overflow-hidden">
       {/* Row 1: Name, badges, and actions */}
       <div className="flex items-center gap-2">
         <span className="font-medium truncate">{category.name}</span>

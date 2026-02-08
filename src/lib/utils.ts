@@ -8,5 +8,5 @@ export function cn(...inputs: ClassValue[]) {
 export function stripHtml(html: string): string {
   if (!html) return '';
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
+  return (doc.body.textContent || '').replace(/\n/g, ' ');
 }
