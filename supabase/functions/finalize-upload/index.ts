@@ -126,7 +126,6 @@ Deno.serve(async (req) => {
         status: 'submitted',
         media_url: mediaUrl,
         thumbnail_url: thumbnailUrl,
-        submitted_at: new Date().toISOString(),
       })
       .eq('id', submissionId)
 

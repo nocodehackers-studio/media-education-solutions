@@ -161,12 +161,10 @@ Deno.serve(async (req) => {
     }
 
     // F1: Atomic check-and-update — ownership + status validated in WHERE clause
-    // F7: Set submitted_at to actual confirmation time
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('submissions')
       .update({
         status: 'submitted',
-        submitted_at: new Date().toISOString(),
       })
       .eq('id', submissionId)
       .eq('participant_id', participantId)
