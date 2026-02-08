@@ -80,25 +80,6 @@ export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFor
 
         <FormField
           control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <RichTextEditor
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder="Tell participants about this contest..."
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="contestCode"
           render={({ field }) => (
             <FormItem>
@@ -113,6 +94,25 @@ export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFor
               <FormDescription>
                 6 characters. Leave blank to auto-generate a unique code.
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Tell participants about this contest..."
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
