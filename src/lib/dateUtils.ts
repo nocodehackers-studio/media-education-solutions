@@ -343,3 +343,13 @@ export function isDeadlinePassed(deadline: string): boolean {
     return false;
   }
 }
+
+export function isAtLeastOneMinuteFromNow(isoDate: string): boolean {
+  try {
+    const date = new Date(isoDate);
+    const oneMinuteFromNow = new Date(Date.now() + 60_000);
+    return date >= oneMinuteFromNow;
+  } catch {
+    return false;
+  }
+}

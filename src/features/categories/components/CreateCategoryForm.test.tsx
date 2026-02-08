@@ -29,6 +29,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
   };
 });
 
+
 function renderWithProviders(ui: ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -103,4 +104,7 @@ describe('CreateCategoryForm', () => {
     // The date picker shows "Pick a date" or a selected date
     expect(screen.getByLabelText(/submission deadline/i)).toBeInTheDocument();
   });
+
+  // Note: Past-deadline validation (isAtLeastOneMinuteFromNow) is tested in
+  // src/lib/dateUtils.test.ts. Calendar interaction in jsdom is not supported.
 });

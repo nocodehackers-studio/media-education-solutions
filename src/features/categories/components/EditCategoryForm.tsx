@@ -32,7 +32,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { updateCategorySchema, type UpdateCategoryInput } from '../types/category.schemas';
 import { useUpdateCategory } from '../hooks/useUpdateCategory';
 import type { Category } from '../types/category.types';
-import { formatDateInTimezone, extractTimeFromDate, combineDateAndTime, getTimezoneDisplayLabel } from '@/lib/dateUtils';
+import { formatDateInTimezone, extractTimeFromDate, combineDateAndTime, getTimezoneDisplayLabel, isAtLeastOneMinuteFromNow } from '@/lib/dateUtils';
 
 interface EditCategoryFormProps {
   category: Category;
@@ -77,6 +77,10 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
       const input = { ...data };
       if (data.deadline) {
         input.deadline = combineDateAndTime(data.deadline, time, contestTimezone);
+        if (!isAtLeastOneMinuteFromNow(input.deadline)) {
+          toast.error('Deadline must be at least 1 minute from now');
+          return;
+        }
       }
       await updateCategory.mutateAsync({
         categoryId: category.id,
@@ -164,7 +168,11 @@ export function EditCategoryForm({ category, contestId, contestTimezone, onSucce
                           field.onChange(date.toISOString());
                         }
                       }}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       initialFocus
                     />
                   </PopoverContent>

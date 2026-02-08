@@ -31,7 +31,7 @@ import {
 import { TimePicker } from '@/components/ui/time-picker';
 import { createCategorySchema, type CreateCategoryInput } from '../types/category.schemas';
 import { useCreateCategory } from '../hooks/useCreateCategory';
-import { formatDateInTimezone, combineDateAndTime, getTimezoneDisplayLabel } from '@/lib/dateUtils';
+import { formatDateInTimezone, combineDateAndTime, getTimezoneDisplayLabel, isAtLeastOneMinuteFromNow } from '@/lib/dateUtils';
 
 interface CreateCategoryFormProps {
   divisionId: string;
@@ -71,6 +71,10 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
     try {
       // Combine date and time into UTC ISO string
       const deadlineUtc = combineDateAndTime(data.deadline, time, contestTimezone);
+      if (!isAtLeastOneMinuteFromNow(deadlineUtc)) {
+        toast.error('Deadline must be at least 1 minute from now');
+        return;
+      }
       await createCategory.mutateAsync({ ...data, deadline: deadlineUtc });
       toast.success('Category created');
       form.reset();
@@ -155,7 +159,11 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
                           field.onChange(date.toISOString());
                         }
                       }}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
