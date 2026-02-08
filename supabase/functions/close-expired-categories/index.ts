@@ -68,19 +68,11 @@ Deno.serve(async (req) => {
     const startTime = Date.now();
     console.log('[close-expired-categories] === START ===');
 
-    // Auth: verify service_role_key (server-to-server, no user context)
-    const authHeader = req.headers.get('Authorization');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: responseHeaders }
-      );
-    }
-
+    // Auth handled by Supabase Gateway (requires valid JWT to reach Edge Functions)
+    // Use service_role for admin operations (same pattern as purge-deleted-contests)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      serviceRoleKey,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
