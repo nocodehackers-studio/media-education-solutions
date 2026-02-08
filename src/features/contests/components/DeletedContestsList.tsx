@@ -17,7 +17,7 @@ function getDaysRemaining(deletedAt: string): number {
 }
 
 export function DeletedContestsList({ contests }: DeletedContestsListProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const restoreContest = useRestoreContest();
 
   const handleRestore = async (id: string, name: string) => {
@@ -37,6 +37,7 @@ export function DeletedContestsList({ contests }: DeletedContestsListProps) {
     <div>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
       >
         {isExpanded ? (
