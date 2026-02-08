@@ -312,7 +312,7 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
 
       {/* Row 2: Description (optional) */}
       {category.description && (
-        <p className="text-xs text-muted-foreground truncate max-w-full">{stripHtml(category.description)}</p>
+        <p className="text-xs text-muted-foreground truncate w-0 min-w-full">{stripHtml(category.description)}</p>
       )}
 
       {/* Row 3: Judge info */}
