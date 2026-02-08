@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import DOMPurify from 'dompurify'
 import {
   ArrowLeft,
   Video,
@@ -168,7 +169,7 @@ export function CategoryDetailPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               About
             </h2>
-            <p className="text-sm whitespace-pre-line">{category.description}</p>
+            <div className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(category.description) }} />
           </div>
         )}
 
@@ -178,7 +179,7 @@ export function CategoryDetailPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Rules
             </h2>
-            <p className="text-sm whitespace-pre-line">{category.rules}</p>
+            <div className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(category.rules) }} />
           </div>
         )}
 

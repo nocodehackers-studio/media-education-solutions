@@ -7,6 +7,7 @@ import {
   Badge,
   Separator,
 } from '@/components/ui';
+import { stripHtml } from '@/lib/utils';
 import { useCategories } from '@/features/categories';
 import { useAdminSubmissions } from '@/features/submissions';
 import type { Contest, ContestStatus } from '../types/contest.types';
@@ -104,7 +105,7 @@ export function ContestCard({ contest, onClick }: ContestCardProps) {
           </Badge>
         </div>
         <CardDescription className="line-clamp-1">
-          {contest.description || '\u00A0'}
+          {contest.description ? stripHtml(contest.description) : '\u00A0'}
         </CardDescription>
       </CardHeader>
 

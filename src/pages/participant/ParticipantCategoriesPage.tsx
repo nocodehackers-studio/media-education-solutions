@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import DOMPurify from 'dompurify'
 import {
   RefreshCw,
   Info,
@@ -265,7 +266,7 @@ function Step1ContestLanding({
 
         {/* Contest description */}
         {contest?.description && (
-          <p className="text-muted-foreground mb-4">{contest.description}</p>
+          <div className="text-muted-foreground mb-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contest.description) }} />
         )}
 
         {/* Contest rules (collapsible) */}
@@ -284,8 +285,8 @@ function Step1ContestLanding({
                 Contest Rules
               </button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 text-sm text-muted-foreground whitespace-pre-line pl-6">
-              {contest.rules}
+            <CollapsibleContent className="mt-2 text-sm text-muted-foreground pl-6">
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contest.rules) }} />
             </CollapsibleContent>
           </Collapsible>
         )}

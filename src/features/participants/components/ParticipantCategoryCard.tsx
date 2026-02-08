@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Video, Image, CheckCircle, ChevronRight, Ban } from 'lucide-react'
 import { Badge, Card, CardContent } from '@/components/ui'
 import { DeadlineCountdown } from './DeadlineCountdown'
-import { cn } from '@/lib/utils'
+import { cn, stripHtml } from '@/lib/utils'
 import { type ParticipantCategory } from '../api/participantsApi'
 import { useParticipantSession } from '@/contexts'
 
@@ -74,7 +74,7 @@ export function ParticipantCategoryCard({ category, contestFinished, acceptingSu
         {/* Description */}
         {category.description && (
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {category.description}
+            {stripHtml(category.description)}
           </p>
         )}
 

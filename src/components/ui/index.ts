@@ -10,6 +10,7 @@ export {
 } from './card'
 export { Input } from './input'
 export { Textarea } from './textarea'
+export { RichTextEditor } from './rich-text-editor'
 
 // === Toast ===
 export { Toaster, toast } from './sonner'

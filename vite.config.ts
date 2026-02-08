@@ -27,6 +27,8 @@ export default defineConfig({
           'query-vendor': ['@tanstack/react-query'],
           // UI libraries - loaded on first page that needs them
           'ui-vendor': ['react-hook-form', '@hookform/resolvers', 'zod', 'lucide-react'],
+          // Tiptap rich text editor - only loaded in admin forms
+          'tiptap-vendor': ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-underline', '@tiptap/extension-link'],
         },
       },
     },

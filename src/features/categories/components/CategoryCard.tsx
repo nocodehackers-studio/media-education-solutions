@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Video, Camera, UserMinus, Send, Loader2, Pencil, Eye } from 'lucide-react';
+import { stripHtml } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -311,7 +312,7 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
 
       {/* Row 2: Description (optional) */}
       {category.description && (
-        <p className="text-xs text-muted-foreground truncate">{category.description}</p>
+        <p className="text-xs text-muted-foreground truncate">{stripHtml(category.description)}</p>
       )}
 
       {/* Row 3: Judge info */}

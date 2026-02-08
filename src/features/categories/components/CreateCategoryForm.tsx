@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
+  RichTextEditor,
   toast,
 } from '@/components/ui';
 import { TimePicker } from '@/components/ui/time-picker';
@@ -192,11 +192,11 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   placeholder="Describe what this category is about..."
-                  className="resize-none"
-                  rows={3}
-                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -211,11 +211,11 @@ export function CreateCategoryForm({ divisionId, contestId, contestTimezone, onS
             <FormItem>
               <FormLabel>Category Rules</FormLabel>
               <FormControl>
-                <Textarea
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   placeholder="Specific rules for this category..."
-                  className="resize-none"
-                  rows={4}
-                  {...field}
                 />
               </FormControl>
               <FormMessage />

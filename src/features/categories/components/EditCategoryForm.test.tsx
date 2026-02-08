@@ -8,6 +8,20 @@ import { toast } from '@/components/ui';
 import type { Category } from '../types/category.types';
 import type { ReactElement } from 'react';
 
+// Mock RichTextEditor as a plain textarea for test compatibility
+vi.mock('@/components/ui/rich-text-editor', () => ({
+  RichTextEditor: ({ value, onChange, onBlur, placeholder, disabled, ...rest }: Record<string, unknown>) => (
+    <textarea
+      value={value as string}
+      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => (onChange as (v: string) => void)(e.target.value)}
+      onBlur={onBlur as () => void}
+      placeholder={placeholder as string}
+      disabled={disabled as boolean}
+      {...rest}
+    />
+  ),
+}));
+
 // Mock the API
 vi.mock('../api/categoriesApi', () => ({
   categoriesApi: {

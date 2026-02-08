@@ -12,7 +12,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
-  Textarea,
+  RichTextEditor,
   toast,
 } from '@/components/ui';
 import { TimezoneCombobox } from '@/components/ui/timezone-combobox';
@@ -85,11 +85,11 @@ export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFor
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   placeholder="Tell participants about this contest..."
-                  className="resize-none"
-                  rows={3}
-                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -125,11 +125,11 @@ export function CreateContestForm({ onSuccess, onDirtyChange }: CreateContestFor
             <FormItem>
               <FormLabel>General Rules</FormLabel>
               <FormControl>
-                <Textarea
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   placeholder="Contest rules and guidelines..."
-                  className="resize-none"
-                  rows={4}
-                  {...field}
                 />
               </FormControl>
               <FormMessage />
