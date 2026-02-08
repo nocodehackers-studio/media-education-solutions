@@ -16,8 +16,8 @@ export function SubmitPage() {
   const location = useLocation()
   const { session } = useParticipantSession()
 
-  // Primary: read category type and accepting status from navigation state
-  const navState = location.state as { type?: string; acceptingSubmissions?: boolean } | null
+  // Primary: read category type, accepting status, and deadline from navigation state
+  const navState = location.state as { type?: string; acceptingSubmissions?: boolean; deadline?: string } | null
   const navType = navState?.type as 'video' | 'photo' | undefined
 
   console.log('[SubmitPage] Mount', {
@@ -39,6 +39,17 @@ export function SubmitPage() {
     participantId: session?.participantId || '',
     participantCode: session?.code || '',
   })
+
+  // Resolve deadline: prefer nav state, fallback to edge function data
+  const categoryDeadline = useMemo(() => {
+    if (categoriesData?.categories && categoryId) {
+      const match = categoriesData.categories.find((c) => c.id === categoryId)
+      return match?.deadline ?? null
+    }
+    return null
+  }, [categoriesData, categoryId])
+
+  const deadline = navState?.deadline ?? categoryDeadline
 
   // Resolve category type: prefer nav state, fallback to edge function data
   const categoryType = useMemo(() => {
@@ -115,8 +126,8 @@ export function SubmitPage() {
   })
 
   if (categoryType === 'video') {
-    return <VideoUploadPage />
+    return <VideoUploadPage deadline={deadline} />
   }
 
-  return <PhotoUploadPage />
+  return <PhotoUploadPage deadline={deadline} />
 }

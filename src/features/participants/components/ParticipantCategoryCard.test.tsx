@@ -44,10 +44,10 @@ const baseCategory: ParticipantCategory = {
   submissionId: null,
 }
 
-function renderCard(category: ParticipantCategory, contestFinished?: boolean) {
+function renderCard(category: ParticipantCategory, contestEnded?: boolean, acceptingSubmissions?: boolean) {
   return render(
     <BrowserRouter>
-      <ParticipantCategoryCard category={category} contestFinished={contestFinished} />
+      <ParticipantCategoryCard category={category} contestEnded={contestEnded} acceptingSubmissions={acceptingSubmissions} />
     </BrowserRouter>
   )
 }
@@ -88,7 +88,7 @@ describe('ParticipantCategoryCard', () => {
       await user.click(screen.getByText('Best Documentary'))
 
       expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
-        state: { category: baseCategory, contestFinished: undefined, acceptingSubmissions: true },
+        state: { category: baseCategory, contestEnded: undefined, acceptingSubmissions: true },
       })
     })
   })
@@ -99,20 +99,23 @@ describe('ParticipantCategoryCard', () => {
       status: 'closed',
     }
 
-    it('shows Closed badge', () => {
+    it('shows "Submissions closed" badge', () => {
       renderCard(closedCategory)
-      expect(screen.getByText('Closed')).toBeInTheDocument()
-    })
-
-    it('shows "Submissions closed" text', () => {
-      renderCard(closedCategory)
-      expect(screen.getByText(/submissions closed/i)).toBeInTheDocument()
+      const matches = screen.getAllByText('Submissions closed')
+      expect(matches.length).toBeGreaterThanOrEqual(1)
     })
 
     it('has muted styling (opacity-60)', () => {
       const { container } = renderCard(closedCategory)
       const card = container.querySelector('[class*="opacity-60"]')
       expect(card).toBeInTheDocument()
+    })
+
+    it('navigates on click (not blocked)', async () => {
+      const user = userEvent.setup()
+      renderCard(closedCategory)
+      await user.click(screen.getByText('Best Documentary'))
+      expect(mockNavigate).toHaveBeenCalled()
     })
   })
 
@@ -136,7 +139,7 @@ describe('ParticipantCategoryCard', () => {
       await user.click(screen.getByText('Best Documentary'))
 
       expect(mockNavigate).toHaveBeenCalledWith('/participant/category/cat-123', {
-        state: { category: submittedCategory, contestFinished: undefined, acceptingSubmissions: true },
+        state: { category: submittedCategory, contestEnded: undefined, acceptingSubmissions: true },
       })
     })
   })
@@ -156,21 +159,51 @@ describe('ParticipantCategoryCard', () => {
     })
   })
 
-  describe('finished contest with no submission', () => {
-    const noSubmission: ParticipantCategory = {
+  describe('contest ended with submission', () => {
+    const endedWithSubmission: ParticipantCategory = {
       ...baseCategory,
+      status: 'closed' as const,
+      hasSubmitted: true,
+      submissionStatus: 'submitted' as const,
+      submissionId: 'sub-001',
+    }
+
+    it('shows "Submission received" badge', () => {
+      renderCard(endedWithSubmission, true, false)
+      expect(screen.getByText('Submission received')).toBeInTheDocument()
+    })
+
+    it('navigates on click', async () => {
+      const user = userEvent.setup()
+      renderCard(endedWithSubmission, true, false)
+      await user.click(screen.getByText('Best Documentary'))
+      expect(mockNavigate).toHaveBeenCalled()
+    })
+  })
+
+  describe('contest ended without submission', () => {
+    const endedNoSubmission: ParticipantCategory = {
+      ...baseCategory,
+      status: 'closed' as const,
       noSubmission: true,
     }
 
-    it('shows No submission badge', () => {
-      renderCard(noSubmission, true)
-      expect(screen.getByText('No submission')).toBeInTheDocument()
+    it('shows "Submissions closed" badge', () => {
+      renderCard(endedNoSubmission, true, false)
+      expect(screen.getByText('Submissions closed')).toBeInTheDocument()
     })
 
-    it('has disabled styling', () => {
-      const { container } = renderCard(noSubmission, true)
-      const card = container.querySelector('[class*="pointer-events-none"]')
+    it('has opacity-60 styling', () => {
+      const { container } = renderCard(endedNoSubmission, true, false)
+      const card = container.querySelector('[class*="opacity-60"]')
       expect(card).toBeInTheDocument()
+    })
+
+    it('navigates on click (not blocked)', async () => {
+      const user = userEvent.setup()
+      renderCard(endedNoSubmission, true, false)
+      await user.click(screen.getByText('Best Documentary'))
+      expect(mockNavigate).toHaveBeenCalled()
     })
   })
 })

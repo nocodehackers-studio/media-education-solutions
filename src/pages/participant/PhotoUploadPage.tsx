@@ -7,9 +7,14 @@ import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { PhotoUploadForm } from '@/features/submissions'
+import { DeadlineCountdown } from '@/features/participants'
 import { useParticipantSession } from '@/contexts'
 
-export function PhotoUploadPage() {
+interface PhotoUploadPageProps {
+  deadline?: string | null
+}
+
+export function PhotoUploadPage({ deadline }: PhotoUploadPageProps) {
   const navigate = useNavigate()
   const { categoryId } = useParams<{ categoryId: string }>()
   const { session } = useParticipantSession()
@@ -43,6 +48,14 @@ export function PhotoUploadPage() {
           <h1 className="text-2xl font-bold">Upload Photo</h1>
           <p className="text-muted-foreground">Submit your photo entry</p>
         </div>
+
+        {/* Deadline countdown */}
+        {deadline && (
+          <DeadlineCountdown
+            deadline={deadline}
+            timezone={session.contestTimezone || 'America/New_York'}
+          />
+        )}
 
         {/* Upload Form */}
         <Card>

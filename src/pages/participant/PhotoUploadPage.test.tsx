@@ -30,6 +30,17 @@ vi.mock('@/features/submissions', () => ({
   )),
 }))
 
+// Mock DeadlineCountdown
+vi.mock('@/features/participants', async () => {
+  const actual = await vi.importActual('@/features/participants')
+  return {
+    ...actual,
+    DeadlineCountdown: vi.fn(({ deadline }: { deadline: string }) => (
+      <div data-testid="deadline-countdown">Deadline: {deadline}</div>
+    )),
+  }
+})
+
 // Mock useNavigate
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -50,7 +61,7 @@ describe('PhotoUploadPage', () => {
     } as ReturnType<typeof useParticipantSession>)
   })
 
-  const renderWithRouter = (categoryId = 'category-123') => {
+  const renderWithRouter = (categoryId = 'category-123', deadline?: string | null) => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
@@ -60,7 +71,7 @@ describe('PhotoUploadPage', () => {
           <Routes>
             <Route
               path="/participant/submit/:categoryId"
-              element={<PhotoUploadPage />}
+              element={<PhotoUploadPage deadline={deadline} />}
             />
           </Routes>
         </MemoryRouter>
@@ -100,6 +111,17 @@ describe('PhotoUploadPage', () => {
     await user.click(backButton)
 
     expect(mockNavigate).toHaveBeenCalledWith('/participant/category/category-123')
+  })
+
+  it('renders deadline countdown when deadline is provided', () => {
+    const futureDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    renderWithRouter('category-123', futureDeadline)
+    expect(screen.getByTestId('deadline-countdown')).toBeInTheDocument()
+  })
+
+  it('does not render deadline countdown when deadline is null', () => {
+    renderWithRouter('category-123', null)
+    expect(screen.queryByTestId('deadline-countdown')).not.toBeInTheDocument()
   })
 
   it('redirects to / when no session', () => {

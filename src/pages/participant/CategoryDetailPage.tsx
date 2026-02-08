@@ -37,6 +37,7 @@ import { useParticipantSession } from '@/contexts'
 
 interface LocationState {
   category?: ParticipantCategory
+  contestEnded?: boolean
   contestFinished?: boolean
   acceptingSubmissions?: boolean
 }
@@ -65,8 +66,8 @@ export function CategoryDetailPage() {
     state?.category ??
     cachedData?.categories.find((c) => c.id === categoryId)
 
-  const contestFinished =
-    state?.contestFinished ?? cachedData?.contestStatus === 'finished'
+  const contestEnded =
+    state?.contestEnded ?? state?.contestFinished ?? !(cachedData?.acceptingSubmissions ?? true)
 
   const acceptingSubmissions =
     state?.acceptingSubmissions ?? cachedData?.acceptingSubmissions ?? false
@@ -107,20 +108,19 @@ export function CategoryDetailPage() {
   }
 
   const isClosed = category.status === 'closed'
-  const isDisabled = contestFinished && category.noSubmission
   const TypeIcon = category.type === 'video' ? Video : Image
   const typeLabel = category.type === 'video' ? 'Video' : 'Photo'
   const hasSubmission = category.hasSubmitted && category.submissionId
 
   const handleSubmit = () => {
     navigate(`/participant/submit/${category.id}`, {
-      state: { type: category.type, acceptingSubmissions },
+      state: { type: category.type, acceptingSubmissions, deadline: category.deadline },
     })
   }
 
   const handleReplace = () => {
     navigate(`/participant/submit/${category.id}`, {
-      state: { type: category.type, acceptingSubmissions },
+      state: { type: category.type, acceptingSubmissions, deadline: category.deadline },
     })
   }
 
@@ -145,21 +145,17 @@ export function CategoryDetailPage() {
           <h1 className="text-2xl sm:text-3xl font-bold">{category.name}</h1>
 
           {/* Deadline */}
-          {!contestFinished && !isClosed && (
+          {acceptingSubmissions && !isClosed ? (
             <DeadlineCountdown
               deadline={category.deadline}
               timezone={session?.contestTimezone || 'America/New_York'}
               className="text-base"
             />
-          )}
-          {!contestFinished && isClosed && (
+          ) : (
             <div className="flex items-center gap-1 text-muted-foreground">
               <Lock className="h-4 w-4" />
-              <span>Submissions closed</span>
+              <span>{!acceptingSubmissions ? 'Contest ended' : 'Submissions closed'}</span>
             </div>
-          )}
-          {contestFinished && (
-            <span className="text-muted-foreground">Contest ended</span>
           )}
         </div>
 
@@ -254,8 +250,8 @@ export function CategoryDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Feedback section when contest is finished */}
-            {contestFinished && (
+            {/* Feedback section when contest has ended */}
+            {contestEnded && (
               <>
                 {submission.review ? (
                   <ParticipantFeedbackSection feedback={submission.review} />
@@ -272,7 +268,7 @@ export function CategoryDetailPage() {
             )}
 
             {/* Lock state message */}
-            {!contestFinished && isLocked && (
+            {!contestEnded && isLocked && (
               <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
                 <Lock className="h-5 w-5 flex-shrink-0" />
                 <p>
@@ -284,7 +280,7 @@ export function CategoryDetailPage() {
             )}
 
             {/* Action buttons */}
-            {!contestFinished && !isLocked && (
+            {acceptingSubmissions && !isClosed && !isLocked && (
               <div className="flex flex-wrap gap-3">
                 <Button variant="outline" onClick={handleReplace}>
                   Replace
@@ -301,18 +297,14 @@ export function CategoryDetailPage() {
         {/* No submission — show action */}
         {!hasSubmission && (
           <div>
-            {isDisabled ? (
-              <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
-            ) : contestFinished ? (
-              <p className="text-sm text-muted-foreground">No submission was made for this category.</p>
-            ) : !acceptingSubmissions ? (
-              <p className="text-sm text-muted-foreground">This contest is closed. Submissions are no longer accepted.</p>
-            ) : isClosed ? (
-              <p className="text-sm text-muted-foreground">This category is no longer accepting submissions.</p>
-            ) : (
+            {acceptingSubmissions && !isClosed ? (
               <Button className="w-full" onClick={handleSubmit}>
                 Submit Entry
               </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No submission was made for this category.
+              </p>
             )}
           </div>
         )}

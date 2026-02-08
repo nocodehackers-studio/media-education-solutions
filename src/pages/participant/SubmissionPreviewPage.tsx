@@ -85,7 +85,7 @@ export function SubmissionPreviewPage() {
   const { submission, libraryId, videoReady } = data
   const isConfirmed = submission.status === 'submitted'
   const isLocked = submission.isLocked
-  const contestFinished = submission.contestStatus === 'finished'
+  const contestEnded = submission.contestStatus === 'closed' || submission.contestStatus === 'reviewed' || submission.contestStatus === 'finished'
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -165,7 +165,7 @@ export function SubmissionPreviewPage() {
         </Card>
 
         {/* Story 6-7: Feedback section when contest is finished */}
-        {contestFinished && (
+        {contestEnded && (
           <>
             {submission.review ? (
               <ParticipantFeedbackSection feedback={submission.review} />
@@ -182,7 +182,7 @@ export function SubmissionPreviewPage() {
         )}
 
         {/* Lock State Message */}
-        {!contestFinished && isLocked && (
+        {!contestEnded && isLocked && (
           <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
             <Lock className="h-5 w-5 flex-shrink-0" />
             <p>
@@ -194,7 +194,7 @@ export function SubmissionPreviewPage() {
         )}
 
         {/* Action Buttons — hidden when contest is finished */}
-        {!contestFinished && !isLocked && (
+        {!contestEnded && !isLocked && (
           <div className="flex flex-wrap gap-3">
             {/* Replace button */}
             {isConfirmed && (

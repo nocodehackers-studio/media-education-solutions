@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Video, Image, CheckCircle, ChevronRight, Ban } from 'lucide-react'
+import { Video, Image, CheckCircle, ChevronRight, Lock } from 'lucide-react'
 import { Badge, Card, CardContent } from '@/components/ui'
 import { DeadlineCountdown } from './DeadlineCountdown'
 import { cn, stripHtml } from '@/lib/utils'
@@ -10,35 +10,29 @@ export type { ParticipantCategory } from '../api/participantsApi'
 
 interface ParticipantCategoryCardProps {
   category: ParticipantCategory
-  contestFinished?: boolean
+  contestEnded?: boolean
   acceptingSubmissions?: boolean
 }
 
-export function ParticipantCategoryCard({ category, contestFinished, acceptingSubmissions = true }: ParticipantCategoryCardProps) {
+export function ParticipantCategoryCard({ category, contestEnded, acceptingSubmissions = true }: ParticipantCategoryCardProps) {
   const navigate = useNavigate()
   const { session } = useParticipantSession()
   const contestTimezone = session?.contestTimezone || 'America/New_York'
   const isClosed = category.status === 'closed'
-  const isDisabled = contestFinished && category.noSubmission
-  const isContestClosed = acceptingSubmissions === false && !contestFinished
   const TypeIcon = category.type === 'video' ? Video : Image
 
   const handleClick = () => {
-    if (isDisabled) return
-    if (isContestClosed) return
     navigate(`/participant/category/${category.id}`, {
-      state: { category, contestFinished, acceptingSubmissions },
+      state: { category, contestEnded, acceptingSubmissions },
     })
   }
 
   return (
     <Card
       className={cn(
-        'transition-colors',
-        !isDisabled && !isContestClosed && 'cursor-pointer hover:bg-accent/50',
-        isClosed && !contestFinished && !isContestClosed && 'opacity-60',
-        isDisabled && 'opacity-50 pointer-events-none',
-        isContestClosed && 'opacity-60',
+        'transition-colors transition-opacity duration-150',
+        'cursor-pointer hover:bg-accent/50',
+        (isClosed || !acceptingSubmissions) && 'opacity-60 hover:opacity-100',
       )}
       onClick={handleClick}
     >
@@ -50,17 +44,15 @@ export function ParticipantCategoryCard({ category, contestFinished, acceptingSu
             <span className="font-semibold truncate">{category.name}</span>
           </div>
           <div className="shrink-0">
-            {isDisabled ? (
-              <Badge variant="secondary" className="text-xs">No submission</Badge>
-            ) : isContestClosed ? (
-              <Badge variant="secondary" className="text-xs">
-                <Ban className="h-3 w-3 mr-1" />
-                Contest is Closed
+            {!acceptingSubmissions && category.submissionStatus === 'submitted' ? (
+              <Badge variant="default" className="bg-green-600 text-xs">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Submission received
               </Badge>
-            ) : isClosed && !contestFinished ? (
+            ) : !acceptingSubmissions || isClosed ? (
               <Badge variant="secondary" className="text-xs">
-                <Ban className="h-3 w-3 mr-1" />
-                Closed
+                <Lock className="h-3 w-3 mr-1" />
+                Submissions closed
               </Badge>
             ) : category.submissionStatus === 'submitted' ? (
               <Badge variant="default" className="bg-green-600 text-xs">
@@ -80,18 +72,14 @@ export function ParticipantCategoryCard({ category, contestFinished, acceptingSu
 
         {/* Bottom row: deadline + chevron */}
         <div className="flex items-center justify-between">
-          {contestFinished ? (
-            <span className="text-muted-foreground text-sm">Contest ended</span>
-          ) : isContestClosed ? (
-            <span className="text-muted-foreground text-sm">Submissions closed</span>
-          ) : !isClosed ? (
+          {acceptingSubmissions && !isClosed ? (
             <DeadlineCountdown deadline={category.deadline} timezone={contestTimezone} />
           ) : (
-            <span className="text-muted-foreground text-sm">Submissions closed</span>
+            <span className="text-muted-foreground text-sm">
+              {!acceptingSubmissions ? 'Contest ended' : 'Submissions closed'}
+            </span>
           )}
-          {!isContestClosed && (
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          )}
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </div>
       </CardContent>
     </Card>

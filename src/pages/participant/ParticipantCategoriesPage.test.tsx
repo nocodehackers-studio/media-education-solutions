@@ -51,6 +51,7 @@ let mockCategoriesData: {
     divisions: ParticipantDivision[]
     contest: ContestInfo | null
     contestStatus: string | null
+    acceptingSubmissions?: boolean
   } | undefined
   isLoading: boolean
   error: Error | null
@@ -153,7 +154,7 @@ describe('ParticipantCategoriesPage', () => {
   describe('empty state', () => {
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: [], divisions: [], contest: baseContest, contestStatus: null },
+        data: { categories: [], divisions: [], contest: baseContest, contestStatus: null, acceptingSubmissions: true },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -186,6 +187,7 @@ describe('ParticipantCategoriesPage', () => {
           divisions,
           contest: baseContest,
           contestStatus: null,
+          acceptingSubmissions: true,
         },
         isLoading: false,
         error: null,
@@ -228,6 +230,7 @@ describe('ParticipantCategoriesPage', () => {
           divisions: singleDivision,
           contest: baseContest,
           contestStatus: null,
+          acceptingSubmissions: true,
         },
         isLoading: false,
         error: null,
@@ -251,7 +254,7 @@ describe('ParticipantCategoriesPage', () => {
 
     beforeEach(() => {
       mockCategoriesData = {
-        data: { categories: [baseCategory], divisions, contest: baseContest, contestStatus: null },
+        data: { categories: [baseCategory], divisions, contest: baseContest, contestStatus: null, acceptingSubmissions: true },
         isLoading: false,
         error: null,
         refetch: mockRefetch,
@@ -290,6 +293,7 @@ describe('ParticipantCategoriesPage', () => {
           divisions: [{ id: 'd-1', name: 'All', displayOrder: 0, categories: finishedCategories }],
           contest: baseContest,
           contestStatus: 'finished',
+          acceptingSubmissions: false,
         },
         isLoading: false,
         error: null,
@@ -297,11 +301,55 @@ describe('ParticipantCategoriesPage', () => {
       }
     })
 
-    it('shows finished contest banner', () => {
+    it('shows ended banner for finished contest', () => {
       renderPage()
       expect(
         screen.getByText(/this contest has ended/i)
       ).toBeInTheDocument()
+    })
+
+    it('shows "Contest ended" badge', () => {
+      renderPage()
+      const matches = screen.getAllByText('Contest ended')
+      expect(matches.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  describe('closed contest', () => {
+    const closedCategories: ParticipantCategory[] = [
+      {
+        ...baseCategory,
+        status: 'closed',
+        hasSubmitted: true,
+        submissionStatus: 'submitted',
+        submissionId: 'sub-001',
+      },
+    ]
+
+    beforeEach(() => {
+      mockCategoriesData = {
+        data: {
+          categories: closedCategories,
+          divisions: [{ id: 'd-1', name: 'All', displayOrder: 0, categories: closedCategories }],
+          contest: baseContest,
+          contestStatus: 'closed',
+          acceptingSubmissions: false,
+        },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+      }
+    })
+
+    it('shows ended banner for closed contest status', () => {
+      renderPage()
+      expect(screen.getByText(/this contest has ended/i)).toBeInTheDocument()
+    })
+
+    it('shows "Contest ended" badge', () => {
+      renderPage()
+      const matches = screen.getAllByText('Contest ended')
+      expect(matches.length).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -309,7 +357,7 @@ describe('ParticipantCategoriesPage', () => {
     beforeEach(() => {
       currentMockSession = null
       mockCategoriesData = {
-        data: { categories: [], divisions: [], contest: null, contestStatus: null },
+        data: { categories: [], divisions: [], contest: null, contestStatus: null, acceptingSubmissions: false },
         isLoading: false,
         error: null,
         refetch: mockRefetch,

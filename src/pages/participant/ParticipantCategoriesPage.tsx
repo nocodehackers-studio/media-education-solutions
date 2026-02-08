@@ -61,8 +61,7 @@ export function ParticipantCategoriesPage() {
   const divisions = data?.divisions
   const contest = data?.contest
   const acceptingSubmissions = data?.acceptingSubmissions ?? false
-  const contestFinished = data?.contestStatus === 'finished'
-  const contestClosed = data?.contestStatus === 'closed' || data?.contestStatus === 'reviewed'
+  const contestEnded = !acceptingSubmissions
   const isSingleDivision = (divisions?.length ?? 0) === 1
 
   // Derive selected division from ID when divisions data is available
@@ -152,8 +151,7 @@ export function ParticipantCategoriesPage() {
         <div key="step2" className="animate-in fade-in slide-in-from-right-4 duration-200">
           <Step2CategoryList
             division={selectedDivision}
-            contestFinished={contestFinished}
-            contestClosed={contestClosed}
+            contestEnded={contestEnded}
             acceptingSubmissions={acceptingSubmissions}
             onBack={handleBack}
           />
@@ -163,8 +161,7 @@ export function ParticipantCategoriesPage() {
           <Step1ContestLanding
             contest={contest}
             contestName={contestName}
-            contestFinished={contestFinished}
-            contestClosed={contestClosed}
+            contestEnded={contestEnded}
             acceptingSubmissions={acceptingSubmissions}
             divisions={divisions || []}
             rulesOpen={rulesOpen}
@@ -188,8 +185,7 @@ export function ParticipantCategoriesPage() {
 interface Step1Props {
   contest: ContestInfo | null | undefined
   contestName: string
-  contestFinished: boolean
-  contestClosed: boolean
+  contestEnded: boolean
   acceptingSubmissions: boolean
   divisions: ParticipantDivision[]
   rulesOpen: boolean
@@ -200,8 +196,7 @@ interface Step1Props {
 function Step1ContestLanding({
   contest,
   contestName,
-  contestFinished,
-  contestClosed,
+  contestEnded,
   acceptingSubmissions,
   divisions,
   rulesOpen,
@@ -251,15 +246,10 @@ function Step1ContestLanding({
               <CircleCheck className="h-3 w-3 mr-1" />
               Accepting Submissions
             </Badge>
-          ) : contestClosed ? (
-            <Badge variant="secondary" className="text-xs">
-              <CircleX className="h-3 w-3 mr-1" />
-              Contest is Closed
-            </Badge>
           ) : (
             <Badge variant="secondary" className="text-xs">
               <CircleX className="h-3 w-3 mr-1" />
-              Contest Ended
+              Contest ended
             </Badge>
           )}
         </div>
@@ -294,20 +284,12 @@ function Step1ContestLanding({
         {/* Divider */}
         <Separator className="mb-6" />
 
-        {/* Contest closed banner */}
-        {contestClosed && (
-          <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg mb-6">
-            <Info className="h-5 w-5 flex-shrink-0" />
-            <p>This contest is closed. Submissions are no longer accepted.</p>
-          </div>
-        )}
-
-        {/* Finished contest banner */}
-        {contestFinished && (
+        {/* Contest ended banner */}
+        {contestEnded && (
           <div className="space-y-3 mb-6">
             <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
               <Info className="h-5 w-5 flex-shrink-0" />
-              <p>This contest has ended. View your feedback below.</p>
+              <p>This contest has ended. View your submissions below.</p>
             </div>
             {divisions?.some((d) => d.categories.some((c) => c.hasFeedback)) && (
               <div className="flex items-center gap-2 text-primary bg-primary/10 p-4 rounded-lg">
@@ -323,13 +305,13 @@ function Step1ContestLanding({
           {isSingleDivision ? (
             <>
               <h2 className="text-lg font-semibold">
-                {contestFinished ? 'Your Submissions' : 'Categories'}
+                {contestEnded ? 'Your Submissions' : 'Categories'}
               </h2>
               {divisions[0].categories.length === 0 ? (
                 <Card>
                   <CardContent className="py-12 text-center">
                     <p className="text-muted-foreground">
-                      {contestFinished
+                      {contestEnded
                         ? 'No categories available.'
                         : 'No categories are currently accepting submissions.'}
                     </p>
@@ -341,7 +323,7 @@ function Step1ContestLanding({
                     <ParticipantCategoryCard
                       key={category.id}
                       category={category}
-                      contestFinished={contestFinished}
+                      contestEnded={contestEnded}
                       acceptingSubmissions={acceptingSubmissions}
                     />
                   ))}
@@ -351,13 +333,13 @@ function Step1ContestLanding({
           ) : (
             <>
               <h2 className="text-lg font-semibold">
-                {contestFinished ? 'Your Submissions' : 'Choose Your Division'}
+                {contestEnded ? 'Your Submissions' : 'Choose Your Division'}
               </h2>
               {divisions.length === 0 ? (
                 <Card>
                   <CardContent className="py-12 text-center">
                     <p className="text-muted-foreground">
-                      {contestFinished
+                      {contestEnded
                         ? 'No categories available.'
                         : 'No categories are currently accepting submissions.'}
                     </p>
@@ -397,13 +379,12 @@ function Step1ContestLanding({
 
 interface Step2Props {
   division: ParticipantDivision
-  contestFinished: boolean
-  contestClosed: boolean
+  contestEnded: boolean
   acceptingSubmissions: boolean
   onBack: () => void
 }
 
-function Step2CategoryList({ division, contestFinished, contestClosed, acceptingSubmissions, onBack }: Step2Props) {
+function Step2CategoryList({ division, contestEnded, acceptingSubmissions, onBack }: Step2Props) {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
       {/* Header with back + user menu */}
@@ -421,20 +402,12 @@ function Step2CategoryList({ division, contestFinished, contestClosed, accepting
         </div>
       </div>
 
-      {/* Contest closed banner */}
-      {contestClosed && (
-        <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
-          <Info className="h-5 w-5 flex-shrink-0" />
-          <p>This contest is closed. Submissions are no longer accepted.</p>
-        </div>
-      )}
-
-      {/* Finished contest banner */}
-      {contestFinished && (
+      {/* Contest ended banner */}
+      {contestEnded && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-muted-foreground bg-muted p-4 rounded-lg">
             <Info className="h-5 w-5 flex-shrink-0" />
-            <p>This contest has ended. View your feedback below.</p>
+            <p>This contest has ended. View your submissions below.</p>
           </div>
           {division.categories.some((c) => c.hasFeedback) && (
             <div className="flex items-center gap-2 text-primary bg-primary/10 p-4 rounded-lg">
@@ -451,7 +424,7 @@ function Step2CategoryList({ division, contestFinished, contestClosed, accepting
           <ParticipantCategoryCard
             key={category.id}
             category={category}
-            contestFinished={contestFinished}
+            contestEnded={contestEnded}
             acceptingSubmissions={acceptingSubmissions}
           />
         ))}
