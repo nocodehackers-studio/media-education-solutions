@@ -19,6 +19,7 @@ const mockAuthContext: AuthContextType = {
   signIn: vi.fn(),
   signOut: vi.fn(),
   resetPassword: vi.fn(),
+  refreshProfile: vi.fn(),
 }
 
 // Wrapper component for router and auth context

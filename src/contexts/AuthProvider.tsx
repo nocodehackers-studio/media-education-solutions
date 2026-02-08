@@ -253,6 +253,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await authApi.resetPassword(email)
   }, [])
 
+  const refreshProfile = useCallback(async () => {
+    const userId = sessionUserIdRef.current
+    if (!userId) return
+    const profile = await authApi.fetchProfile(userId)
+    if (profile && mountedRef.current) {
+      setUser(profile)
+      cacheProfile(profile, userId)
+    }
+  }, [])
+
   const value = useMemo(
     () => ({
       user,
@@ -261,8 +271,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signIn,
       signOut,
       resetPassword,
+      refreshProfile,
     }),
-    [user, isLoading, sessionUserId, signIn, signOut, resetPassword]
+    [user, isLoading, sessionUserId, signIn, signOut, resetPassword, refreshProfile]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

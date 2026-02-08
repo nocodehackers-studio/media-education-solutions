@@ -39,6 +39,7 @@ describe('ProtectedRoute', () => {
       signIn: () => Promise<void>
       signOut: () => Promise<void>
       resetPassword: () => Promise<void>
+      refreshProfile: () => Promise<void>
     }
   ) => {
     return render(
@@ -66,6 +67,7 @@ describe('ProtectedRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
@@ -82,6 +84,7 @@ describe('ProtectedRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Login Page')).toBeInTheDocument()
@@ -98,6 +101,7 @@ describe('ProtectedRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Protected Content')).toBeInTheDocument()
@@ -112,6 +116,7 @@ describe('ProtectedRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Protected Content')).toBeInTheDocument()
@@ -130,6 +135,7 @@ describe('ProtectedRoute', () => {
             signIn: vi.fn(),
             signOut: vi.fn(),
             resetPassword: vi.fn(),
+            refreshProfile: vi.fn(),
           }}
         >
           <MemoryRouter initialEntries={['/protected-page']}>

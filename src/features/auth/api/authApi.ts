@@ -131,6 +131,21 @@ async function fetchProfile(userId: string): Promise<User | null> {
 }
 
 /**
+ * Update user profile (first name, last name).
+ * RLS allows self-update; protect_profile_columns() trigger blocks role/email/id changes.
+ */
+async function updateProfile(userId: string, updates: { firstName: string; lastName: string }): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ first_name: updates.firstName, last_name: updates.lastName })
+    .eq('id', userId)
+
+  if (error) {
+    throw new Error(getErrorMessage(ERROR_CODES.SERVER_ERROR))
+  }
+}
+
+/**
  * Get the current session.
  * Returns null if not authenticated.
  */
@@ -144,6 +159,7 @@ export const authApi = {
   signOut,
   resetPassword,
   updatePassword,
+  updateProfile,
   fetchProfile,
   getSession,
 }

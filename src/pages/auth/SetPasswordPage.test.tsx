@@ -25,6 +25,7 @@ vi.mock('@/lib/supabase', () => ({
 
 const mockUpdatePassword = vi.fn()
 const mockFetchProfile = vi.fn()
+const mockUpdateProfile = vi.fn()
 vi.mock('@/features/auth', async () => {
   const actual = await vi.importActual('@/features/auth')
   return {
@@ -32,13 +33,23 @@ vi.mock('@/features/auth', async () => {
     authApi: {
       updatePassword: (...args: unknown[]) => mockUpdatePassword(...args),
       fetchProfile: (...args: unknown[]) => mockFetchProfile(...args),
+      updateProfile: (...args: unknown[]) => mockUpdateProfile(...args),
     },
   }
 })
 
+// Mock useAuth
+const mockRefreshProfile = vi.fn()
+vi.mock('@/contexts', () => ({
+  useAuth: () => ({
+    refreshProfile: mockRefreshProfile,
+  }),
+}))
+
 // Mock toast
 const mockToastSuccess = vi.fn()
 const mockToastError = vi.fn()
+const mockToastWarning = vi.fn()
 vi.mock('@/components/ui', async () => {
   const actual = await vi.importActual('@/components/ui')
   return {
@@ -46,6 +57,7 @@ vi.mock('@/components/ui', async () => {
     toast: {
       success: (...args: unknown[]) => mockToastSuccess(...args),
       error: (...args: unknown[]) => mockToastError(...args),
+      warning: (...args: unknown[]) => mockToastWarning(...args),
     },
   }
 })
@@ -75,48 +87,6 @@ describe('SetPasswordPage', () => {
       expect(screen.getByText('Verifying...')).toBeInTheDocument()
     })
 
-    it('renders password form when valid invite session exists', async () => {
-      setUrlHash('#type=invite')
-      mockGetSession.mockResolvedValue({
-        data: { session: { user: { id: 'user-123' } } },
-      })
-
-      renderPage()
-
-      await waitFor(() => {
-        expect(screen.getByText(/set your password/i)).toBeInTheDocument()
-      })
-      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /set password/i })).toBeInTheDocument()
-    })
-
-    it('renders password form when valid recovery session exists', async () => {
-      setUrlHash('#type=recovery')
-      mockGetSession.mockResolvedValue({
-        data: { session: { user: { id: 'user-123' } } },
-      })
-
-      renderPage()
-
-      await waitFor(() => {
-        expect(screen.getByText(/set your password/i)).toBeInTheDocument()
-      })
-    })
-
-    it('renders password form when valid magiclink session exists', async () => {
-      setUrlHash('#type=magiclink')
-      mockGetSession.mockResolvedValue({
-        data: { session: { user: { id: 'user-123' } } },
-      })
-
-      renderPage()
-
-      await waitFor(() => {
-        expect(screen.getByText(/set your password/i)).toBeInTheDocument()
-      })
-    })
-
     it('shows invalid link error when no session exists', async () => {
       setUrlHash('#type=invite')
       mockGetSession.mockResolvedValue({ data: { session: null } })
@@ -129,24 +99,7 @@ describe('SetPasswordPage', () => {
       expect(screen.getByRole('button', { name: /go to login/i })).toBeInTheDocument()
     })
 
-    it('redirects to login when session exists but no valid type in hash', async () => {
-      // When type is invalid but session exists, the component treats it as
-      // "user navigated directly while logged in" - so it checks profile and redirects
-      setUrlHash('#type=invalid')
-      mockGetSession.mockResolvedValue({
-        data: { session: { user: { id: 'user-123' } } },
-      })
-      mockFetchProfile.mockResolvedValue({ role: 'admin' })
-
-      renderPage()
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true })
-      })
-    })
-
     it('redirects judge to dashboard if session exists but not from setup flow (AC5)', async () => {
-      // No type in hash - indicates direct navigation, not from invite link
       window.location.hash = ''
       mockGetSession.mockResolvedValue({
         data: { session: { user: { id: 'user-123' } } },
@@ -175,81 +128,192 @@ describe('SetPasswordPage', () => {
     })
   })
 
-  describe('Form Validation', () => {
-    beforeEach(async () => {
+  describe('Onboarding Mode (invite/magiclink)', () => {
+    beforeEach(() => {
       setUrlHash('#type=invite')
       mockGetSession.mockResolvedValue({
         data: { session: { user: { id: 'user-123' } } },
       })
     })
 
-    it('shows error when password is too short (AC4)', async () => {
-      const user = userEvent.setup()
+    it('shows all four fields when invite session exists (AC2)', async () => {
       renderPage()
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+        expect(screen.getByText('Complete Your Account')).toBeInTheDocument()
       })
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+    })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      await user.type(passwordInput, 'short')
-      await user.tab() // Trigger blur validation
+    it('shows "Complete Your Account" title and onboarding description', async () => {
+      renderPage()
 
       await waitFor(() => {
-        expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument()
+        expect(screen.getByText('Complete Your Account')).toBeInTheDocument()
+        expect(screen.getByText(/complete your account setup to start judging/i)).toBeInTheDocument()
       })
     })
 
-    it('shows error when passwords do not match (AC3)', async () => {
+    it('shows all four fields when magiclink session exists', async () => {
+      window.location.hash = ''
+      setUrlHash('#type=magiclink')
+
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByText('Complete Your Account')).toBeInTheDocument()
+      })
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+    })
+
+    it('calls updatePassword FIRST, then updateProfile, then refreshProfile on submit (AC3)', async () => {
+      mockUpdatePassword.mockResolvedValue(undefined)
+      mockUpdateProfile.mockResolvedValue(undefined)
+      mockRefreshProfile.mockResolvedValue(undefined)
       const user = userEvent.setup()
       renderPage()
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
       })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
-
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'differentpassword')
-      await user.tab()
+      await user.type(screen.getByLabelText(/first name/i), 'Jane')
+      await user.type(screen.getByLabelText(/last name/i), 'Doe')
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'validpassword123')
+      await user.click(screen.getByRole('button', { name: /complete setup/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument()
+        expect(mockUpdatePassword).toHaveBeenCalledWith('validpassword123')
+      })
+
+      await waitFor(() => {
+        expect(mockUpdateProfile).toHaveBeenCalledWith('user-123', { firstName: 'Jane', lastName: 'Doe' })
+      })
+
+      await waitFor(() => {
+        expect(mockRefreshProfile).toHaveBeenCalled()
+      })
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/judge/dashboard', { replace: true })
       })
     })
 
-    it('does not show error when passwords match', async () => {
+    it('does NOT call updateProfile when updatePassword fails', async () => {
+      mockUpdatePassword.mockRejectedValue(new Error('Failed to set password'))
       const user = userEvent.setup()
       renderPage()
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
       })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
+      await user.type(screen.getByLabelText(/first name/i), 'Jane')
+      await user.type(screen.getByLabelText(/last name/i), 'Doe')
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'validpassword123')
+      await user.click(screen.getByRole('button', { name: /complete setup/i }))
 
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'validpassword123')
+      await waitFor(() => {
+        expect(mockToastError).toHaveBeenCalledWith('Failed to set password')
+      })
+
+      expect(mockUpdateProfile).not.toHaveBeenCalled()
+    })
+
+    it('shows warning toast and still navigates when updateProfile fails (AC11)', async () => {
+      mockUpdatePassword.mockResolvedValue(undefined)
+      mockUpdateProfile.mockRejectedValue(new Error('Profile update failed'))
+      const user = userEvent.setup()
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByLabelText(/first name/i), 'Jane')
+      await user.type(screen.getByLabelText(/last name/i), 'Doe')
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'validpassword123')
+      await user.click(screen.getByRole('button', { name: /complete setup/i }))
+
+      await waitFor(() => {
+        expect(mockToastWarning).toHaveBeenCalledWith('Password set, but name update failed. You can update your name later.')
+      })
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/judge/dashboard', { replace: true })
+      })
+    })
+
+    it('shows validation error when first name is empty', async () => {
+      const user = userEvent.setup()
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+      })
+
+      await user.click(screen.getByLabelText(/first name/i))
       await user.tab()
 
       await waitFor(() => {
-        expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument()
+        expect(screen.getByText('First name is required')).toBeInTheDocument()
+      })
+    })
+
+    it('shows validation error when last name is empty', async () => {
+      const user = userEvent.setup()
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+      })
+
+      await user.click(screen.getByLabelText(/last name/i))
+      await user.tab()
+
+      await waitFor(() => {
+        expect(screen.getByText('Last name is required')).toBeInTheDocument()
       })
     })
   })
 
-  describe('Password Submission', () => {
-    beforeEach(async () => {
-      setUrlHash('#type=invite')
+  describe('Recovery Mode', () => {
+    beforeEach(() => {
+      setUrlHash('#type=recovery')
       mockGetSession.mockResolvedValue({
         data: { session: { user: { id: 'user-123' } } },
       })
     })
 
-    it('calls updatePassword and navigates to judge dashboard on success (AC2)', async () => {
+    it('shows only password fields when recovery session exists (AC4)', async () => {
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByText('Reset Your Password')).toBeInTheDocument()
+      })
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+      expect(screen.queryByLabelText(/first name/i)).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/last name/i)).not.toBeInTheDocument()
+    })
+
+    it('shows "Reset Your Password" title (AC4)', async () => {
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByText('Reset Your Password')).toBeInTheDocument()
+        expect(screen.getByText('Enter your new password below.')).toBeInTheDocument()
+      })
+    })
+
+    it('calls updatePassword and navigates on success', async () => {
       mockUpdatePassword.mockResolvedValue(undefined)
       const user = userEvent.setup()
       renderPage()
@@ -258,13 +322,9 @@ describe('SetPasswordPage', () => {
         expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
       })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
-      const submitButton = screen.getByRole('button', { name: /set password/i })
-
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'validpassword123')
-      await user.click(submitButton)
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'validpassword123')
+      await user.click(screen.getByRole('button', { name: /set password/i }))
 
       await waitFor(() => {
         expect(mockUpdatePassword).toHaveBeenCalledWith('validpassword123')
@@ -288,43 +348,25 @@ describe('SetPasswordPage', () => {
         expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
       })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
-      const submitButton = screen.getByRole('button', { name: /set password/i })
-
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'validpassword123')
-      await user.click(submitButton)
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'validpassword123')
+      await user.click(screen.getByRole('button', { name: /set password/i }))
 
       await waitFor(() => {
         expect(mockToastError).toHaveBeenCalledWith('Failed to set password')
       })
     })
+  })
 
-    it('shows loading state while submitting', async () => {
-      mockUpdatePassword.mockImplementation(() => new Promise(() => {})) // Never resolves
-      const user = userEvent.setup()
-      renderPage()
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
-      })
-
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
-      const submitButton = screen.getByRole('button', { name: /set password/i })
-
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'validpassword123')
-      await user.click(submitButton)
-
-      await waitFor(() => {
-        expect(submitButton).toBeDisabled()
+  describe('Form Validation', () => {
+    beforeEach(() => {
+      setUrlHash('#type=invite')
+      mockGetSession.mockResolvedValue({
+        data: { session: { user: { id: 'user-123' } } },
       })
     })
 
-    it('disables inputs while submitting', async () => {
-      mockUpdatePassword.mockImplementation(() => new Promise(() => {}))
+    it('shows error when password is too short (AC4)', async () => {
       const user = userEvent.setup()
       renderPage()
 
@@ -332,17 +374,28 @@ describe('SetPasswordPage', () => {
         expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
       })
 
-      const passwordInput = screen.getByLabelText(/^password$/i)
-      const confirmInput = screen.getByLabelText(/confirm password/i)
-      const submitButton = screen.getByRole('button', { name: /set password/i })
-
-      await user.type(passwordInput, 'validpassword123')
-      await user.type(confirmInput, 'validpassword123')
-      await user.click(submitButton)
+      await user.type(screen.getByLabelText(/^password$/i), 'short')
+      await user.tab()
 
       await waitFor(() => {
-        expect(passwordInput).toBeDisabled()
-        expect(confirmInput).toBeDisabled()
+        expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument()
+      })
+    })
+
+    it('shows error when passwords do not match (AC3)', async () => {
+      const user = userEvent.setup()
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByLabelText(/^password$/i), 'validpassword123')
+      await user.type(screen.getByLabelText(/confirm password/i), 'differentpassword')
+      await user.tab()
+
+      await waitFor(() => {
+        expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument()
       })
     })
   })

@@ -47,6 +47,9 @@ const AdminCategoryRankingsPage = lazy(() =>
 const JudgeDashboardPage = lazy(() =>
   import('@/pages/judge/DashboardPage').then((m) => ({ default: m.JudgeDashboardPage }))
 )
+const JudgeContestDetailPage = lazy(() =>
+  import('@/pages/judge/ContestDetailPage').then((m) => ({ default: m.ContestDetailPage }))
+)
 const CategoryReviewPage = lazy(() =>
   import('@/pages/judge/CategoryReviewPage').then((m) => ({ default: m.CategoryReviewPage }))
 )
@@ -238,6 +241,16 @@ const router = createBrowserRouter([
       <JudgeRoute>
         <PageLazyRoute>
           <JudgeDashboardPage />
+        </PageLazyRoute>
+      </JudgeRoute>
+    ),
+  },
+  {
+    path: '/judge/contests/:contestId',
+    element: (
+      <JudgeRoute>
+        <PageLazyRoute>
+          <JudgeContestDetailPage />
         </PageLazyRoute>
       </JudgeRoute>
     ),

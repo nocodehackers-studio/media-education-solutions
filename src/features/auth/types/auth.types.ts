@@ -27,6 +27,7 @@ export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string, turnstileToken: string) => Promise<void>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 /** Sign in credentials */

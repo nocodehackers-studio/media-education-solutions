@@ -39,3 +39,21 @@ export const resetPasswordSchema = z
   })
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+
+/** Judge onboarding form validation schema (invite/magiclink flow) */
+export const judgeOnboardingSchema = z
+  .object({
+    firstName: z.string().trim().min(1, 'First name is required').max(100, 'First name is too long'),
+    lastName: z.string().trim().min(1, 'Last name is required').max(100, 'Last name is too long'),
+    password: z
+      .string()
+      .min(1, 'Password is required')
+      .min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+export type JudgeOnboardingFormData = z.infer<typeof judgeOnboardingSchema>

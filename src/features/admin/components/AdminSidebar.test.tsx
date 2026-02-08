@@ -24,6 +24,7 @@ const mockAuthContext: AuthContextType = {
   signIn: vi.fn(),
   signOut: mockSignOut,
   resetPassword: vi.fn(),
+  refreshProfile: vi.fn(),
 }
 
 function renderWithProviders(ui: React.ReactElement, initialPath = '/admin/dashboard') {

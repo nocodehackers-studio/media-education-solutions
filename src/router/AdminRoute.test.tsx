@@ -32,6 +32,7 @@ describe('AdminRoute', () => {
       signIn: () => Promise<void>
       signOut: () => Promise<void>
       resetPassword: () => Promise<void>
+      refreshProfile: () => Promise<void>
     }
   ) => {
     return render(
@@ -60,6 +61,7 @@ describe('AdminRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByTestId('admin-loading-skeleton')).toBeInTheDocument()
@@ -76,6 +78,7 @@ describe('AdminRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Login Page')).toBeInTheDocument()
@@ -92,6 +95,7 @@ describe('AdminRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Judge Dashboard')).toBeInTheDocument()
@@ -108,6 +112,7 @@ describe('AdminRoute', () => {
         signIn: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        refreshProfile: vi.fn(),
       })
 
       expect(screen.getByText('Admin Content')).toBeInTheDocument()
@@ -127,6 +132,7 @@ describe('AdminRoute', () => {
             signIn: vi.fn(),
             signOut: vi.fn(),
             resetPassword: vi.fn(),
+            refreshProfile: vi.fn(),
           }}
         >
           <MemoryRouter initialEntries={['/admin/contests']}>

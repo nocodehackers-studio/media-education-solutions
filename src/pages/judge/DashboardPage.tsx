@@ -1,14 +1,9 @@
-// JudgeDashboardPage - Story 3-4
-// Shows judge's assigned categories with status and submission counts
-
-import { type ComponentType } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { Calendar, CheckCircle2, ClipboardList, Eye, LogOut, Play } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts';
-import { useCategoriesByJudge, type CategoryWithContext } from '@/features/categories';
-import { formatDateTimeInTimezone } from '@/lib/dateUtils';
+import { type ComponentType } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Calendar, CheckCircle2, ClipboardList, Eye, LogOut, Play } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAuth } from '@/contexts'
+import { useCategoriesByJudge, type CategoryWithContext } from '@/features/categories'
 import {
   Badge,
   Button,
@@ -18,45 +13,65 @@ import {
   CardHeader,
   CardTitle,
   Skeleton,
-} from '@/components/ui';
+} from '@/components/ui'
+
+interface ContestGroup {
+  contestName: string
+  categories: CategoryWithContext[]
+}
+
+function groupByContest(categories: CategoryWithContext[]): Map<string, ContestGroup> {
+  const map = new Map<string, ContestGroup>()
+  for (const cat of categories) {
+    const existing = map.get(cat.contestId)
+    if (existing) {
+      existing.categories.push(cat)
+    } else {
+      map.set(cat.contestId, { contestName: cat.contestName, categories: [cat] })
+    }
+  }
+  return map
+}
 
 export function JudgeDashboardPage() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
   const {
     data: categories,
     isLoading,
     error,
     refetch,
-  } = useCategoriesByJudge(user?.id);
+  } = useCategoriesByJudge(user?.id)
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      navigate('/login', { replace: true });
+      await signOut()
+      navigate('/login', { replace: true })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to sign out');
+      toast.error(err instanceof Error ? err.message : 'Failed to sign out')
     }
-  };
+  }
 
   // Stats
-  const totalCategories = categories?.length || 0;
+  const totalCategories = categories?.length || 0
   const completedCategories =
-    categories?.filter((c) => !!c.judgingCompletedAt).length || 0;
+    categories?.filter((c) => !!c.judgingCompletedAt).length || 0
   const closedCategories =
-    categories?.filter((c) => c.status === 'closed' && !c.judgingCompletedAt).length || 0;
+    categories?.filter((c) => c.status === 'closed' && !c.judgingCompletedAt).length || 0
   const awaitingCategories =
-    categories?.filter((c) => c.status === 'published').length || 0;
+    categories?.filter((c) => c.status === 'published').length || 0
 
   // Loading state
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <DashboardSkeleton />
   }
 
   // Error state
   if (error) {
-    return <DashboardError error={error} onRetry={refetch} />;
+    return <DashboardError error={error} onRetry={refetch} />
   }
+
+  const contestGroups = groupByContest(categories || [])
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -102,33 +117,33 @@ export function JudgeDashboardPage() {
           />
         </div>
 
-        {/* Categories List */}
+        {/* Contests List */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Your Categories</h2>
+          <h2 className="text-lg font-semibold">Your Contests</h2>
 
-          {/* Empty State (AC5) */}
-          {totalCategories === 0 ? (
+          {/* Empty State */}
+          {contestGroups.size === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground text-center">
-                  No categories assigned yet
+                  No contests assigned yet
                 </p>
                 <p className="text-sm text-muted-foreground text-center mt-1">
-                  You'll see your assigned categories here once an admin assigns
+                  You'll see your assigned contests here once an admin assigns
                   you
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4">
-              {categories?.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onStartReviewing={() => {
-                    navigate(`/judge/categories/${category.id}`);
-                  }}
+              {Array.from(contestGroups.entries()).map(([contestId, group]) => (
+                <ContestCard
+                  key={contestId}
+                  contestId={contestId}
+                  contestName={group.contestName}
+                  categories={group.categories}
+                  onViewCategories={() => navigate(`/judge/contests/${contestId}`)}
                 />
               ))}
             </div>
@@ -136,15 +151,15 @@ export function JudgeDashboardPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Stat Card Component
 interface StatCardProps {
-  title: string;
-  value: number;
-  icon: ComponentType<{ className?: string }>;
-  highlight?: boolean;
+  title: string
+  value: number
+  icon: ComponentType<{ className?: string }>
+  highlight?: boolean
 }
 
 function StatCard({ title, value, icon: Icon, highlight }: StatCardProps) {
@@ -164,88 +179,64 @@ function StatCard({ title, value, icon: Icon, highlight }: StatCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-// Category Card Component (AC2, AC3, AC4)
-interface CategoryCardProps {
-  category: CategoryWithContext;
-  onStartReviewing: () => void;
+// Contest Card Component
+interface ContestCardProps {
+  contestId: string
+  contestName: string
+  categories: CategoryWithContext[]
+  onViewCategories: () => void
 }
 
-function CategoryCard({ category, onStartReviewing }: CategoryCardProps) {
-  const isClosed = category.status === 'closed';
-  const isCompleted = !!category.judgingCompletedAt;
-
-  // Defensive date handling - deadline should always exist but guard against edge cases
-  const getDeadlineText = () => {
-    if (isCompleted) return `Completed on ${new Date(category.judgingCompletedAt!).toLocaleDateString()}`;
-    if (isClosed) return 'Ready for review';
-    if (!category.deadline) return 'Awaiting deadline';
-    try {
-      const deadlineDate = new Date(category.deadline);
-      if (isNaN(deadlineDate.getTime())) return 'Awaiting deadline';
-      const relativeTime = formatDistanceToNow(deadlineDate, { addSuffix: true });
-      const absoluteTime = formatDateTimeInTimezone(category.deadline, category.contestTimezone);
-      return `Deadline: ${absoluteTime} (${relativeTime})`;
-    } catch {
-      return 'Awaiting deadline';
-    }
-  };
-  const deadlineText = getDeadlineText();
+function ContestCard({ contestName, categories, onViewCategories }: ContestCardProps) {
+  const totalSubmissions = categories.reduce((sum, c) => sum + c.submissionCount, 0)
+  const readyToReview = categories.filter((c) => c.status === 'closed' && !c.judgingCompletedAt).length
+  const completed = categories.filter((c) => !!c.judgingCompletedAt).length
 
   return (
-    <Card className={isCompleted ? 'border-green-500 shadow-md' : isClosed ? 'border-primary shadow-md' : ''}>
+    <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-lg">{category.name}</CardTitle>
+            <CardTitle className="text-lg">{contestName}</CardTitle>
             <CardDescription>
-              {category.contestName} &bull; {category.divisionName}
+              {categories.length} {categories.length === 1 ? 'category' : 'categories'} assigned
             </CardDescription>
           </div>
-          <Badge variant={isCompleted ? 'default' : isClosed ? 'default' : 'secondary'}
-            className={isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}
-          >
-            {isCompleted ? 'Complete' : isClosed ? 'Closed' : 'Published'}
-          </Badge>
+          {readyToReview > 0 && (
+            <Badge variant="default">
+              {readyToReview} ready
+            </Badge>
+          )}
+          {readyToReview === 0 && completed === categories.length && (
+            <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+              Complete
+            </Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{deadlineText}</p>
             <p className="text-sm">
-              <span className="font-medium">{category.submissionCount}</span>{' '}
-              submissions
+              <span className="font-medium">{totalSubmissions}</span> total submissions
             </p>
-          </div>
-          <Button
-            onClick={onStartReviewing}
-            disabled={!isClosed && !isCompleted}
-            variant={isClosed || isCompleted ? 'default' : 'outline'}
-          >
-            {isCompleted ? (
-              <>
-                <Eye className="mr-2 h-4 w-4" />
-                View Reviews
-              </>
-            ) : isClosed ? (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Start Reviewing
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Not Ready
-              </>
+            {readyToReview > 0 && (
+              <p className="text-sm text-primary">
+                {readyToReview} {readyToReview === 1 ? 'category' : 'categories'} ready to review
+              </p>
             )}
+          </div>
+          <Button onClick={onViewCategories}>
+            <Eye className="mr-2 h-4 w-4" />
+            View Categories
           </Button>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // Loading Skeleton
@@ -260,8 +251,8 @@ function DashboardSkeleton() {
           </div>
           <Skeleton className="h-10 w-24" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
@@ -273,13 +264,13 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Error State
 interface DashboardErrorProps {
-  error: Error;
-  onRetry: () => void;
+  error: Error
+  onRetry: () => void
 }
 
 function DashboardError({ error, onRetry }: DashboardErrorProps) {
@@ -299,5 +290,5 @@ function DashboardError({ error, onRetry }: DashboardErrorProps) {
         </Card>
       </div>
     </div>
-  );
+  )
 }

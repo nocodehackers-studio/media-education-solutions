@@ -27,9 +27,11 @@ export {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  judgeOnboardingSchema,
 } from './types/auth.schemas'
 export type {
   LoginFormData,
   ForgotPasswordFormData,
   ResetPasswordFormData,
+  JudgeOnboardingFormData,
 } from './types/auth.schemas'
