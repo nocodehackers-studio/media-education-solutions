@@ -110,7 +110,7 @@ function DivisionSection({
                 <Plus className="h-3 w-3 mr-1" />
                 Add
               </Button>
-              <SheetContent>
+              <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create Category in {division.name}</SheetTitle>
                 </SheetHeader>

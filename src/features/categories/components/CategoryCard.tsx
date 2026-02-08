@@ -270,7 +270,7 @@ export function CategoryCard({ category, contestId, contestTimezone }: CategoryC
                 {isEditable ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </SheetTrigger>
-            <SheetContent className="flex flex-col overflow-y-auto">
+            <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>
                   {isEditable ? 'Edit Category' : 'View Category'}
